@@ -35,6 +35,11 @@ const server = createServer(async (request, response) => {
     try {
       body = await readFile(resolvedPath);
     } catch {
+      if (extname(relativePath)) {
+        response.writeHead(404);
+        response.end('Not found');
+        return;
+      }
       resolvedPath = join(root, 'index.html');
       body = await readFile(resolvedPath);
     }
