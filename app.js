@@ -266,6 +266,20 @@ function handleLogout() {
   showToast('Đã đăng xuất khỏi lịch của Vy.');
 }
 
+function isIosDevice() {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+}
+
+function isHomeScreenApp() {
+  return window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+}
+
+function showIosInstallGuidance() {
+  $('#reminderTitle').textContent = 'Cài app lên màn hình chính trước';
+  $('#reminderDescription').textContent = 'Trong Safari: Chia sẻ → Thêm vào màn hình chính → mở app từ biểu tượng Lịch của Vy.';
+  showToast('Vy hãy thêm app vào Màn hình chính rồi mở lại để bật thông báo nha 📱');
+}
+
 function reminderDescription(code) {
   if (code === 'D') return 'đi làm ca D · 07:30–19:30';
   if (code === 'N') return 'đi làm ca N · 19:30–07:30 hôm sau';
@@ -350,7 +364,12 @@ async function enableNotifications() {
     showToast('Đã lập nhắc lịch trên điện thoại cho Vy rồi 💗');
     return;
   }
+  if (isIosDevice() && !isHomeScreenApp()) {
+    showIosInstallGuidance();
+    return;
+  }
   if (!('Notification' in window)) {
+    if (isIosDevice()) showIosInstallGuidance();
     showToast('Trình duyệt này chưa hỗ trợ thông báo.');
     return;
   }
@@ -416,6 +435,12 @@ async function scheduleNativeReminders(localNotifications) {
 
 function updateNotificationUi(permission = ('Notification' in window ? Notification.permission : 'unsupported')) {
   const enabled = permission === 'granted';
+  if (isIosDevice() && !isHomeScreenApp() && !enabled) {
+    $('#reminderTitle').textContent = 'Cài app lên màn hình chính để bật nhắc';
+    $('#reminderDescription').textContent = 'Safari thường không xin quyền thông báo cho app này. Hãy thêm vào màn hình chính trước.';
+    $('#enableNotification').textContent = 'Cách bật';
+    return;
+  }
   $('#notificationIcon').textContent = enabled ? '♥' : '♡';
   $('#reminderTitle').textContent = enabled ? 'Nhắc lịch đã bật' : 'Nhắc lịch đang tắt';
   $('#reminderDescription').textContent = enabled ? 'Vy sẽ nhận lời nhắc nhẹ nhàng khi mở app.' : 'Bật thông báo để Vy không bỏ lỡ ca làm nhé.';
