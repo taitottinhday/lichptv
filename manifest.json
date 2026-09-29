@@ -1,0 +1,11 @@
+{
+  "name": "Lịch của Vy",
+  "short_name": "Lịch Vy",
+  "description": "Lịch đi làm và nhắc lịch dễ thương cho Phan Thị Thảo Vy",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#f7f3f5",
+  "theme_color": "#ff6f91",
+  "lang": "vi",
+  "icons": []
+}

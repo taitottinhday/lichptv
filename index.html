@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#ff6f91" />
+    <meta name="description" content="Lịch đi làm dễ thương của Phan Thị Thảo Vy" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌷</text></svg>" />
+    <link rel="stylesheet" href="styles.css" />
+    <title>Lịch của Vy · đi làm vui vẻ nhé</title>
+  </head>
+  <body>
+    <section class="login-screen" id="loginScreen">
+      <div class="login-card">
+        <div class="login-flower" aria-hidden="true">🌷</div>
+        <p class="eyebrow">ROSTER ED NURSING</p>
+        <h1>Đăng nhập lịch của Vy</h1>
+        <p class="login-intro">Đăng nhập để xem lịch làm việc và nhận những lời nhắc thật dễ thương nhé.</p>
+        <form id="loginForm" novalidate>
+          <label for="username">Tài khoản</label>
+          <input id="username" name="username" type="text" autocomplete="username" placeholder="Nhập tài khoản" required />
+          <label for="password">Mật khẩu</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Nhập mật khẩu" required />
+          <p class="login-error" id="loginError" role="alert" aria-live="polite"></p>
+          <button class="button button-primary full-width" type="submit">Đăng nhập vào lịch 💗</button>
+        </form>
+        <p class="login-note">Lịch riêng của Phan Thị Thảo Vy · số 8</p>
+      </div>
+    </section>
+
+    <div class="app-shell" id="appShell">
+      <header class="topbar">
+        <div class="brand-lockup">
+          <div class="brand-mark" aria-hidden="true">🌷</div>
+          <div>
+            <p class="eyebrow">ROSTER ED NURSING</p>
+            <h1>Lịch của Vy</h1>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <button class="icon-button" id="notificationButton" type="button" title="Bật thông báo" aria-label="Bật thông báo">
+            <span id="notificationIcon">♡</span>
+          </button>
+          <button class="logout-button" id="logoutButton" type="button">Đăng xuất</button>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero-card" aria-labelledby="welcomeTitle">
+          <div class="hero-copy">
+            <div class="status-pill"><span class="status-dot"></span><span id="currentGreeting">Phan Thị Thảo Vy · số 8</span></div>
+            <h2 id="welcomeTitle">Chào buổi sáng, Vy yêu 🌤️</h2>
+            <p id="heroMessage">Mình cùng xem hôm nay nàng có lịch gì nhé.</p>
+          </div>
+          <div class="hero-art" aria-hidden="true">
+            <span class="sparkle sparkle-one">✦</span>
+            <span class="sparkle sparkle-two">✧</span>
+            <div class="sun">☀️</div>
+            <div class="cloud cloud-one"></div>
+            <div class="cloud cloud-two"></div>
+          </div>
+        </section>
+
+        <section class="shift-overview" aria-label="Lịch gần nhất">
+          <article class="shift-card today-card" id="todayCard">
+            <div class="card-heading"><span>HÔM NAY</span><span class="mini-date" id="todayDateLabel"></span></div>
+            <div class="shift-row">
+              <div class="shift-code" id="todayCode">—</div>
+              <div>
+                <h3 id="todayTitle">Đang tải lịch...</h3>
+                <p id="todaySubtitle">—</p>
+              </div>
+            </div>
+            <div class="sweet-note" id="todayNote">💌 Một ngày thật dịu dàng nhé!</div>
+            <div class="live-countdown" id="liveCountdown" hidden></div>
+          </article>
+
+          <article class="shift-card tomorrow-card" id="tomorrowCard">
+            <div class="card-heading"><span>NGÀY MAI</span><span class="mini-date" id="tomorrowDateLabel"></span></div>
+            <div class="shift-row">
+              <div class="shift-code" id="tomorrowCode">—</div>
+              <div>
+                <h3 id="tomorrowTitle">Đang tải lịch...</h3>
+                <p id="tomorrowSubtitle">—</p>
+              </div>
+            </div>
+            <div class="sweet-note" id="tomorrowNote">🌙 Ngủ ngon để mai thật nhiều năng lượng nha!</div>
+          </article>
+        </section>
+
+        <section class="reminder-banner" aria-label="Nhắc lịch">
+          <div class="reminder-icon">🔔</div>
+          <div class="reminder-copy">
+            <strong id="reminderTitle">Nhắc lịch đang tắt</strong>
+            <span id="reminderDescription">Bật thông báo để Vy không bỏ lỡ ca làm nhé.</span>
+          </div>
+          <button class="button button-dark" id="enableNotification" type="button">Bật nhắc</button>
+          <button class="button button-light" id="exportCalendar" type="button">Tải lịch vào điện thoại</button>
+        </section>
+
+        <section class="calendar-section" aria-labelledby="calendarHeading">
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">LỊCH LÀM VIỆC</p>
+              <h2 id="calendarHeading">Lịch của Vy</h2>
+            </div>
+            <div class="month-controls">
+              <button class="icon-button soft" id="previousMonth" type="button" aria-label="Tháng trước">‹</button>
+              <span id="monthLabel">Tháng 10, 2026</span>
+              <button class="icon-button soft" id="nextMonth" type="button" aria-label="Tháng sau">›</button>
+            </div>
+          </div>
+
+          <div class="legend" aria-label="Chú thích ca làm">
+            <span><i class="legend-swatch shift-day"></i>D · 12h ngày</span>
+            <span><i class="legend-swatch shift-night"></i>N · 12h đêm</span>
+            <span><i class="legend-swatch shift-off"></i>18 / 9 · nghỉ</span>
+          </div>
+
+          <div class="calendar-card">
+            <div class="weekdays" aria-hidden="true">
+              <span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+          </div>
+          <p class="calendar-hint">Chạm vào một ngày để xem chi tiết hoặc đổi ca nhanh.</p>
+        </section>
+
+        <section class="tips-card">
+          <div class="tip-illustration" aria-hidden="true">🩺</div>
+          <div>
+            <p class="section-kicker">LỜI NHẮN NHỎ</p>
+            <h2 id="tipTitle">Vy nhớ uống nước nha</h2>
+            <p id="tipCopy">Đi làm chuyên nghiệp, tan ca bình an, và luôn nhớ là có người thương chờ Vy về. 💗</p>
+          </div>
+        </section>
+      </main>
+
+      <footer class="app-footer">
+        <span>Made with love for Vy</span><span>•</span><span id="lastUpdated">Lịch cá nhân</span>
+      </footer>
+    </div>
+
+    <div class="modal-backdrop" id="dayModal" hidden>
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <button class="modal-close" id="closeModal" type="button" aria-label="Đóng">×</button>
+        <p class="section-kicker" id="modalDate">NGÀY</p>
+        <h2 id="modalTitle">Chỉnh lịch</h2>
+        <p class="modal-subtitle">Chọn ca của Vy cho ngày này</p>
+        <div class="shift-picker" id="shiftPicker">
+          <button type="button" data-code="D"><b>D</b><span>12h ban ngày</span></button>
+          <button type="button" data-code="N"><b>N</b><span>12h ban đêm</span></button>
+          <button type="button" data-code="18"><b>18</b><span>Nghỉ</span></button>
+          <button type="button" data-code="9"><b>9</b><span>Nghỉ</span></button>
+          <button type="button" data-code="eAD"><b>eAD</b><span>Điều chỉnh</span></button>
+        </div>
+        <button class="button button-primary full-width" id="saveShift" type="button">Lưu lịch cho Vy</button>
+        <p class="modal-footnote">Lịch sửa sẽ được lưu trên thiết bị này.</p>
+      </div>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="app.js"></script>
+  </body>
+</html>
