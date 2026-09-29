@@ -10,10 +10,13 @@ Bản dùng thử PWA cho lịch làm việc của Phan Thị Thảo Vy.
 ## Chạy trên máy tính
 
 ```bash
+npm run build
 npm start
 ```
 
 Mở `http://localhost:4173`.
+
+Trong lúc phát triển giao diện, có thể dùng `npm run dev`.
 
 Khi deploy Railway, Railway tự cấp biến `PORT`; `server.mjs` đã cấu hình để lắng nghe đúng cổng đó và host `0.0.0.0`.
 
