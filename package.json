@@ -2,6 +2,7 @@
   "name": "lich-cua-thao-vy",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "start": "node server.mjs",
@@ -12,8 +13,12 @@
   },
   "dependencies": {
     "@capacitor/core": "^7.4.3",
+    "@capacitor/ios": "^7.4.3",
     "@capacitor/local-notifications": "^7.0.3",
-    "@capacitor/ios": "^7.4.3"
+    "express": "^5.2.1",
+    "node-cron": "^4.6.0",
+    "pg": "^8.23.0",
+    "web-push": "^3.6.7"
   },
   "devDependencies": {
     "@capacitor/android": "^7.4.3",

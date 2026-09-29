@@ -1,20 +1,11 @@
+import { defaultSchedule } from './schedule-data.js';
+
 const STORAGE_KEY = 'lich-cua-vy-schedule-v2';
 const AUTH_KEY = 'lich-cua-vy-authenticated-v1';
 const DEMO_USERNAME = 'phanthithaovy';
 const DEMO_PASSWORD = '261004';
 const START_DATE = '2026-09-26';
 const END_DATE = '2026-10-25';
-
-// Lịch mặc định được nhập từ dòng số 8 trong ảnh roster: Code 4127179 - Phan Thi Thảo Vy.
-// Có thể chạm vào từng ngày trong lịch để sửa nếu bệnh viện cập nhật.
-const defaultSchedule = {
-  '2026-09-26': '18', '2026-09-27': 'eAD', '2026-09-28': 'D', '2026-09-29': 'N', '2026-09-30': '18',
-  '2026-10-01': 'D', '2026-10-02': '18', '2026-10-03': 'N', '2026-10-04': 'N', '2026-10-05': '18',
-  '2026-10-06': 'D', '2026-10-07': 'N', '2026-10-08': '18', '2026-10-09': 'D', '2026-10-10': 'D',
-  '2026-10-11': 'N', '2026-10-12': '9', '2026-10-13': '9', '2026-10-14': 'D', '2026-10-15': 'N',
-  '2026-10-16': '9', '2026-10-17': 'N', '2026-10-18': '9', '2026-10-19': 'N', '2026-10-20': '9',
-  '2026-10-21': '9', '2026-10-22': 'D', '2026-10-23': 'N', '2026-10-24': 'N', '2026-10-25': '9'
-};
 
 const state = {
   schedule: loadSchedule(),
@@ -373,14 +364,49 @@ async function enableNotifications() {
     showToast('Trình duyệt này chưa hỗ trợ thông báo.');
     return;
   }
-  const permission = await Notification.requestPermission();
-  updateNotificationUi(permission);
-  if (permission === 'granted') {
-    new Notification('Lịch của Vy đã sẵn sàng 🌷', { body: 'Mình sẽ nhắc Vy hôm nay và ngày mai thật nhẹ nhàng nhé.' });
-    showToast('Đã bật nhắc lịch cho Vy rồi nè 💗');
-  } else {
-    showToast('Vy chưa cấp quyền thông báo. Có thể bật lại trong cài đặt trình duyệt.');
+  try {
+    await subscribeToWebPush();
+    updateNotificationUi('granted');
+    showToast('Đã bật nhắc 06:00 và 17:00 cho Vy rồi 💗');
+  } catch (error) {
+    showToast(error.message || 'Chưa thể bật nhắc lịch. Vy thử lại sau nhé.');
   }
+}
+
+function urlBase64ToUint8Array(value) {
+  const padding = '='.repeat((4 - (value.length % 4)) % 4);
+  const base64 = (value + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const bytes = atob(base64);
+  return Uint8Array.from(bytes, (character) => character.charCodeAt(0));
+}
+
+async function subscribeToWebPush() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+    throw new Error('Thiết bị này chưa hỗ trợ nhắc nền. Hãy mở app từ Màn hình chính trên iPhone.');
+  }
+  const permission = await Notification.requestPermission();
+  if (permission !== 'granted') {
+    throw new Error('Vy chưa cho phép thông báo. Hãy bật lại trong Cài đặt iPhone nhé.');
+  }
+  const keyResponse = await fetch('/api/push/public-key');
+  if (!keyResponse.ok) {
+    throw new Error('Hệ thống nhắc lịch chưa được cấu hình trên Railway.');
+  }
+  const { publicKey } = await keyResponse.json();
+  const registration = await navigator.serviceWorker.ready;
+  let subscription = await registration.pushManager.getSubscription();
+  if (!subscription) {
+    subscription = await registration.pushManager.subscribe({
+      userVisibleOnly: true,
+      applicationServerKey: urlBase64ToUint8Array(publicKey)
+    });
+  }
+  const subscribeResponse = await fetch('/api/push/subscribe', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(subscription)
+  });
+  if (!subscribeResponse.ok) throw new Error('Không lưu được thiết bị nhận nhắc. Vy thử lại nhé.');
 }
 
 async function getNativeNotifications() {
@@ -443,7 +469,7 @@ function updateNotificationUi(permission = ('Notification' in window ? Notificat
   }
   $('#notificationIcon').textContent = enabled ? '♥' : '♡';
   $('#reminderTitle').textContent = enabled ? 'Nhắc lịch đã bật' : 'Nhắc lịch đang tắt';
-  $('#reminderDescription').textContent = enabled ? 'Vy sẽ nhận lời nhắc nhẹ nhàng khi mở app.' : 'Bật thông báo để Vy không bỏ lỡ ca làm nhé.';
+  $('#reminderDescription').textContent = enabled ? 'Vy sẽ được nhắc lúc 06:00 và 17:00, kể cả khi đã đóng app.' : 'Bật thông báo để Vy không bỏ lỡ ca làm nhé.';
   $('#enableNotification').textContent = enabled ? 'Đã bật' : 'Bật nhắc';
 }
 

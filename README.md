@@ -26,6 +26,24 @@ Khi deploy Railway, Railway tự cấp biến `PORT`; `server.mjs` đã cấu h�
 
 Trong app, bấm **Tải lịch vào điện thoại** để tải file `lich-cua-vy-nhac-06h-17h.ics`. Mở file bằng ứng dụng Lịch và xác nhận thêm lịch. File này tạo nhắc tự động mỗi ngày lúc **06:00** cho lịch hôm nay và **17:00** cho lịch ngày mai, kể cả khi app đã đóng.
 
+## Thông báo trực tiếp từ app
+
+App có thể gửi Web Push trực tiếp cho iPhone lúc **06:00** và **17:00** theo giờ Việt Nam. Trên Railway, tạo thêm một dịch vụ **PostgreSQL** trong cùng project và liên kết biến `DATABASE_URL` cho service `lichptv`.
+
+Tạo cặp VAPID trên máy tính:
+
+```bash
+npx web-push generate-vapid-keys --json
+```
+
+Trong Railway → service `lichptv` → **Variables**, thêm:
+
+- `VAPID_PUBLIC_KEY`: giá trị `publicKey` vừa tạo.
+- `VAPID_PRIVATE_KEY`: giá trị `privateKey` vừa tạo.
+- `VAPID_EMAIL`: ví dụ `mailto:email-cua-ban@example.com`.
+
+Redeploy app, sau đó trên iPhone mở app từ **Màn hình chính** và bấm **Bật nhắc**. iPhone sẽ hỏi quyền thông báo; chọn **Cho phép**.
+
 ## Đóng gói thành app iPhone có thông báo native
 
 Để app nhắc lúc 06:00 và 17:00 kể cả khi đã đóng, cần build bằng **macOS + Xcode**. Windows không thể xuất hoặc ký file iOS `.ipa`.
