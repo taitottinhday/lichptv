@@ -333,14 +333,18 @@ function exportCalendarFile() {
     const description = reminderDescription(code);
     const todayStart = new Date(date);
     todayStart.setHours(6, 0, 0, 0);
-    events.push(createCalendarEvent(`${key}-today`, todayStart, `Lịch hôm nay: ${description}`, `Vy ơi, hôm nay ${description}. Cố lên và nhớ giữ sức nhé 💗`));
+    events.push(createCalendarEvent(`${key}-morning`, todayStart, 'Chào buổi sáng, Vy yêu', `Hôm nay ${description}. Chúc Vy một ngày thật vui vẻ và chuyên nghiệp nhé 💗`));
+
+    const noonStart = new Date(date);
+    noonStart.setHours(12, 0, 0, 0);
+    events.push(createCalendarEvent(`${key}-noon`, noonStart, 'Chúc em yêu buổi trưa vui vẻ', 'Giữa ngày rồi đó. Nhớ uống nước, ăn uống đầy đủ và giữ sức nha 💕'));
 
     const tomorrow = new Date(date);
     tomorrow.setDate(tomorrow.getDate() - 1);
     const tomorrowCode = state.schedule[localDateKey(date)];
     const tomorrowStart = new Date(tomorrow);
-    tomorrowStart.setHours(17, 0, 0, 0);
-    events.push(createCalendarEvent(`${key}-tomorrow`, tomorrowStart, `Lịch ngày mai: ${description}`, `Vy ơi, ngày mai ${description}. Chuẩn bị nhẹ nhàng để ngày mai thật vui nha 💗`));
+    tomorrowStart.setHours(20, 0, 0, 0);
+    events.push(createCalendarEvent(`${key}-evening`, tomorrowStart, 'Chúc em yêu buổi tối thật dịu dàng', `Ngày mai ${description}. Ngủ ngon để mai luôn tràn đầy năng lượng nha 💞`));
   });
   const ics = [
     'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Lich Cua Vy//VI', 'CALSCALE:GREGORIAN',
@@ -351,12 +355,12 @@ function exportCalendarFile() {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = 'lich-cua-vy-nhac-06h-17h.ics';
+  link.download = 'lich-cua-vy-nhac-06h-12h-20h.ics';
   document.body.appendChild(link);
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
-  showToast('Đã tạo lịch nhắc 06:00 và 17:00. Hãy mở file bằng ứng dụng Lịch nhé 📅');
+  showToast('Đã tạo lịch nhắc 06:00, 12:00 và 20:00. Hãy mở file bằng ứng dụng Lịch nhé 📅');
 }
 
 async function enableNotifications() {
@@ -365,7 +369,7 @@ async function enableNotifications() {
     await scheduleNativeReminders(nativeNotifications);
     $('#notificationIcon').textContent = '♥';
     $('#reminderTitle').textContent = 'Nhắc lịch điện thoại đã bật';
-    $('#reminderDescription').textContent = 'Vy sẽ được nhắc lúc 06:00 và 17:00 kể cả khi app đã đóng.';
+    $('#reminderDescription').textContent = 'Vy sẽ nhận lời nhắn lúc 06:00, 12:00 và 20:00 kể cả khi app đã đóng.';
     $('#enableNotification').textContent = 'Đã bật';
     showToast('Đã lập nhắc lịch trên điện thoại cho Vy rồi 💗');
     return;
@@ -382,7 +386,7 @@ async function enableNotifications() {
   try {
     await subscribeToWebPush();
     updateNotificationUi('granted');
-    showToast('Đã bật nhắc 06:00 và 17:00 cho Vy rồi 💗');
+    showToast('Đã bật lời nhắn 06:00, 12:00 và 20:00 cho Vy rồi 💗');
   } catch (error) {
     showToast(error.message || 'Chưa thể bật nhắc lịch. Vy thử lại sau nhé.');
   }
@@ -431,9 +435,11 @@ async function getNativeNotifications() {
   return nativeNotificationsPromise;
 }
 
-function nativeReminderBody(label, date) {
+function nativeReminderBody(moment, label, date) {
   const dateText = displayDate(date, { weekday: 'long', day: 'numeric', month: 'numeric' });
-  return `Vy ơi, ${dateText}: ${label}. Cố lên và nhớ giữ sức nhé 💗`;
+  if (moment === 'morning') return `Chào buổi sáng Vy yêu 🌷 Hôm nay ${dateText}: ${label}. Cố lên và nhớ giữ sức nhé 💗`;
+  if (moment === 'noon') return `Chúc em yêu buổi trưa vui vẻ ☀️ Hôm nay ${label}. Nhớ uống nước và ăn uống đầy đủ nha 💕`;
+  return `Chúc em yêu buổi tối thật dịu dàng 🌙 Ngày mai ${dateText}: ${label}. Ngủ ngon nha 💞`;
 }
 
 async function scheduleNativeReminders(localNotifications) {
@@ -448,26 +454,37 @@ async function scheduleNativeReminders(localNotifications) {
     const date = parseDate(key);
     const code = state.schedule[key];
     const label = reminderDescription(code);
-    const todayAtSix = new Date(date);
-    todayAtSix.setHours(6, 0, 0, 0);
-    if (todayAtSix > now) {
+    const morningAtSix = new Date(date);
+    morningAtSix.setHours(6, 0, 0, 0);
+    if (morningAtSix > now) {
       notifications.push({
         id: 600000 + index,
-        title: 'Lịch hôm nay của Vy 🌷',
-        body: nativeReminderBody(label, date),
-        schedule: { at: todayAtSix },
+        title: '🌷 Chào buổi sáng, Vy yêu',
+        body: nativeReminderBody('morning', label, date),
+        schedule: { at: morningAtSix },
         smallIcon: 'ic_stat_icon_config_sample'
       });
     }
-    const tomorrowAtFive = new Date(date);
-    tomorrowAtFive.setDate(tomorrowAtFive.getDate() - 1);
-    tomorrowAtFive.setHours(17, 0, 0, 0);
-    if (tomorrowAtFive > now) {
+    const noonAtTwelve = new Date(date);
+    noonAtTwelve.setHours(12, 0, 0, 0);
+    if (noonAtTwelve > now) {
       notifications.push({
-        id: 170000 + index,
-        title: 'Lịch ngày mai của Vy 💌',
-        body: nativeReminderBody(label, date),
-        schedule: { at: tomorrowAtFive },
+        id: 1200000 + index,
+        title: '☀️ Chúc em yêu buổi trưa vui vẻ',
+        body: nativeReminderBody('noon', label, date),
+        schedule: { at: noonAtTwelve },
+        smallIcon: 'ic_stat_icon_config_sample'
+      });
+    }
+    const eveningAtEight = new Date(date);
+    eveningAtEight.setDate(eveningAtEight.getDate() - 1);
+    eveningAtEight.setHours(20, 0, 0, 0);
+    if (eveningAtEight > now) {
+      notifications.push({
+        id: 2000000 + index,
+        title: '🌙 Chúc em yêu buổi tối thật dịu dàng',
+        body: nativeReminderBody('evening', label, date),
+        schedule: { at: eveningAtEight },
         smallIcon: 'ic_stat_icon_config_sample'
       });
     }
@@ -485,7 +502,7 @@ function updateNotificationUi(permission = ('Notification' in window ? Notificat
   }
   $('#notificationIcon').textContent = enabled ? '♥' : '♡';
   $('#reminderTitle').textContent = enabled ? 'Nhắc lịch đã bật' : 'Nhắc lịch đang tắt';
-  $('#reminderDescription').textContent = enabled ? 'Vy sẽ được nhắc lúc 06:00 và 17:00, kể cả khi đã đóng app.' : 'Bật thông báo để Vy không bỏ lỡ ca làm nhé.';
+  $('#reminderDescription').textContent = enabled ? 'Vy sẽ nhận lời nhắn lúc 06:00, 12:00 và 20:00, kể cả khi đã đóng app.' : 'Bật thông báo để Vy không bỏ lỡ ca làm nhé.';
   $('#enableNotification').textContent = enabled ? 'Đã bật' : 'Bật nhắc';
 }
 

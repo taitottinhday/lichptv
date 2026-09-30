@@ -19,6 +19,8 @@ let appIconBuffer;
 const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
 const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
 const vapidEmail = process.env.VAPID_EMAIL || 'mailto:admin@example.com';
+const geminiApiKey = process.env.GEMINI_API_KEY?.trim();
+const geminiModel = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 let pushConfigured = false;
 
 if (vapidPublicKey && vapidPrivateKey) {
@@ -109,19 +111,76 @@ async function sendToAllSubscriptions(payload) {
   }));
 }
 
-async function dispatchReminder(kind) {
+const fallbackMessages = {
+  morning: (date, schedule) => `Chào buổi sáng Vy yêu 🌷 Hôm nay ${date} ${schedule}. Chúc em một ngày thật vui vẻ, chuyên nghiệp và luôn giữ nụ cười nha 💗`,
+  noon: (_date, schedule) => `Chúc em yêu buổi trưa thật vui ☀️ Hôm nay ${schedule}. Nhớ uống nước, ăn uống đầy đủ và nghỉ một chút khi có thể nha 💕`,
+  evening: (date, schedule) => `Tối rồi, Vy yêu nhớ nghỉ ngơi nhé 🌙 Ngày mai ${date} ${schedule}. Ngủ ngon để mai luôn tràn đầy năng lượng nha 💞`
+};
+
+const notificationTitles = {
+  morning: '🌷 Chào buổi sáng, Vy yêu',
+  noon: '☀️ Chúc em yêu buổi trưa vui vẻ',
+  evening: '🌙 Chúc em yêu buổi tối thật dịu dàng'
+};
+
+function fallbackMessage(moment, dateText, description) {
+  return fallbackMessages[moment](dateText, description);
+}
+
+async function generateCuteMessage(moment, dateText, description) {
+  const fallback = fallbackMessage(moment, dateText, description);
+  if (!geminiApiKey) return fallback;
+
+  const prompt = [
+    'Viết một lời nhắn thông báo rất ngắn bằng tiếng Việt cho Phan Thị Thảo Vy, người yêu của người gửi.',
+    `Thời điểm: ${moment === 'morning' ? 'buổi sáng' : moment === 'noon' ? 'buổi trưa' : 'buổi tối'}.`,
+    `Lịch: ${moment === 'evening' ? `ngày mai ${dateText}` : `hôm nay ${dateText}`} ${description}.`,
+    'Giọng điệu: cute, ấm áp, tự nhiên, có thể gọi Vy là em yêu, nhưng vẫn lịch sự và chuyên nghiệp.',
+    'Có thể dùng 1–2 emoji. Chỉ trả về đúng một câu, không tiêu đề, không dấu ngoặc kép, tối đa 180 ký tự.'
+  ].join(' ');
+
+  // Chỉ gửi yêu cầu tạo câu chúc chung lên Gemini; lịch và ca làm được ghép cục bộ.
+  const safePrompt = [
+    'Write one short Vietnamese greeting for a loved one.',
+    `Time of day: ${moment === 'morning' ? 'morning' : moment === 'noon' ? 'noon' : 'evening'}.`,
+    'Make it cute, warm, natural, professional, and optionally use one or two emojis.',
+    'Return only one sentence, without a title or quotation marks, under 180 characters.'
+  ].join(' ');
+
+  try {
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(geminiModel)}:generateContent`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': geminiApiKey },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: safePrompt }] }],
+        generationConfig: { temperature: 0.9, maxOutputTokens: 100 }
+      })
+    });
+    if (!response.ok) throw new Error(`Gemini HTTP ${response.status}`);
+    const data = await response.json();
+    const text = data.candidates?.[0]?.content?.parts?.map((part) => part.text || '').join('').trim();
+    if (!text) throw new Error('Gemini không trả về nội dung');
+    return text.replace(/^['"“”]+|['"“”]+$/g, '').replace(/\s+/g, ' ').slice(0, 180);
+  } catch (error) {
+    console.error('Gemini không tạo được lời nhắn mới:', error.message);
+    return fallback;
+  }
+}
+
+async function dispatchDailyReminder(moment) {
   if (!pushConfigured) return;
   const today = vietnamDateKey();
-  const dateKey = kind === 'tomorrow' ? addDays(today, 1) : today;
+  const dateKey = moment === 'evening' ? addDays(today, 1) : today;
   const code = defaultSchedule[dateKey];
-  const description = shiftDescription(code);
-  if (!description) return;
-
-  const isTomorrow = kind === 'tomorrow';
+  const description = shiftDescription(code) || 'chưa có dữ liệu lịch';
+  const dateText = prettyDate(dateKey);
+  const greeting = await generateCuteMessage(moment, dateText, description);
+  const scheduleText = moment === 'evening' ? `Ngày mai ${dateText} ${description}.` : `Hôm nay ${dateText} ${description}.`;
+  const body = `${greeting} ${scheduleText}`;
   const payload = JSON.stringify({
-    title: isTomorrow ? 'Lịch ngày mai của Vy 💌' : 'Lịch hôm nay của Vy 🌷',
-    body: `Vy ơi, ${isTomorrow ? 'ngày mai' : 'hôm nay'} ${prettyDate(dateKey)} ${description}. Cố lên nha 💗`,
-    tag: `lich-${kind}-${dateKey}`,
+    title: notificationTitles[moment],
+    body,
+    tag: `lich-${moment}-${dateKey}`,
     url: '/'
   });
   await sendToAllSubscriptions(payload);
@@ -129,7 +188,7 @@ async function dispatchReminder(kind) {
 
 app.use(express.json({ limit: '32kb' }));
 
-app.get('/api/health', (_request, response) => response.json({ ok: true, pushConfigured, database: Boolean(pool) }));
+app.get('/api/health', (_request, response) => response.json({ ok: true, pushConfigured, database: Boolean(pool), geminiConfigured: Boolean(geminiApiKey) }));
 
 app.get('/api/app-icon', async (_request, response) => {
   if (!/^https:\/\//i.test(AVATAR_IMAGE_URL)) {
@@ -169,7 +228,7 @@ app.post('/api/push/subscribe', async (request, response) => {
     await saveSubscription(subscription);
     await webpush.sendNotification(subscription, JSON.stringify({
       title: 'Đã bật nhắc lịch cho Vy 🌷',
-      body: 'Từ giờ Vy sẽ nhận lịch hôm nay lúc 06:00 và lịch ngày mai lúc 17:00.',
+      body: 'Từ giờ Vy sẽ nhận lời nhắn dễ thương lúc 06:00, 12:00 và 20:00 mỗi ngày.',
       tag: 'lich-cua-vy-welcome',
       url: '/'
     }));
@@ -186,8 +245,9 @@ app.use((request, response) => {
   return response.sendFile(resolve(distRoot, 'index.html'));
 });
 
-cron.schedule('0 6 * * *', () => dispatchReminder('today'), { timezone: 'Asia/Ho_Chi_Minh' });
-cron.schedule('0 17 * * *', () => dispatchReminder('tomorrow'), { timezone: 'Asia/Ho_Chi_Minh' });
+cron.schedule('0 6 * * *', () => dispatchDailyReminder('morning'), { timezone: 'Asia/Ho_Chi_Minh' });
+cron.schedule('0 12 * * *', () => dispatchDailyReminder('noon'), { timezone: 'Asia/Ho_Chi_Minh' });
+cron.schedule('0 20 * * *', () => dispatchDailyReminder('evening'), { timezone: 'Asia/Ho_Chi_Minh' });
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`Lịch của Vy đang chạy tại cổng ${port}. Push: ${pushConfigured ? 'đã cấu hình' : 'chưa cấu hình'}.`);

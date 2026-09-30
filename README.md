@@ -24,13 +24,18 @@ Khi deploy Railway, Railway tự cấp biến `PORT`; `server.mjs` đã cấu h�
 
 Điện thoại và máy tính cần cùng mạng Wi-Fi. Mở địa chỉ IP của máy tính với cổng `4173` trên điện thoại, sau đó chọn “Thêm vào màn hình chính”.
 
-Trong app, bấm **Tải lịch vào điện thoại** để tải file `lich-cua-vy-nhac-06h-17h.ics`. Mở file bằng ứng dụng Lịch và xác nhận thêm lịch. File này tạo nhắc tự động mỗi ngày lúc **06:00** cho lịch hôm nay và **17:00** cho lịch ngày mai, kể cả khi app đã đóng.
+Trong app, bấm **Tải lịch vào điện thoại** để tải file `lich-cua-vy-nhac-06h-12h-20h.ics`. Mở file bằng ứng dụng Lịch và xác nhận thêm lịch. File này tạo 3 lời nhắn mỗi ngày lúc **06:00**, **12:00** và **20:00**, kể cả khi app đã đóng.
 
 ## Thông báo trực tiếp từ app
 
-App có thể gửi Web Push trực tiếp cho iPhone lúc **06:00** và **17:00** theo giờ Việt Nam. Trên Railway, tạo thêm một dịch vụ **PostgreSQL** trong cùng project và liên kết biến `DATABASE_URL` cho service `lichptv`.
+App có thể gửi Web Push trực tiếp cho iPhone lúc **06:00**, **12:00** và **20:00** theo giờ Việt Nam. Trên Railway, tạo thêm một dịch vụ **PostgreSQL** trong cùng project và liên kết biến `DATABASE_URL` cho service `lichptv`.
 
-Sau khi bấm **Bật nhắc**, app sẽ gửi ngay một thông báo chào mừng để xác nhận iPhone đã đăng ký thành công. Lịch tự động chỉ chạy ở hai mốc **06:00** và **17:00**.
+Sau khi bấm **Bật nhắc**, app sẽ gửi ngay một thông báo chào mừng để xác nhận iPhone đã đăng ký thành công. Lịch tự động chạy ở ba mốc **06:00**, **12:00** và **20:00**. Các câu nhắn được Gemini tạo mới khi đã cấu hình `GEMINI_API_KEY`; nếu chưa có key hoặc Gemini lỗi, app tự dùng câu dự phòng.
+
+Để bật Gemini, trong Railway → service `lichptv` → **Variables**, thêm:
+
+- `GEMINI_API_KEY`: API key lấy từ Google AI Studio.
+- `GEMINI_MODEL`: để trống để dùng `gemini-2.5-flash`, hoặc nhập model khác được tài khoản hỗ trợ.
 
 ### Đổi ảnh của Vy
 
@@ -58,7 +63,7 @@ Redeploy app, sau đó trên iPhone mở app từ **Màn hình chính** và bấ
 
 ## Đóng gói thành app iPhone có thông báo native
 
-Để app nhắc lúc 06:00 và 17:00 kể cả khi đã đóng, cần build bằng **macOS + Xcode**. Windows không thể xuất hoặc ký file iOS `.ipa`.
+Để app nhắc lúc 06:00, 12:00 và 20:00 kể cả khi đã đóng, cần build bằng **macOS + Xcode**. Windows không thể xuất hoặc ký file iOS `.ipa`.
 
 ```bash
 npm install
@@ -72,7 +77,8 @@ Trong Xcode, chọn iPhone của bạn làm thiết bị chạy, bật **Signing
 
 Sau khi bấm nút **Bật nhắc** trong app, app sẽ lập thông báo cục bộ:
 
-- 06:00: lịch hôm nay của Vy.
-- 17:00: lịch ngày mai của Vy.
+- 06:00: lời chúc buổi sáng và lịch hôm nay của Vy.
+- 12:00: lời chúc buổi trưa và nhắc Vy giữ sức.
+- 20:00: lời chúc buổi tối và lịch ngày mai của Vy.
 
 > Lưu ý: tài khoản demo đang được kiểm tra ở phía giao diện để dùng thử. Khi đưa lên Internet hoặc dùng thật, cần chuyển xác thực sang máy chủ và lưu mật khẩu dạng hash.
