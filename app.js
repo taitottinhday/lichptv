@@ -694,7 +694,7 @@ function renderOverview() {
   const hour = new Date().getHours();
   const greeting = hour < 11 ? 'Chào buổi sáng, Vy yêu 🌤️' : hour < 18 ? 'Chào buổi chiều, Vy yêu 🌼' : 'Chào buổi tối, Vy yêu 🌙';
   $('#welcomeTitle').textContent = greeting;
-  $('#currentGreeting').textContent = 'Phan Thị Thảo Vy · số 8';
+  $('#currentGreeting').textContent = 'Phan Thị Thảo Vy · số 6';
   $('#heroMessage').textContent = todayCode === 'D' || todayCode === 'N' ? 'Nàng nhớ giữ sức, làm việc vui vẻ và tan ca bình an để về với anh iu nhé.' : 'Hôm nay nàng có thể thong thả một chút, nhớ chăm sóc bản thân và nhớ anh iu nha.';
 }
 
