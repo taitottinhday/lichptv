@@ -186,6 +186,17 @@ async function dispatchDailyReminder(moment) {
   await sendToAllSubscriptions(payload);
 }
 
+async function dispatchTestGreeting() {
+  if (!pushConfigured || vietnamDateKey() !== '2026-09-30') return;
+  const greeting = await generateCuteMessage('morning', '', '');
+  await sendToAllSubscriptions(JSON.stringify({
+    title: '💌 Lời chúc thử dành cho Vy',
+    body: `${greeting} Đây là lời nhắn thử từ Lịch của Vy nha 💗`,
+    tag: 'lich-cua-vy-test-1018-2026-09-30',
+    url: '/'
+  }));
+}
+
 app.use(express.json({ limit: '32kb' }));
 
 app.get('/api/health', (_request, response) => response.json({ ok: true, pushConfigured, database: Boolean(pool), geminiConfigured: Boolean(geminiApiKey) }));
@@ -248,6 +259,8 @@ app.use((request, response) => {
 cron.schedule('0 6 * * *', () => dispatchDailyReminder('morning'), { timezone: 'Asia/Ho_Chi_Minh' });
 cron.schedule('0 12 * * *', () => dispatchDailyReminder('noon'), { timezone: 'Asia/Ho_Chi_Minh' });
 cron.schedule('0 20 * * *', () => dispatchDailyReminder('evening'), { timezone: 'Asia/Ho_Chi_Minh' });
+// Bản nháp một lần theo yêu cầu: 10:18 ngày 30/09/2026, giờ Việt Nam.
+cron.schedule('18 10 * * *', dispatchTestGreeting, { timezone: 'Asia/Ho_Chi_Minh' });
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`Lịch của Vy đang chạy tại cổng ${port}. Push: ${pushConfigured ? 'đã cấu hình' : 'chưa cấu hình'}.`);
