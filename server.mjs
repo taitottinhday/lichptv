@@ -4,6 +4,7 @@ import pg from 'pg';
 import webpush from 'web-push';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import sharp from 'sharp';
 import { defaultSchedule } from './schedule-data.js';
 import { AVATAR_IMAGE_URL } from './avatar-config.js';
 
@@ -14,6 +15,7 @@ const distRoot = resolve(fileURLToPath(new URL('./dist', import.meta.url)));
 const databaseUrl = process.env.DATABASE_URL;
 const pool = databaseUrl ? new Pool({ connectionString: databaseUrl, ssl: databaseUrl.includes('localhost') ? false : { rejectUnauthorized: false } }) : null;
 const memorySubscriptions = new Map();
+let appIconBuffer;
 const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
 const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
 const vapidEmail = process.env.VAPID_EMAIL || 'mailto:admin@example.com';
@@ -129,11 +131,27 @@ app.use(express.json({ limit: '32kb' }));
 
 app.get('/api/health', (_request, response) => response.json({ ok: true, pushConfigured, database: Boolean(pool) }));
 
-app.get('/api/app-icon', (_request, response) => {
+app.get('/api/app-icon', async (_request, response) => {
   if (!/^https:\/\//i.test(AVATAR_IMAGE_URL)) {
     return response.status(404).send('Chưa cấu hình ảnh đại diện.');
   }
-  return response.redirect(AVATAR_IMAGE_URL);
+  try {
+    if (!appIconBuffer) {
+      const imageResponse = await fetch(AVATAR_IMAGE_URL, {
+        headers: { 'user-agent': 'LichVy/1.0 image fetcher' }
+      });
+      if (!imageResponse.ok) throw new Error(`Ảnh trả về HTTP ${imageResponse.status}`);
+      const source = Buffer.from(await imageResponse.arrayBuffer());
+      appIconBuffer = await sharp(source)
+        .resize(1024, 1024, { fit: 'contain', background: '#ffe4ec' })
+        .jpeg({ quality: 92 })
+        .toBuffer();
+    }
+    return response.type('image/jpeg').set('Cache-Control', 'public, max-age=31536000, immutable').send(appIconBuffer);
+  } catch (error) {
+    console.error('Không tạo được icon từ ảnh Vy:', error.message);
+    return response.status(502).send('Không tải được ảnh đại diện.');
+  }
 });
 
 app.get('/api/push/public-key', (_request, response) => {
