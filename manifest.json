@@ -9,9 +9,9 @@
   "lang": "vi",
   "icons": [
     {
-      "src": "/app-icon.png?v=1",
+      "src": "/app-icon.jpg?v=1",
       "sizes": "512x512",
-      "type": "image/png",
+      "type": "image/jpeg",
       "purpose": "any"
     }
   ]
