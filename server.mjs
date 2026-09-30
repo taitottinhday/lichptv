@@ -5,6 +5,7 @@ import webpush from 'web-push';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defaultSchedule } from './schedule-data.js';
+import { AVATAR_IMAGE_URL } from './avatar-config.js';
 
 const { Pool } = pg;
 const app = express();
@@ -127,6 +128,13 @@ async function dispatchReminder(kind) {
 app.use(express.json({ limit: '32kb' }));
 
 app.get('/api/health', (_request, response) => response.json({ ok: true, pushConfigured, database: Boolean(pool) }));
+
+app.get('/api/app-icon', (_request, response) => {
+  if (!/^https:\/\//i.test(AVATAR_IMAGE_URL)) {
+    return response.status(404).send('Chưa cấu hình ảnh đại diện.');
+  }
+  return response.redirect(AVATAR_IMAGE_URL);
+});
 
 app.get('/api/push/public-key', (_request, response) => {
   if (!pushConfigured) return response.status(503).json({ error: 'Push notifications are not configured.' });
