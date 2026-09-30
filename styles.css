@@ -117,12 +117,20 @@ h3 { margin-bottom: 4px; font-size: 16px; }
 .admin-subtitle { margin: 0; color: var(--muted); font-size: 13px; }
 .admin-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; padding-top: 18px; border-top: 1px dashed #eedce3; }
 .food-request-list { display: grid; gap: 12px; margin-top: 22px; }
-.food-request-item { display: flex; align-items: start; justify-content: space-between; gap: 15px; padding: 16px; border: 1px solid #f0dce3; border-radius: 18px; background: #fff9fb; }
+.food-request-item { display: flex; align-items: start; justify-content: space-between; flex-wrap: wrap; gap: 15px; padding: 16px; border: 1px solid #f0dce3; border-radius: 18px; background: #fff9fb; }
+.food-request-item > div:first-child { flex: 1 1 260px; }
 .food-request-item h3 { margin: 6px 0; color: var(--ink); }
 .food-request-item p { margin: 0 0 7px; color: #8e6472; font-size: 12px; }
 .food-request-item small { color: #aaa0a5; font-size: 10px; }
 .request-category { color: var(--pink-dark); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .request-status { padding: 8px; border: 1px solid #eadce2; border-radius: 10px; background: #fff; color: #765563; font: inherit; font-size: 11px; }
+.response-panel { flex: 1 1 100%; padding-top: 13px; border-top: 1px dashed #efdce3; }
+.response-sent { margin: 0 0 10px !important; color: var(--pink-dark) !important; font-weight: 700; }
+.quick-responses { display: flex; flex-wrap: wrap; gap: 7px; }
+.quick-response { padding: 7px 10px; border: 1px solid #f0cbd7; border-radius: 999px; background: #fff; color: var(--pink-dark); font: inherit; font-size: 11px; }
+.quick-response:hover { background: var(--pink-soft); }
+.response-note { width: 100%; min-height: 52px; margin-top: 9px; padding: 9px; border: 1px solid #eadce2; border-radius: 11px; resize: vertical; font: inherit; font-size: 11px; }
+.response-send { margin-top: 8px; padding: 9px 12px; font-size: 11px; }
 .food-request-item.bought { background: #fff9ec; }
 .food-request-item.done { opacity: .65; }
 .empty-request { margin: 20px 0 0; color: var(--muted); font-size: 13px; text-align: center; }

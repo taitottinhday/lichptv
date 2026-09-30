@@ -53,6 +53,8 @@ Nên đặt riêng hai biến trên Railway để đổi thông tin đăng nhậ
 
 Sau khi vào góc nhận request, anh bấm **Bật thông báo nhận request** một lần. Khi Vy gửi món, thông báo sẽ hiện trên màn hình khóa của anh; trong góc này anh cũng có thể đánh dấu **Đang chờ mua**, **Anh mua rồi** hoặc **Đã gửi Vy**.
 
+Trong từng request, anh có thể bấm **Mua bây giờ**, **Mua sau**, **Tối đi làm về mua** hoặc ghi một lời nhắn riêng rồi bấm **Gửi phản hồi cho Vy**. Vy sẽ nhận phản hồi bằng thông báo push trên điện thoại.
+
 ### Đổi ảnh của Vy
 
 Mở file `avatar-config.js`, thay phần `DAN_LINK_ANH_CUA_VY_VAO_DAY` bằng đường dẫn HTTPS trực tiếp tới ảnh, ví dụ:

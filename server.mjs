@@ -51,8 +51,10 @@ const databaseReady = pool
       item TEXT NOT NULL,
       note TEXT NOT NULL DEFAULT '',
       status TEXT NOT NULL DEFAULT 'pending',
+      response TEXT NOT NULL DEFAULT '',
+      responded_at TIMESTAMPTZ,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    )`)
+    ); ALTER TABLE food_requests ADD COLUMN IF NOT EXISTS response TEXT NOT NULL DEFAULT ''; ALTER TABLE food_requests ADD COLUMN IF NOT EXISTS responded_at TIMESTAMPTZ;`)
   : Promise.resolve();
 
 function vietnamDateKey(date = new Date()) {
@@ -290,7 +292,7 @@ app.post('/api/food-requests', async (request, response) => {
       );
       requestRecord = result.rows[0];
     } else {
-      requestRecord = { id: ++memoryFoodRequestId, category, item, note, status: 'pending', created_at: new Date().toISOString() };
+      requestRecord = { id: ++memoryFoodRequestId, category, item, note, status: 'pending', response: '', responded_at: null, created_at: new Date().toISOString() };
       memoryFoodRequests.unshift(requestRecord);
     }
     await sendToRole('admin', JSON.stringify({
@@ -311,7 +313,7 @@ app.get('/api/food-requests', async (request, response) => {
   try {
     if (pool) {
       await databaseReady;
-      const result = await pool.query('SELECT id, category, item, note, status, created_at FROM food_requests ORDER BY created_at DESC LIMIT 50');
+      const result = await pool.query('SELECT id, category, item, note, status, response, responded_at, created_at FROM food_requests ORDER BY created_at DESC LIMIT 50');
       return response.json({ requests: result.rows });
     }
     return response.json({ requests: memoryFoodRequests.slice(0, 50) });
@@ -337,6 +339,44 @@ app.patch('/api/food-requests/:id', async (request, response) => {
   } catch (error) {
     console.error('Không cập nhật được request món ăn:', error.message);
     return response.status(500).json({ error: 'Chưa cập nhật được request.' });
+  }
+});
+
+app.post('/api/food-requests/:id/respond', async (request, response) => {
+  if (!isAdminRequest(request)) return response.status(401).json({ error: 'Chưa đăng nhập tài khoản nhận request.' });
+  const responseText = String(request.body?.response || '').trim().slice(0, 500);
+  const status = ['pending', 'bought', 'done'].includes(request.body?.status) ? request.body.status : 'pending';
+  if (!responseText) return response.status(400).json({ error: 'Hãy nhập lời phản hồi cho Vy.' });
+  try {
+    let requestRecord;
+    if (pool) {
+      await databaseReady;
+      const result = await pool.query(
+        `UPDATE food_requests SET response = $1, responded_at = NOW(), status = $2
+         WHERE id = $3
+         RETURNING id, item, note`,
+        [responseText, status, request.params.id]
+      );
+      requestRecord = result.rows[0];
+    } else {
+      requestRecord = memoryFoodRequests.find((entry) => String(entry.id) === String(request.params.id));
+      if (requestRecord) {
+        requestRecord.response = responseText;
+        requestRecord.responded_at = new Date().toISOString();
+        requestRecord.status = status;
+      }
+    }
+    if (!requestRecord) return response.status(404).json({ error: 'Không tìm thấy request món ăn.' });
+    await sendToRole('vy', JSON.stringify({
+      title: '💌 Anh phản hồi món của Vy',
+      body: `${responseText} · Món em chọn: ${requestRecord.item} 💗`,
+      tag: `food-response-${requestRecord.id}-${Date.now()}`,
+      url: '/'
+    }));
+    return response.json({ ok: true });
+  } catch (error) {
+    console.error('Không gửi được phản hồi món ăn:', error.message);
+    return response.status(500).json({ error: 'Chưa gửi được phản hồi cho Vy.' });
   }
 });
 

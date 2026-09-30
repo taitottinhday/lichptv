@@ -15,6 +15,12 @@ const FOOD_MENU = [
   { category: 'Bánh & ăn vặt', emoji: '🍰', items: ['Bánh flan', 'Bánh su kem', 'Bánh tiramisu', 'Bánh bông lan trứng muối', 'Bánh crepe', 'Bánh mochi', 'Bánh cá', 'Bánh gạo cay', 'Bánh tráng trộn', 'Bánh tráng cuốn', 'Khoai tây chiên', 'Xúc xích', 'Cá viên chiên', 'Há cảo', 'Nem chua rán', 'Chè', 'Sữa chua dẻo', 'Kem'] }
 ];
 
+const QUICK_RESPONSES = {
+  now: { text: 'Anh sẽ mua cho em bây giờ nha 💗', status: 'bought' },
+  later: { text: 'Để anh sắp xếp rồi mua cho em sau nha 💌', status: 'pending' },
+  evening: { text: 'Tối đi làm về anh mua cho em nha 🌙', status: 'pending' }
+};
+
 const state = {
   schedule: loadSchedule(),
   visibleMonth: new Date(2026, 9, 1),
@@ -30,6 +36,10 @@ let nativeNotificationsPromise;
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
+
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character]));
+}
 
 function loadSchedule() {
   try {
@@ -153,7 +163,14 @@ async function loadFoodRequests() {
     const response = await fetch('/api/food-requests', { headers: { Authorization: `Bearer ${token}` } });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Chưa tải được request.');
-    list.innerHTML = data.requests.length ? data.requests.map((request) => `
+    const displayRequests = data.requests.map((request) => ({
+      ...request,
+      category: escapeHtml(request.category),
+      item: escapeHtml(request.item),
+      note: escapeHtml(request.note),
+      response: escapeHtml(request.response)
+    }));
+    list.innerHTML = displayRequests.length ? displayRequests.map((request) => `
       <article class="food-request-item ${request.status}">
         <div><span class="request-category">${request.category}</span><h3>${request.item}</h3>${request.note ? `<p>Ghi chú: ${request.note}</p>` : ''}<small>${new Date(request.created_at).toLocaleString('vi-VN')}</small></div>
         <select class="request-status" data-request-id="${request.id}" aria-label="Trạng thái request">
@@ -164,6 +181,31 @@ async function loadFoodRequests() {
       </article>
     `).join('') : '<p class="empty-request">Chưa có món nào, chờ Vy chọn món thật ngon nha 💗</p>';
     $$('.request-status').forEach((select) => select.addEventListener('change', () => updateFoodRequest(select.dataset.requestId, select.value)));
+    data.requests.forEach((request) => {
+      const select = document.querySelector(`.request-status[data-request-id="${request.id}"]`);
+      if (!select) return;
+      const panel = document.createElement('div');
+      panel.className = 'response-panel';
+      panel.innerHTML = `
+        ${request.response ? `<p class="response-sent">Đã phản hồi: ${escapeHtml(request.response)}</p>` : ''}
+        <div class="quick-responses">
+          <button type="button" class="quick-response" data-response-key="now">Mua bây giờ</button>
+          <button type="button" class="quick-response" data-response-key="later">Mua sau</button>
+          <button type="button" class="quick-response" data-response-key="evening">Tối đi làm về mua</button>
+        </div>
+        <textarea class="response-note" id="response-note-${request.id}" rows="2" placeholder="Anh ghi chú thêm cho Vy ở đây..."></textarea>
+        <button type="button" class="button button-primary response-send" data-request-id="${request.id}">Gửi phản hồi cho Vy 💌</button>
+      `;
+      select.parentElement.appendChild(panel);
+      panel.querySelectorAll('.quick-response').forEach((button) => button.addEventListener('click', () => {
+        const quick = QUICK_RESPONSES[button.dataset.responseKey];
+        sendFoodResponse(request.id, quick.text, quick.status);
+      }));
+      panel.querySelector('.response-send').addEventListener('click', () => {
+        const note = panel.querySelector('.response-note').value.trim();
+        sendFoodResponse(request.id, note, 'pending');
+      });
+    });
   } catch (error) {
     list.innerHTML = `<p class="empty-request">${error.message}</p>`;
   }
@@ -177,6 +219,27 @@ async function updateFoodRequest(id, status) {
     body: JSON.stringify({ status })
   });
   loadFoodRequests();
+}
+
+async function sendFoodResponse(id, responseText, status = 'pending') {
+  if (!responseText) {
+    showToast('Anh hãy ghi lời nhắn cho Vy trước nha 💕');
+    return;
+  }
+  const token = sessionStorage.getItem(ADMIN_TOKEN_KEY);
+  try {
+    const response = await fetch(`/api/food-requests/${id}/respond`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ response: responseText, status })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'Chưa gửi được phản hồi cho Vy.');
+    showToast('Vy sẽ nhận được phản hồi của anh ngay 💌');
+    loadFoodRequests();
+  } catch (error) {
+    showToast(error.message);
+  }
 }
 
 function applyAvatarImage() {
