@@ -576,7 +576,7 @@ async function enableNotifications() {
     await scheduleNativeReminders(nativeNotifications);
     $('#notificationIcon').textContent = '♥';
     $('#reminderTitle').textContent = 'Nhắc lịch điện thoại đã bật';
-    $('#reminderDescription').textContent = 'Vy sẽ nhận lời nhắn lúc 06:00, 12:00 và 20:00 kể cả khi app đã đóng.';
+    $('#reminderDescription').textContent = '';
     $('#enableNotification').textContent = 'Đã bật';
     showToast('Đã lập nhắc lịch trên điện thoại cho Vy rồi 💗');
     return;
@@ -711,7 +711,7 @@ function updateNotificationUi(permission = ('Notification' in window ? Notificat
   }
   $('#notificationIcon').textContent = enabled ? '♥' : '♡';
   $('#reminderTitle').textContent = enabled ? 'Nhắc lịch đã bật' : 'Nhắc lịch đang tắt';
-  $('#reminderDescription').textContent = enabled ? 'Vy sẽ nhận lời nhắn lúc 06:00, 12:00 và 20:00, kể cả khi đã đóng app.' : 'Bật thông báo để Vy không bỏ lỡ ca làm nhé.';
+  $('#reminderDescription').textContent = enabled ? '' : 'Bật thông báo để Vy không bỏ lỡ ca làm nhé.';
   $('#enableNotification').textContent = enabled ? 'Đã bật' : 'Bật nhắc';
 }
 
