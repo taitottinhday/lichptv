@@ -3,16 +3,25 @@ import { AVATAR_IMAGE_URL } from './avatar-config.js';
 
 const STORAGE_KEY = 'lich-cua-vy-schedule-v2';
 const AUTH_KEY = 'lich-cua-vy-authenticated-v1';
+const ADMIN_TOKEN_KEY = 'lich-cua-vy-admin-token-v1';
 const DEMO_USERNAME = 'phanthithaovy';
 const DEMO_PASSWORD = '261004';
 const START_DATE = '2026-09-26';
 const END_DATE = '2026-10-25';
+
+const FOOD_MENU = [
+  { category: 'Nước uống', emoji: '🥤', items: ['Trà sữa truyền thống', 'Trà sữa cốm', 'Trà sữa khoai môn', 'Trà sữa matcha', 'Trà sữa socola', 'Trà sữa ô long', 'Trà đào cam sả', 'Trà vải', 'Trà dâu', 'Trà chanh', 'Nước sen dừa', 'Nước dừa tắc', 'Nước cam', 'Nước ép dưa hấu', 'Nước ép táo', 'Sữa tươi trân châu đường đen', 'Cacao đá', 'Matcha latte', 'Cà phê sữa', 'Nước suối'] },
+  { category: 'Món ăn', emoji: '🍱', items: ['Cơm gà', 'Cơm tấm sườn bì chả', 'Cơm chiên dương châu', 'Phở bò', 'Phở gà', 'Bún bò Huế', 'Bún chả', 'Bún thịt nướng', 'Mì cay', 'Mì trộn', 'Mì xào bò', 'Bánh mì thịt', 'Bánh mì xíu mại', 'Bánh cuốn', 'Bánh xèo', 'Cháo gà', 'Gà rán', 'Gà sốt cay', 'Pizza', 'Sushi', 'Kimbap', 'Tokbokki', 'Salad', 'Hamburger'] },
+  { category: 'Bánh & ăn vặt', emoji: '🍰', items: ['Bánh flan', 'Bánh su kem', 'Bánh tiramisu', 'Bánh bông lan trứng muối', 'Bánh crepe', 'Bánh mochi', 'Bánh cá', 'Bánh gạo cay', 'Bánh tráng trộn', 'Bánh tráng cuốn', 'Khoai tây chiên', 'Xúc xích', 'Cá viên chiên', 'Há cảo', 'Nem chua rán', 'Chè', 'Sữa chua dẻo', 'Kem'] }
+];
 
 const state = {
   schedule: loadSchedule(),
   visibleMonth: new Date(2026, 9, 1),
   selectedDate: null,
   selectedCode: null,
+  selectedFood: null,
+  selectedFoodCategory: null,
   toastTimer: null,
   countdownTimer: null
 };
@@ -33,6 +42,141 @@ function loadSchedule() {
 
 function saveSchedule() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state.schedule));
+}
+
+function renderFoodMenu() {
+  const container = $('#foodCategories');
+  if (!container) return;
+  container.innerHTML = FOOD_MENU.map((group) => `
+    <div class="food-category">
+      <h3>${group.emoji} ${group.category}</h3>
+      <div class="food-options">
+        ${group.items.map((item) => `<button class="food-option" type="button" data-food="${item}" data-category="${group.category}">${item}</button>`).join('')}
+      </div>
+    </div>
+  `).join('');
+  $$('.food-option').forEach((button) => button.addEventListener('click', () => {
+    state.selectedFood = button.dataset.food;
+    state.selectedFoodCategory = button.dataset.category;
+    $$('.food-option').forEach((item) => item.classList.toggle('selected', item === button));
+    $('#foodRequestStatus').textContent = `Em đang chọn: ${state.selectedFood} 💗`;
+  }));
+}
+
+async function submitFoodRequest() {
+  const note = $('#foodNote').value.trim();
+  if (!state.selectedFood && !note) {
+    $('#foodRequestStatus').textContent = 'Em chọn một món hoặc ghi chú món em thích trước nha 💕';
+    return;
+  }
+  const button = $('#sendFoodRequest');
+  button.disabled = true;
+  try {
+    const response = await fetch('/api/food-requests', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        category: state.selectedFoodCategory || 'Món em ghi chú',
+        item: state.selectedFood || 'Món theo ghi chú',
+        note
+      })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'Chưa gửi được request món ăn.');
+    $('#foodRequestStatus').textContent = 'Anh nhận được rồi nha, để anh đi mua cho em 💌';
+    $('#foodNote').value = '';
+    state.selectedFood = null;
+    state.selectedFoodCategory = null;
+    $$('.food-option').forEach((item) => item.classList.remove('selected'));
+    showToast('Đã gửi món em thích cho anh rồi 💗');
+  } catch (error) {
+    $('#foodRequestStatus').textContent = error.message;
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function showAdminScreen() {
+  $('#loginScreen').hidden = true;
+  $('#appShell').classList.remove('is-unlocked');
+  $('#appShell').hidden = true;
+  $('#adminScreen').hidden = false;
+  loadFoodRequests();
+}
+
+function leaveAdminScreen() {
+  sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+  $('#adminScreen').hidden = true;
+  $('#appShell').hidden = false;
+  $('#loginScreen').hidden = false;
+  $('#adminLoginPanel').hidden = true;
+  $('#loginForm').hidden = false;
+}
+
+async function handleAdminLogin(event) {
+  event.preventDefault();
+  const error = $('#adminLoginError');
+  try {
+    const response = await fetch('/api/admin/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: $('#adminUsername').value.trim(), password: $('#adminPassword').value })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Đăng nhập chưa thành công.');
+    sessionStorage.setItem(ADMIN_TOKEN_KEY, data.token);
+    error.textContent = '';
+    showAdminScreen();
+  } catch (loginError) {
+    error.textContent = loginError.message;
+  }
+}
+
+async function enableAdminNotifications() {
+  const token = sessionStorage.getItem(ADMIN_TOKEN_KEY);
+  if (!token) return;
+  try {
+    await subscribeToWebPush('admin', token);
+    $('#enableAdminNotifications').textContent = 'Đã bật thông báo nhận request';
+    showToast('Từ giờ anh sẽ nhận thông báo khi Vy chọn món 💌');
+  } catch (error) {
+    showToast(error.message || 'Chưa bật được thông báo nhận request.');
+  }
+}
+
+async function loadFoodRequests() {
+  const token = sessionStorage.getItem(ADMIN_TOKEN_KEY);
+  if (!token) return;
+  const list = $('#foodRequestList');
+  list.innerHTML = '<p class="empty-request">Đang tải các món Vy muốn ăn...</p>';
+  try {
+    const response = await fetch('/api/food-requests', { headers: { Authorization: `Bearer ${token}` } });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Chưa tải được request.');
+    list.innerHTML = data.requests.length ? data.requests.map((request) => `
+      <article class="food-request-item ${request.status}">
+        <div><span class="request-category">${request.category}</span><h3>${request.item}</h3>${request.note ? `<p>Ghi chú: ${request.note}</p>` : ''}<small>${new Date(request.created_at).toLocaleString('vi-VN')}</small></div>
+        <select class="request-status" data-request-id="${request.id}" aria-label="Trạng thái request">
+          <option value="pending" ${request.status === 'pending' ? 'selected' : ''}>Đang chờ mua</option>
+          <option value="bought" ${request.status === 'bought' ? 'selected' : ''}>Anh mua rồi</option>
+          <option value="done" ${request.status === 'done' ? 'selected' : ''}>Đã gửi Vy</option>
+        </select>
+      </article>
+    `).join('') : '<p class="empty-request">Chưa có món nào, chờ Vy chọn món thật ngon nha 💗</p>';
+    $$('.request-status').forEach((select) => select.addEventListener('change', () => updateFoodRequest(select.dataset.requestId, select.value)));
+  } catch (error) {
+    list.innerHTML = `<p class="empty-request">${error.message}</p>`;
+  }
+}
+
+async function updateFoodRequest(id, status) {
+  const token = sessionStorage.getItem(ADMIN_TOKEN_KEY);
+  await fetch(`/api/food-requests/${id}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ status })
+  });
+  loadFoodRequests();
 }
 
 function applyAvatarImage() {
@@ -399,7 +543,7 @@ function urlBase64ToUint8Array(value) {
   return Uint8Array.from(bytes, (character) => character.charCodeAt(0));
 }
 
-async function subscribeToWebPush() {
+async function subscribeToWebPush(role = 'vy', adminToken = '') {
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
     throw new Error('Thiết bị này chưa hỗ trợ nhắc nền. Hãy mở app từ Màn hình chính trên iPhone.');
   }
@@ -421,10 +565,12 @@ async function subscribeToWebPush() {
       applicationServerKey: urlBase64ToUint8Array(publicKey)
     });
   }
+  const headers = { 'Content-Type': 'application/json' };
+  if (role === 'admin') headers.Authorization = `Bearer ${adminToken}`;
   const subscribeResponse = await fetch('/api/push/subscribe', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(subscription)
+    headers,
+    body: JSON.stringify(role === 'admin' ? { subscription, role } : subscription)
   });
   if (!subscribeResponse.ok) throw new Error('Không lưu được thiết bị nhận nhắc. Vy thử lại nhé.');
 }
@@ -508,6 +654,21 @@ function updateNotificationUi(permission = ('Notification' in window ? Notificat
 
 function bindEvents() {
   $('#loginForm').addEventListener('submit', handleLogin);
+  $('#showAdminLogin').addEventListener('click', () => {
+    $('#loginForm').hidden = true;
+    $('#showAdminLogin').hidden = true;
+    $('#adminLoginPanel').hidden = false;
+  });
+  $('#backToVyLogin').addEventListener('click', () => {
+    $('#loginForm').hidden = false;
+    $('#showAdminLogin').hidden = false;
+    $('#adminLoginPanel').hidden = true;
+  });
+  $('#adminLoginForm').addEventListener('submit', handleAdminLogin);
+  $('#adminLogout').addEventListener('click', leaveAdminScreen);
+  $('#enableAdminNotifications').addEventListener('click', enableAdminNotifications);
+  $('#refreshFoodRequests').addEventListener('click', loadFoodRequests);
+  $('#sendFoodRequest').addEventListener('click', submitFoodRequest);
   $('#logoutButton').addEventListener('click', handleLogout);
   $('#enableNotification').addEventListener('click', enableNotifications);
   $('#exportCalendar').addEventListener('click', exportCalendarFile);
@@ -543,6 +704,7 @@ function bindEvents() {
 
 function init() {
   applyAvatarImage();
+  renderFoodMenu();
   bindEvents();
   setAuthenticated(localStorage.getItem(AUTH_KEY) === 'true');
   renderOverview();
@@ -556,6 +718,7 @@ function init() {
       console.error('Không đăng ký được service worker:', error);
     });
   }
+  if (sessionStorage.getItem(ADMIN_TOKEN_KEY)) showAdminScreen();
 }
 
 init();

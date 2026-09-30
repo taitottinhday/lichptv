@@ -30,6 +30,20 @@
           <button class="button button-primary full-width" type="submit">Đăng nhập vào lịch 💗</button>
         </form>
         <p class="login-note">Lịch riêng của Phan Thị Thảo Vy · số 8</p>
+        <button class="text-button" id="showAdminLogin" type="button">Anh nhận request món ăn 💌</button>
+        <div class="admin-login-panel" id="adminLoginPanel" hidden>
+          <p class="section-kicker">GÓC NHẬN REQUEST</p>
+          <h2>Đăng nhập để nhận món của Vy</h2>
+          <form id="adminLoginForm" novalidate>
+            <label for="adminUsername">Tài khoản của anh</label>
+            <input id="adminUsername" type="text" autocomplete="username" placeholder="Nhập tài khoản" required />
+            <label for="adminPassword">Mật khẩu</label>
+            <input id="adminPassword" type="password" autocomplete="current-password" placeholder="Nhập mật khẩu" required />
+            <p class="login-error" id="adminLoginError" role="alert" aria-live="polite"></p>
+            <button class="button button-dark full-width" type="submit">Vào góc nhận món 💌</button>
+          </form>
+          <button class="text-button" id="backToVyLogin" type="button">Quay lại lịch của Vy</button>
+        </div>
       </div>
     </section>
 
@@ -103,6 +117,22 @@
           <button class="button button-light" id="exportCalendar" type="button">Tải lịch vào điện thoại</button>
         </section>
 
+        <section class="food-section" aria-labelledby="foodHeading">
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">GÓC NHỎ CỦA EM</p>
+              <h2 id="foodHeading">Hôm nay em muốn anh mua gì? 🥤</h2>
+            </div>
+            <span class="food-status">Anh đang chờ em chọn món 💗</span>
+          </div>
+          <p class="food-intro">Chọn một món thật ngon, để anh chuẩn bị niềm vui nhỏ cho em nha.</p>
+          <div id="foodCategories"></div>
+          <label class="food-note-label" for="foodNote">Nếu trong list này không có món em thích thì em hãy ghi chú vào đây nha ✍️</label>
+          <textarea id="foodNote" class="food-note" rows="3" maxlength="500" placeholder="Ví dụ: anh mua giúp em món ... nhé 💕"></textarea>
+          <button class="button button-primary" id="sendFoodRequest" type="button">Gửi anh mua món này 💌</button>
+          <p class="food-request-status" id="foodRequestStatus" role="status" aria-live="polite"></p>
+        </section>
+
         <section class="calendar-section" aria-labelledby="calendarHeading">
           <div class="section-heading">
             <div>
@@ -145,6 +175,24 @@
         <span>Made with love for Vy</span><span>•</span><span id="lastUpdated">Lịch cá nhân</span>
       </footer>
     </div>
+
+    <section class="admin-screen" id="adminScreen" hidden>
+      <div class="admin-card">
+        <div class="admin-heading">
+          <div>
+            <p class="section-kicker">GÓC NHỎ CỦA ANH</p>
+            <h1>Vy chọn món rồi nè 💌</h1>
+            <p class="admin-subtitle">Các request món ăn sẽ hiện ở đây và gửi thông báo về máy anh.</p>
+          </div>
+          <button class="logout-button" id="adminLogout" type="button">Đăng xuất</button>
+        </div>
+        <div class="admin-actions">
+          <button class="button button-dark" id="enableAdminNotifications" type="button">Bật thông báo nhận request</button>
+          <button class="button button-light" id="refreshFoodRequests" type="button">Làm mới</button>
+        </div>
+        <div id="foodRequestList" class="food-request-list"></div>
+      </div>
+    </section>
 
     <div class="modal-backdrop" id="dayModal" hidden>
       <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">

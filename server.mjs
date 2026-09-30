@@ -2,6 +2,7 @@ import express from 'express';
 import cron from 'node-cron';
 import pg from 'pg';
 import webpush from 'web-push';
+import { randomUUID } from 'node:crypto';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
@@ -21,6 +22,11 @@ const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
 const vapidEmail = process.env.VAPID_EMAIL || 'mailto:admin@example.com';
 const geminiApiKey = process.env.GEMINI_API_KEY?.trim();
 const geminiModel = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const adminUsername = process.env.ADMIN_USERNAME || 'anh';
+const adminPassword = process.env.ADMIN_PASSWORD || '261004';
+const adminSessions = new Set();
+const memoryFoodRequests = [];
+let memoryFoodRequestId = 0;
 let pushConfigured = false;
 
 if (vapidPublicKey && vapidPrivateKey) {
@@ -36,6 +42,15 @@ const databaseReady = pool
   ? pool.query(`CREATE TABLE IF NOT EXISTS push_subscriptions (
       endpoint TEXT PRIMARY KEY,
       subscription JSONB NOT NULL,
+      role TEXT NOT NULL DEFAULT 'vy',
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    ); ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS role TEXT NOT NULL DEFAULT 'vy';
+    CREATE TABLE IF NOT EXISTS food_requests (
+      id BIGSERIAL PRIMARY KEY,
+      category TEXT NOT NULL,
+      item TEXT NOT NULL,
+      note TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'pending',
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )`)
   : Promise.resolve();
@@ -66,27 +81,27 @@ function prettyDate(key) {
   return `${day}/${month}`;
 }
 
-async function saveSubscription(subscription) {
+async function saveSubscription(subscription, role = 'vy') {
   if (pool) {
     await databaseReady;
     await pool.query(
-      `INSERT INTO push_subscriptions (endpoint, subscription)
-       VALUES ($1, $2::jsonb)
-       ON CONFLICT (endpoint) DO UPDATE SET subscription = EXCLUDED.subscription, created_at = NOW()`,
-      [subscription.endpoint, JSON.stringify(subscription)]
+      `INSERT INTO push_subscriptions (endpoint, subscription, role)
+       VALUES ($1, $2::jsonb, $3)
+       ON CONFLICT (endpoint) DO UPDATE SET subscription = EXCLUDED.subscription, role = EXCLUDED.role, created_at = NOW()`,
+      [subscription.endpoint, JSON.stringify(subscription), role]
     );
     return;
   }
-  memorySubscriptions.set(subscription.endpoint, subscription);
+  memorySubscriptions.set(subscription.endpoint, { subscription, role });
 }
 
-async function allSubscriptions() {
+async function allSubscriptions(role = 'vy') {
   if (pool) {
     await databaseReady;
-    const result = await pool.query('SELECT subscription FROM push_subscriptions');
+    const result = await pool.query('SELECT subscription FROM push_subscriptions WHERE role = $1', [role]);
     return result.rows.map((row) => row.subscription);
   }
-  return [...memorySubscriptions.values()];
+  return [...memorySubscriptions.values()].filter((entry) => entry.role === role).map((entry) => entry.subscription);
 }
 
 async function removeSubscription(endpoint) {
@@ -98,9 +113,9 @@ async function removeSubscription(endpoint) {
   memorySubscriptions.delete(endpoint);
 }
 
-async function sendToAllSubscriptions(payload) {
+async function sendToRole(role, payload) {
   if (!pushConfigured) return;
-  const subscriptions = await allSubscriptions();
+  const subscriptions = await allSubscriptions(role);
   await Promise.all(subscriptions.map(async (subscription) => {
     try {
       await webpush.sendNotification(subscription, payload);
@@ -109,6 +124,11 @@ async function sendToAllSubscriptions(payload) {
       else console.error('Không gửi được nhắc lịch:', error.message);
     }
   }));
+}
+
+function isAdminRequest(request) {
+  const token = request.headers.authorization?.replace(/^Bearer\s+/i, '');
+  return Boolean(token && adminSessions.has(token));
 }
 
 const fallbackMessages = {
@@ -183,12 +203,22 @@ async function dispatchDailyReminder(moment) {
     tag: `lich-${moment}-${dateKey}`,
     url: '/'
   });
-  await sendToAllSubscriptions(payload);
+  await sendToRole('vy', payload);
 }
 
 app.use(express.json({ limit: '32kb' }));
 
 app.get('/api/health', (_request, response) => response.json({ ok: true, pushConfigured, database: Boolean(pool), geminiConfigured: Boolean(geminiApiKey) }));
+
+app.post('/api/admin/login', (request, response) => {
+  const { username, password } = request.body || {};
+  if (username !== adminUsername || password !== adminPassword) {
+    return response.status(401).json({ error: 'Sai tài khoản hoặc mật khẩu.' });
+  }
+  const token = randomUUID();
+  adminSessions.add(token);
+  return response.json({ ok: true, token });
+});
 
 app.get('/api/app-icon', async (_request, response) => {
   if (!/^https:\/\//i.test(AVATAR_IMAGE_URL)) {
@@ -219,23 +249,94 @@ app.get('/api/push/public-key', (_request, response) => {
 });
 
 app.post('/api/push/subscribe', async (request, response) => {
-  const subscription = request.body;
+  const role = request.body?.role === 'admin' ? 'admin' : 'vy';
+  const subscription = request.body?.subscription || request.body;
+  if (role === 'admin' && !isAdminRequest(request)) {
+    return response.status(401).json({ error: 'Cần đăng nhập tài khoản nhận request.' });
+  }
   if (!pushConfigured) return response.status(503).json({ error: 'Push notifications are not configured.' });
   if (!subscription?.endpoint || !subscription?.keys?.p256dh || !subscription?.keys?.auth) {
     return response.status(400).json({ error: 'Invalid push subscription.' });
   }
   try {
-    await saveSubscription(subscription);
+    await saveSubscription(subscription, role);
     await webpush.sendNotification(subscription, JSON.stringify({
-      title: 'Đã bật nhắc lịch cho Vy 🌷',
-      body: 'Từ giờ Vy sẽ nhận lời nhắn dễ thương lúc 06:00, 12:00 và 20:00 mỗi ngày.',
-      tag: 'lich-cua-vy-welcome',
+      title: role === 'admin' ? 'Đã bật nhận request món ăn 💌' : 'Đã bật nhắc lịch cho Vy 🌷',
+      body: role === 'admin' ? 'Từ giờ anh sẽ nhận được thông báo khi Vy chọn món.' : 'Từ giờ Vy sẽ nhận lời nhắn dễ thương lúc 06:00, 12:00 và 20:00 mỗi ngày.',
+      tag: role === 'admin' ? 'food-request-admin-welcome' : 'lich-cua-vy-welcome',
       url: '/'
     }));
     return response.status(201).json({ ok: true });
   } catch (error) {
     console.error('Không lưu được đăng ký thông báo:', error.message);
     return response.status(500).json({ error: 'Could not save subscription.' });
+  }
+});
+
+app.post('/api/food-requests', async (request, response) => {
+  const category = String(request.body?.category || '').trim().slice(0, 80);
+  const item = String(request.body?.item || '').trim().slice(0, 160);
+  const note = String(request.body?.note || '').trim().slice(0, 500);
+  if (!category || !item) return response.status(400).json({ error: 'Vui lòng chọn món hoặc ghi chú món.' });
+
+  try {
+    let requestRecord;
+    if (pool) {
+      await databaseReady;
+      const result = await pool.query(
+        `INSERT INTO food_requests (category, item, note) VALUES ($1, $2, $3)
+         RETURNING id, category, item, note, status, created_at`,
+        [category, item, note]
+      );
+      requestRecord = result.rows[0];
+    } else {
+      requestRecord = { id: ++memoryFoodRequestId, category, item, note, status: 'pending', created_at: new Date().toISOString() };
+      memoryFoodRequests.unshift(requestRecord);
+    }
+    await sendToRole('admin', JSON.stringify({
+      title: '💌 Vy chọn món rồi nè',
+      body: `${item}${note ? ` · Ghi chú: ${note}` : ''}. Anh mua cho em nha 💗`,
+      tag: `food-request-${requestRecord.id}`,
+      url: '/?admin=1'
+    }));
+    return response.status(201).json({ ok: true, request: requestRecord });
+  } catch (error) {
+    console.error('Không lưu được request món ăn:', error.message);
+    return response.status(500).json({ error: 'Chưa gửi được request món ăn.' });
+  }
+});
+
+app.get('/api/food-requests', async (request, response) => {
+  if (!isAdminRequest(request)) return response.status(401).json({ error: 'Chưa đăng nhập tài khoản nhận request.' });
+  try {
+    if (pool) {
+      await databaseReady;
+      const result = await pool.query('SELECT id, category, item, note, status, created_at FROM food_requests ORDER BY created_at DESC LIMIT 50');
+      return response.json({ requests: result.rows });
+    }
+    return response.json({ requests: memoryFoodRequests.slice(0, 50) });
+  } catch (error) {
+    console.error('Không đọc được request món ăn:', error.message);
+    return response.status(500).json({ error: 'Chưa đọc được request món ăn.' });
+  }
+});
+
+app.patch('/api/food-requests/:id', async (request, response) => {
+  if (!isAdminRequest(request)) return response.status(401).json({ error: 'Chưa đăng nhập tài khoản nhận request.' });
+  const status = ['pending', 'bought', 'done'].includes(request.body?.status) ? request.body.status : null;
+  if (!status) return response.status(400).json({ error: 'Trạng thái không hợp lệ.' });
+  try {
+    if (pool) {
+      await databaseReady;
+      await pool.query('UPDATE food_requests SET status = $1 WHERE id = $2', [status, request.params.id]);
+    } else {
+      const record = memoryFoodRequests.find((entry) => String(entry.id) === String(request.params.id));
+      if (record) record.status = status;
+    }
+    return response.json({ ok: true });
+  } catch (error) {
+    console.error('Không cập nhật được request món ăn:', error.message);
+    return response.status(500).json({ error: 'Chưa cập nhật được request.' });
   }
 });
 

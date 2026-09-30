@@ -37,6 +37,22 @@ Sau khi bấm **Bật nhắc**, app sẽ gửi ngay một thông báo chào mừ
 - `GEMINI_API_KEY`: API key lấy từ Google AI Studio.
 - `GEMINI_MODEL`: để trống để dùng `gemini-2.5-flash`, hoặc nhập model khác được tài khoản hỗ trợ.
 
+## Góc chọn món và tài khoản nhận request
+
+Sau khi Vy đăng nhập, phần **Hôm nay em muốn anh mua gì?** có các nhóm nước uống, món ăn, bánh và ăn vặt. Vy có thể chọn món trong danh sách hoặc ghi chú món chưa có rồi bấm gửi. Request được lưu vào PostgreSQL và gửi Web Push riêng cho tài khoản của anh.
+
+Để đăng nhập góc nhận request, mặc định dùng:
+
+- Tài khoản: `anh`
+- Mật khẩu: `261004`
+
+Nên đặt riêng hai biến trên Railway để đổi thông tin đăng nhập:
+
+- `ADMIN_USERNAME`
+- `ADMIN_PASSWORD`
+
+Sau khi vào góc nhận request, anh bấm **Bật thông báo nhận request** một lần. Khi Vy gửi món, thông báo sẽ hiện trên màn hình khóa của anh; trong góc này anh cũng có thể đánh dấu **Đang chờ mua**, **Anh mua rồi** hoặc **Đã gửi Vy**.
+
 ### Đổi ảnh của Vy
 
 Mở file `avatar-config.js`, thay phần `DAN_LINK_ANH_CUA_VY_VAO_DAY` bằng đường dẫn HTTPS trực tiếp tới ảnh, ví dụ:
