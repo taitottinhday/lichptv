@@ -15,6 +15,9 @@ const port = Number(process.env.PORT || 4173);
 const distRoot = resolve(fileURLToPath(new URL('./dist', import.meta.url)));
 const databaseUrl = process.env.DATABASE_URL;
 const pool = databaseUrl ? new Pool({ connectionString: databaseUrl, ssl: databaseUrl.includes('localhost') ? false : { rejectUnauthorized: false } }) : null;
+const supabaseUrl = process.env.SUPABASE_URL?.trim().replace(/\/$/, '');
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || process.env.SUPABASE_SECRET_KEY?.trim();
+const supabaseConfigured = Boolean(supabaseUrl && supabaseServiceKey);
 const memorySubscriptions = new Map();
 let appIconBuffer;
 const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
@@ -64,6 +67,31 @@ const databaseReady = pool
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );`)
   : Promise.resolve();
+
+async function supabaseRequest(path, options = {}) {
+  if (!supabaseConfigured) throw new Error('Supabase chưa được cấu hình.');
+  const response = await fetch(`${supabaseUrl}/rest/v1/${path}`, {
+    ...options,
+    headers: {
+      apikey: supabaseServiceKey,
+      Authorization: `Bearer ${supabaseServiceKey}`,
+      Accept: 'application/json',
+      ...(options.headers || {})
+    }
+  });
+  const text = await response.text();
+  let data = null;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = text;
+  }
+  if (!response.ok) {
+    const detail = typeof data === 'string' ? data : data?.message || data?.hint || data?.error;
+    throw new Error(`Supabase HTTP ${response.status}${detail ? `: ${detail}` : ''}`);
+  }
+  return data;
+}
 
 function vietnamDateKey(date = new Date()) {
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -218,7 +246,7 @@ async function dispatchDailyReminder(moment) {
 
 app.use(express.json({ limit: '32kb' }));
 
-app.get('/api/health', (_request, response) => response.json({ ok: true, pushConfigured, database: Boolean(pool), geminiConfigured: Boolean(geminiApiKey) }));
+app.get('/api/health', (_request, response) => response.json({ ok: true, pushConfigured, database: Boolean(pool), supabaseConfigured, geminiConfigured: Boolean(geminiApiKey) }));
 
 app.post('/api/admin/login', (request, response) => {
   const { username, password } = request.body || {};
@@ -236,6 +264,10 @@ app.get('/api/chat/messages', async (request, response) => {
     return response.status(401).json({ error: 'Cần đăng nhập góc chat của anh.' });
   }
   try {
+    if (supabaseConfigured) {
+      const rows = await supabaseRequest('chat_messages?select=id,sender_role,content,created_at&order=id.desc&limit=100');
+      return response.json({ messages: (rows || []).reverse() });
+    }
     if (pool) {
       await databaseReady;
       const result = await pool.query(
@@ -263,7 +295,17 @@ app.post('/api/chat/messages', async (request, response) => {
 
   try {
     let message;
-    if (pool) {
+    if (supabaseConfigured) {
+      const rows = await supabaseRequest('chat_messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Prefer: 'return=representation'
+        },
+        body: JSON.stringify({ sender_role: senderRole, content })
+      });
+      message = rows?.[0];
+    } else if (pool) {
       await databaseReady;
       const result = await pool.query(
         `INSERT INTO chat_messages (sender_role, content)
