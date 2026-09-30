@@ -393,7 +393,8 @@ async function subscribeToWebPush() {
     throw new Error('Hệ thống nhắc lịch chưa được cấu hình trên Railway.');
   }
   const { publicKey } = await keyResponse.json();
-  const registration = await navigator.serviceWorker.ready;
+  const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+  await navigator.serviceWorker.ready;
   let subscription = await registration.pushManager.getSubscription();
   if (!subscription) {
     subscription = await registration.pushManager.subscribe({
@@ -517,7 +518,11 @@ function init() {
   renderLiveCountdown();
   state.countdownTimer = setInterval(renderLiveCountdown, 30000);
   $('#lastUpdated').textContent = `Cập nhật ${new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date())}`;
-  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch((error) => {
+      console.error('Không đăng ký được service worker:', error);
+    });
+  }
 }
 
 init();
