@@ -29,7 +29,9 @@ const state = {
   selectedFood: null,
   selectedFoodCategory: null,
   toastTimer: null,
-  countdownTimer: null
+  countdownTimer: null,
+  chatTimer: null,
+  chatLoading: false
 };
 
 let nativeNotificationsPromise;
@@ -106,15 +108,112 @@ async function submitFoodRequest() {
   }
 }
 
+function chatTime(createdAt) {
+  const date = new Date(createdAt);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+}
+
+function renderChatMessages(messages, selector, viewerRole) {
+  const container = $(selector);
+  if (!container) return;
+  const shouldStickToBottom = !container.dataset.ready || container.scrollHeight - container.scrollTop - container.clientHeight < 90;
+  container.innerHTML = messages.length ? messages.map((message) => {
+    const own = message.sender_role === viewerRole;
+    const sender = own ? (viewerRole === 'admin' ? 'Anh' : 'Vy') : (viewerRole === 'admin' ? 'Vy' : 'Anh');
+    const content = escapeHtml(message.content).replace(/\r?\n/g, '<br />');
+    return `<article class="chat-message ${own ? 'is-mine' : 'is-theirs'}">
+      <div class="chat-bubble"><p>${content}</p><time datetime="${escapeHtml(message.created_at)}">${sender} · ${chatTime(message.created_at)}</time></div>
+    </article>`;
+  }).join('') : '<p class="chat-empty">Chưa có tin nhắn nào. Nhắn một câu thật ngọt cho người thương nha 💗</p>';
+  container.dataset.ready = 'true';
+  if (shouldStickToBottom) container.scrollTop = container.scrollHeight;
+}
+
+async function loadChatMessages(viewerRole = 'vy', silent = false) {
+  if (state.chatLoading) return;
+  const token = viewerRole === 'admin' ? sessionStorage.getItem(ADMIN_TOKEN_KEY) : '';
+  if (viewerRole === 'admin' && !token) return;
+  state.chatLoading = true;
+  const status = viewerRole === 'admin' ? $('#adminChatStatus') : $('#chatStatus');
+  try {
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const response = await fetch(`/api/chat/messages?role=${viewerRole}`, { headers });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'Chưa tải được tin nhắn.');
+    renderChatMessages(data.messages || [], viewerRole === 'admin' ? '#adminChatMessages' : '#chatMessages', viewerRole);
+    if (status && !silent) status.textContent = '';
+  } catch (error) {
+    if (status && !silent) status.textContent = error.message;
+  } finally {
+    state.chatLoading = false;
+  }
+}
+
+async function sendChatMessage(senderRole = 'vy') {
+  const input = senderRole === 'admin' ? $('#adminChatInput') : $('#chatInput');
+  const button = senderRole === 'admin' ? $('#sendAdminChat') : $('#sendChat');
+  const status = senderRole === 'admin' ? $('#adminChatStatus') : $('#chatStatus');
+  const content = input.value.trim();
+  if (!content) {
+    status.textContent = 'Viết một điều muốn nói trước nha 💗';
+    input.focus();
+    return;
+  }
+  const token = senderRole === 'admin' ? sessionStorage.getItem(ADMIN_TOKEN_KEY) : '';
+  button.disabled = true;
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers.Authorization = `Bearer ${token}`;
+    const response = await fetch('/api/chat/messages', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ senderRole, content })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'Chưa gửi được tin nhắn.');
+    input.value = '';
+    status.textContent = senderRole === 'admin' ? 'Đã gửi cho Vy 💌' : 'Đã gửi cho anh 💌';
+    await loadChatMessages(senderRole);
+  } catch (error) {
+    status.textContent = error.message;
+  } finally {
+    button.disabled = false;
+    input.focus();
+  }
+}
+
+function stopChatPolling() {
+  if (state.chatTimer) clearInterval(state.chatTimer);
+  state.chatTimer = null;
+}
+
+function startChatPolling(viewerRole) {
+  stopChatPolling();
+  loadChatMessages(viewerRole);
+  state.chatTimer = setInterval(() => loadChatMessages(viewerRole, true), 4000);
+}
+
+function bindChatQuickReplies() {
+  $$('[data-chat-quick]').forEach((button) => button.addEventListener('click', () => {
+    const input = $(button.dataset.chatTarget);
+    if (!input) return;
+    input.value = `${input.value}${input.value ? ' ' : ''}${button.dataset.chatQuick}`;
+    input.focus();
+  }));
+}
+
 function showAdminScreen() {
   $('#loginScreen').hidden = true;
   $('#appShell').classList.remove('is-unlocked');
   $('#appShell').hidden = true;
   $('#adminScreen').hidden = false;
+  startChatPolling('admin');
   loadFoodRequests();
 }
 
 function leaveAdminScreen() {
+  stopChatPolling();
   sessionStorage.removeItem(ADMIN_TOKEN_KEY);
   $('#adminScreen').hidden = true;
   $('#appShell').hidden = false;
@@ -450,8 +549,10 @@ function setAuthenticated(authenticated) {
   loginScreen.hidden = authenticated;
   if (authenticated) {
     localStorage.setItem(AUTH_KEY, 'true');
+    startChatPolling('vy');
   } else {
     localStorage.removeItem(AUTH_KEY);
+    stopChatPolling();
   }
 }
 
@@ -732,6 +833,15 @@ function bindEvents() {
   $('#enableAdminNotifications').addEventListener('click', enableAdminNotifications);
   $('#refreshFoodRequests').addEventListener('click', loadFoodRequests);
   $('#sendFoodRequest').addEventListener('click', submitFoodRequest);
+  $('#chatForm').addEventListener('submit', (event) => {
+    event.preventDefault();
+    sendChatMessage('vy');
+  });
+  $('#adminChatForm').addEventListener('submit', (event) => {
+    event.preventDefault();
+    sendChatMessage('admin');
+  });
+  bindChatQuickReplies();
   $('#logoutButton').addEventListener('click', handleLogout);
   $('#enableNotification').addEventListener('click', enableNotifications);
   $('#exportCalendar').addEventListener('click', exportCalendarFile);

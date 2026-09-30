@@ -27,6 +27,8 @@ const adminPassword = process.env.ADMIN_PASSWORD || '261004';
 const adminSessions = new Set();
 const memoryFoodRequests = [];
 let memoryFoodRequestId = 0;
+const memoryChatMessages = [];
+let memoryChatMessageId = 0;
 let pushConfigured = false;
 
 if (vapidPublicKey && vapidPrivateKey) {
@@ -54,7 +56,13 @@ const databaseReady = pool
       response TEXT NOT NULL DEFAULT '',
       responded_at TIMESTAMPTZ,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    ); ALTER TABLE food_requests ADD COLUMN IF NOT EXISTS response TEXT NOT NULL DEFAULT ''; ALTER TABLE food_requests ADD COLUMN IF NOT EXISTS responded_at TIMESTAMPTZ;`)
+    ); ALTER TABLE food_requests ADD COLUMN IF NOT EXISTS response TEXT NOT NULL DEFAULT ''; ALTER TABLE food_requests ADD COLUMN IF NOT EXISTS responded_at TIMESTAMPTZ;
+    CREATE TABLE IF NOT EXISTS chat_messages (
+      id BIGSERIAL PRIMARY KEY,
+      sender_role TEXT NOT NULL CHECK (sender_role IN ('vy', 'admin')),
+      content TEXT NOT NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );`)
   : Promise.resolve();
 
 function vietnamDateKey(date = new Date()) {
@@ -220,6 +228,74 @@ app.post('/api/admin/login', (request, response) => {
   const token = randomUUID();
   adminSessions.add(token);
   return response.json({ ok: true, token });
+});
+
+app.get('/api/chat/messages', async (request, response) => {
+  const viewerRole = request.query.role === 'admin' ? 'admin' : 'vy';
+  if (viewerRole === 'admin' && !isAdminRequest(request)) {
+    return response.status(401).json({ error: 'Cần đăng nhập góc chat của anh.' });
+  }
+  try {
+    if (pool) {
+      await databaseReady;
+      const result = await pool.query(
+        `SELECT id, sender_role, content, created_at
+         FROM chat_messages
+         ORDER BY id DESC
+         LIMIT 100`
+      );
+      return response.json({ messages: result.rows.reverse() });
+    }
+    return response.json({ messages: memoryChatMessages.slice(-100) });
+  } catch (error) {
+    console.error('Không đọc được lịch sử chat:', error.message);
+    return response.status(500).json({ error: 'Chưa tải được lịch sử tin nhắn.' });
+  }
+});
+
+app.post('/api/chat/messages', async (request, response) => {
+  const senderRole = request.body?.senderRole === 'admin' ? 'admin' : 'vy';
+  if (senderRole === 'admin' && !isAdminRequest(request)) {
+    return response.status(401).json({ error: 'Cần đăng nhập góc chat của anh.' });
+  }
+  const content = String(request.body?.content || '').trim().slice(0, 2000);
+  if (!content) return response.status(400).json({ error: 'Tin nhắn chưa có nội dung.' });
+
+  try {
+    let message;
+    if (pool) {
+      await databaseReady;
+      const result = await pool.query(
+        `INSERT INTO chat_messages (sender_role, content)
+         VALUES ($1, $2)
+         RETURNING id, sender_role, content, created_at`,
+        [senderRole, content]
+      );
+      message = result.rows[0];
+    } else {
+      message = {
+        id: ++memoryChatMessageId,
+        sender_role: senderRole,
+        content,
+        created_at: new Date().toISOString()
+      };
+      memoryChatMessages.push(message);
+      if (memoryChatMessages.length > 100) memoryChatMessages.shift();
+    }
+
+    const recipientRole = senderRole === 'vy' ? 'admin' : 'vy';
+    const senderName = senderRole === 'vy' ? 'Vy' : 'Anh';
+    await sendToRole(recipientRole, JSON.stringify({
+      title: senderRole === 'vy' ? '💌 Vy vừa nhắn cho anh' : '💌 Anh vừa nhắn cho Vy',
+      body: `${senderName}: ${content.slice(0, 180)}`,
+      tag: `chat-message-${message.id}`,
+      url: senderRole === 'vy' ? '/?admin=1' : '/'
+    }));
+    return response.status(201).json({ ok: true, message });
+  } catch (error) {
+    console.error('Không gửi được tin nhắn:', error.message);
+    return response.status(500).json({ error: 'Chưa gửi được tin nhắn.' });
+  }
 });
 
 app.get('/api/app-icon', async (_request, response) => {

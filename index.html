@@ -133,6 +133,28 @@
           <p class="food-request-status" id="foodRequestStatus" role="status" aria-live="polite"></p>
         </section>
 
+        <section class="chat-section" aria-labelledby="chatHeading">
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">GÓC TÂM TÌNH RIÊNG</p>
+              <h2 id="chatHeading">Nhắn cho anh yêu 💌</h2>
+            </div>
+            <span class="chat-status-pill">Anh sẽ nhận được thông báo</span>
+          </div>
+          <p class="chat-intro">Tin nhắn của anh và Vy sẽ được lưu lại để mình không bỏ lỡ những điều ngọt ngào nha.</p>
+          <div class="chat-thread" id="chatMessages" role="log" aria-live="polite" aria-label="Tin nhắn giữa Vy và anh"></div>
+          <div class="chat-quick-replies" aria-label="Tin nhắn nhanh">
+            <button type="button" data-chat-quick="🥰 Nhớ anh quá" data-chat-target="#chatInput">🥰 Nhớ anh quá</button>
+            <button type="button" data-chat-quick="💗 Yêu anh nhiều" data-chat-target="#chatInput">💗 Yêu anh nhiều</button>
+            <button type="button" data-chat-quick="Em ổn nha anh" data-chat-target="#chatInput">Em ổn nha anh</button>
+          </div>
+          <form class="chat-compose" id="chatForm">
+            <textarea id="chatInput" maxlength="2000" rows="2" placeholder="Nhắn anh một điều thật ngọt ngào..." aria-label="Tin nhắn gửi cho anh"></textarea>
+            <button class="button button-primary" id="sendChat" type="submit">Gửi anh 💌</button>
+          </form>
+          <p class="chat-status" id="chatStatus" role="status" aria-live="polite"></p>
+        </section>
+
         <section class="calendar-section" aria-labelledby="calendarHeading">
           <div class="section-heading">
             <div>
@@ -190,6 +212,26 @@
           <button class="button button-dark" id="enableAdminNotifications" type="button">Bật thông báo nhận request</button>
           <button class="button button-light" id="refreshFoodRequests" type="button">Làm mới</button>
         </div>
+        <section class="chat-section admin-chat-section" aria-labelledby="adminChatHeading">
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">TIN NHẮN RIÊNG</p>
+              <h2 id="adminChatHeading">Nhắn cho Vy 💌</h2>
+            </div>
+            <span class="chat-status-pill">Tin nhắn sẽ hiện ở máy Vy</span>
+          </div>
+          <div class="chat-thread" id="adminChatMessages" role="log" aria-live="polite" aria-label="Tin nhắn giữa anh và Vy"></div>
+          <div class="chat-quick-replies" aria-label="Tin nhắn nhanh cho Vy">
+            <button type="button" data-chat-quick="💗 Anh nhớ Vy" data-chat-target="#adminChatInput">💗 Anh nhớ Vy</button>
+            <button type="button" data-chat-quick="Em yêu cố lên nha" data-chat-target="#adminChatInput">Em yêu cố lên nha</button>
+            <button type="button" data-chat-quick="🥰 Tối anh gọi em nha" data-chat-target="#adminChatInput">🥰 Tối anh gọi em nha</button>
+          </div>
+          <form class="chat-compose" id="adminChatForm">
+            <textarea id="adminChatInput" maxlength="2000" rows="2" placeholder="Nhắn cho Vy một điều thật ngọt ngào..." aria-label="Tin nhắn gửi cho Vy"></textarea>
+            <button class="button button-primary" id="sendAdminChat" type="submit">Gửi cho Vy 💌</button>
+          </form>
+          <p class="chat-status" id="adminChatStatus" role="status" aria-live="polite"></p>
+        </section>
         <div id="foodRequestList" class="food-request-list"></div>
       </div>
     </section>

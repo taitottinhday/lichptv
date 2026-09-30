@@ -55,6 +55,18 @@ Sau khi vào góc nhận request, anh bấm **Bật thông báo nhận request**
 
 Trong từng request, anh có thể bấm **Mua bây giờ**, **Mua sau**, **Tối đi làm về mua** hoặc ghi một lời nhắn riêng rồi bấm **Gửi phản hồi cho Vy**. Vy sẽ nhận phản hồi bằng thông báo push trên điện thoại.
 
+## Nhắn tin riêng Anh – Vy
+
+App đã có luồng chat riêng cho hai người:
+
+- Vy nhắn ở phần **Nhắn cho anh yêu** sau khi đăng nhập tài khoản Vy.
+- Anh nhắn ở phần **Nhắn cho Vy** trong góc admin.
+- Tin nhắn được lưu trong bảng `chat_messages` của PostgreSQL và tự tải lại mỗi 4 giây.
+- Khi người kia đã bật Web Push, tin nhắn mới sẽ gửi thông báo ra màn hình khóa.
+- Hiện tại là tin nhắn chữ và emoji; ảnh, video, ghi âm, gọi thoại sẽ làm ở bản tiếp theo.
+
+Railway cần có `DATABASE_URL` của PostgreSQL để lịch sử chat không bị mất khi service khởi động lại. Nếu chưa có database, app chỉ dùng bộ nhớ tạm trong lúc chơi thử.
+
 ### Đổi ảnh của Vy
 
 Mở file `avatar-config.js`, thay phần `DAN_LINK_ANH_CUA_VY_VAO_DAY` bằng đường dẫn HTTPS trực tiếp tới ảnh, ví dụ:
