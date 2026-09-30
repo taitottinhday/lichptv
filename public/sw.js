@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lich-cua-vy-v4';
+const CACHE_NAME = 'lich-cua-vy-v5';
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (event) => {
@@ -17,8 +17,20 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  event.waitUntil(clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => {
-    const existing = windows.find((client) => client.url.includes(self.location.origin));
-    return existing ? existing.focus() : clients.openWindow(event.notification.data.url);
+  const targetUrl = new URL(event.notification.data?.url || '/', self.location.origin).href;
+  event.waitUntil(clients.matchAll({ type: 'window', includeUncontrolled: true }).then(async (windows) => {
+    const existing = windows.find((client) => client.url.startsWith(self.location.origin));
+    if (!existing) return clients.openWindow(targetUrl);
+    await existing.focus();
+    if (typeof existing.navigate === 'function') {
+      try {
+        await existing.navigate(targetUrl);
+        return existing;
+      } catch {
+        // Dùng postMessage nếu trình duyệt không cho service worker điều hướng trực tiếp.
+      }
+    }
+    existing.postMessage({ type: 'notification-navigation', url: targetUrl });
+    return existing;
   }));
 });

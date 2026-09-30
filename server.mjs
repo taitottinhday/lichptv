@@ -333,7 +333,7 @@ async function dispatchDailyReminder(moment) {
     title: notificationTitles[moment],
     body,
     tag: `lich-${moment}-${dateKey}`,
-    url: '/'
+    url: '/?section=calendar'
   });
   await sendToRole('vy', payload);
 }
@@ -484,7 +484,7 @@ app.post('/api/chat/messages', async (request, response) => {
       title: senderRole === 'vy' ? '💌 Vy vừa nhắn cho anh' : '💌 Anh vừa nhắn cho Vy',
       body: notificationBody,
       tag: `chat-message-${message.id}`,
-      url: senderRole === 'vy' ? '/?admin=1' : '/'
+      url: senderRole === 'vy' ? '/?admin=1&section=admin-chat' : '/?section=vy-chat'
     }));
     return response.status(201).json({ ok: true, message });
   } catch (error) {
@@ -537,7 +537,7 @@ app.post('/api/push/subscribe', async (request, response) => {
       title: role === 'admin' ? 'Đã bật nhận request món ăn 💌' : 'Đã bật nhắc lịch cho Vy 🌷',
       body: role === 'admin' ? 'Từ giờ anh sẽ nhận được thông báo khi Vy chọn món.' : 'Từ giờ Vy sẽ nhận lời nhắn dễ thương lúc 06:00, 12:00 và 20:00 mỗi ngày.',
       tag: role === 'admin' ? 'food-request-admin-welcome' : 'lich-cua-vy-welcome',
-      url: '/'
+      url: role === 'admin' ? '/?admin=1&section=food-requests' : '/?section=calendar'
     }));
     return response.status(201).json({ ok: true });
   } catch (error) {
@@ -570,7 +570,7 @@ app.post('/api/food-requests', async (request, response) => {
       title: '💌 Vy chọn món rồi nè',
       body: `${item}${note ? ` · Ghi chú: ${note}` : ''}. Anh mua cho em nha 💗`,
       tag: `food-request-${requestRecord.id}`,
-      url: '/?admin=1'
+      url: '/?admin=1&section=food-requests'
     }));
     return response.status(201).json({ ok: true, request: requestRecord });
   } catch (error) {
@@ -642,7 +642,7 @@ app.post('/api/food-requests/:id/respond', async (request, response) => {
       title: '💌 Anh phản hồi món của Vy',
       body: `${responseText} · Món em chọn: ${requestRecord.item} 💗`,
       tag: `food-response-${requestRecord.id}-${Date.now()}`,
-      url: '/'
+      url: '/?section=food'
     }));
     return response.json({ ok: true });
   } catch (error) {

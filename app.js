@@ -493,6 +493,48 @@ function handleIncomingCallHint() {
   window.history.replaceState({}, document.title, window.location.pathname);
 }
 
+function handleIncomingNotificationTarget() {
+  const params = new URLSearchParams(window.location.search);
+  const section = params.get('section');
+  if (!section) return false;
+  const selectorBySection = {
+    calendar: '#calendarSection',
+    food: '#foodSection',
+    'vy-chat': '#vyChatSection',
+    'admin-chat': '#adminChatSection',
+    'food-requests': '#foodRequestList'
+  };
+  const target = $(selectorBySection[section]);
+  const adminTarget = section === 'admin-chat' || section === 'food-requests';
+  const screen = adminTarget ? $('#adminScreen') : $('#appShell');
+  if (!target || screen?.hidden) return false;
+  window.setTimeout(() => {
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    target.classList.add('notification-target');
+    window.setTimeout(() => target.classList.remove('notification-target'), 1900);
+  }, 80);
+  window.history.replaceState({}, document.title, window.location.pathname);
+  return true;
+}
+
+function handleNotificationNavigation(url) {
+  const targetUrl = new URL(url || '/', window.location.origin);
+  if (targetUrl.origin !== window.location.origin) return;
+  window.history.replaceState({}, document.title, `${targetUrl.pathname}${targetUrl.search}`);
+  if (targetUrl.searchParams.get('admin') === '1' && localStorage.getItem(ADMIN_TOKEN_KEY) && $('#adminScreen').hidden) {
+    showAdminScreen();
+  }
+  handleIncomingCallHint();
+  handleIncomingNotificationTarget();
+}
+
+function bindNotificationNavigation() {
+  if (!('serviceWorker' in navigator)) return;
+  navigator.serviceWorker.addEventListener('message', (event) => {
+    if (event.data?.type === 'notification-navigation') handleNotificationNavigation(event.data.url);
+  });
+}
+
 function showAdminScreen() {
   $('#loginScreen').hidden = true;
   $('#appShell').classList.remove('is-unlocked');
@@ -527,6 +569,7 @@ async function handleAdminLogin(event) {
     localStorage.setItem(ADMIN_TOKEN_KEY, data.token);
     error.textContent = '';
     showAdminScreen();
+    handleIncomingNotificationTarget();
   } catch (loginError) {
     error.textContent = loginError.message;
   }
@@ -908,6 +951,7 @@ function handleLogin(event) {
     setAuthenticated(true);
     renderOverview();
     renderCalendar();
+    handleIncomingNotificationTarget();
     showToast('Đăng nhập thành công, chào Vy yêu 💗');
     return;
   }
@@ -1083,7 +1127,13 @@ async function subscribeToWebPush(role = 'vy', adminToken = '') {
 
 async function getNativeNotifications() {
   if (!window.Capacitor) return null;
-  nativeNotificationsPromise ||= import('@capacitor/local-notifications').then((module) => module.LocalNotifications).catch(() => null);
+  nativeNotificationsPromise ||= import('@capacitor/local-notifications').then(async (module) => {
+    const notifications = module.LocalNotifications;
+    await notifications.addListener('localNotificationActionPerformed', (event) => {
+      handleNotificationNavigation(event.notification?.extra?.url || '/?section=calendar');
+    });
+    return notifications;
+  }).catch(() => null);
   return nativeNotificationsPromise;
 }
 
@@ -1114,6 +1164,7 @@ async function scheduleNativeReminders(localNotifications) {
         title: '🌷 Chào buổi sáng, Vy yêu',
         body: nativeReminderBody('morning', label, date),
         schedule: { at: morningAtSix },
+        extra: { url: '/?section=calendar' },
         smallIcon: 'ic_stat_icon_config_sample'
       });
     }
@@ -1125,6 +1176,7 @@ async function scheduleNativeReminders(localNotifications) {
         title: '☀️ Chúc em yêu buổi trưa vui vẻ',
         body: nativeReminderBody('noon', label, date),
         schedule: { at: noonAtTwelve },
+        extra: { url: '/?section=calendar' },
         smallIcon: 'ic_stat_icon_config_sample'
       });
     }
@@ -1137,6 +1189,7 @@ async function scheduleNativeReminders(localNotifications) {
         title: '🌙 Chúc em yêu buổi tối thật dịu dàng',
         body: nativeReminderBody('evening', label, date),
         schedule: { at: eveningAtEight },
+        extra: { url: '/?section=calendar' },
         smallIcon: 'ic_stat_icon_config_sample'
       });
     }
@@ -1232,6 +1285,7 @@ function init() {
   applyAvatarImage();
   renderFoodMenu();
   bindEvents();
+  bindNotificationNavigation();
   setAuthenticated(localStorage.getItem(AUTH_KEY) === 'true');
   renderOverview();
   renderCalendar();
@@ -1246,6 +1300,7 @@ function init() {
   }
   if (localStorage.getItem(ADMIN_TOKEN_KEY)) showAdminScreen();
   handleIncomingCallHint();
+  handleIncomingNotificationTarget();
 }
 
 init();
