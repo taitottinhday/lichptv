@@ -159,7 +159,7 @@ function renderOverview() {
   const greeting = hour < 11 ? 'Chào buổi sáng, Vy yêu 🌤️' : hour < 18 ? 'Chào buổi chiều, Vy yêu 🌼' : 'Chào buổi tối, Vy yêu 🌙';
   $('#welcomeTitle').textContent = greeting;
   $('#currentGreeting').textContent = 'Phan Thị Thảo Vy · số 8';
-  $('#heroMessage').textContent = todayCode === 'D' || todayCode === 'N' ? 'Nàng nhớ giữ sức, làm việc thật chuyên nghiệp và tan ca bình an nhé.' : 'Hôm nay nàng có thể thong thả một chút, nhớ chăm sóc bản thân nha.';
+  $('#heroMessage').textContent = todayCode === 'D' || todayCode === 'N' ? 'Nàng nhớ giữ sức, làm việc vui vẻ và tan ca bình an để về với anh iu nhé.' : 'Hôm nay nàng có thể thong thả một chút, nhớ chăm sóc bản thân và nhớ anh iu nha.';
 }
 
 function renderShiftCard(prefix, date, code) {
@@ -333,7 +333,7 @@ function exportCalendarFile() {
     const description = reminderDescription(code);
     const todayStart = new Date(date);
     todayStart.setHours(6, 0, 0, 0);
-    events.push(createCalendarEvent(`${key}-morning`, todayStart, 'Chào buổi sáng, Vy yêu', `Hôm nay ${description}. Chúc Vy một ngày thật vui vẻ và chuyên nghiệp nhé 💗`));
+    events.push(createCalendarEvent(`${key}-morning`, todayStart, 'Chào buổi sáng, Vy yêu', `Hôm nay ${description}. Chúc Vy một ngày thật vui vẻ và nhớ anh iu thật nhiều nhé 💗`));
 
     const noonStart = new Date(date);
     noonStart.setHours(12, 0, 0, 0);

@@ -112,7 +112,7 @@ async function sendToAllSubscriptions(payload) {
 }
 
 const fallbackMessages = {
-  morning: (date, schedule) => `Chào buổi sáng Vy yêu 🌷 Hôm nay ${date} ${schedule}. Chúc em một ngày thật vui vẻ, chuyên nghiệp và luôn giữ nụ cười nha 💗`,
+  morning: (date, schedule) => `Chào buổi sáng Vy yêu 🌷 Hôm nay ${date} ${schedule}. Chúc em một ngày thật ngọt ngào, vui vẻ và luôn nhớ anh iu nha 💗`,
   noon: (_date, schedule) => `Chúc em yêu buổi trưa thật vui ☀️ Hôm nay ${schedule}. Nhớ uống nước, ăn uống đầy đủ và nghỉ một chút khi có thể nha 💕`,
   evening: (date, schedule) => `Tối rồi, Vy yêu nhớ nghỉ ngơi nhé 🌙 Ngày mai ${date} ${schedule}. Ngủ ngon để mai luôn tràn đầy năng lượng nha 💞`
 };
@@ -135,7 +135,7 @@ async function generateCuteMessage(moment, dateText, description) {
     'Viết một lời nhắn thông báo rất ngắn bằng tiếng Việt cho Phan Thị Thảo Vy, người yêu của người gửi.',
     `Thời điểm: ${moment === 'morning' ? 'buổi sáng' : moment === 'noon' ? 'buổi trưa' : 'buổi tối'}.`,
     `Lịch: ${moment === 'evening' ? `ngày mai ${dateText}` : `hôm nay ${dateText}`} ${description}.`,
-    'Giọng điệu: cute, ấm áp, tự nhiên, có thể gọi Vy là em yêu, nhưng vẫn lịch sự và chuyên nghiệp.',
+    'Giọng điệu: ngọt ngào, lãng mạn, cute, ấm áp, tự nhiên, như lời nhắn của người yêu dành cho em yêu.',
     'Có thể dùng 1–2 emoji. Chỉ trả về đúng một câu, không tiêu đề, không dấu ngoặc kép, tối đa 180 ký tự.'
   ].join(' ');
 
@@ -143,7 +143,7 @@ async function generateCuteMessage(moment, dateText, description) {
   const safePrompt = [
     'Write one short Vietnamese greeting for a loved one.',
     `Time of day: ${moment === 'morning' ? 'morning' : moment === 'noon' ? 'noon' : 'evening'}.`,
-    'Make it cute, warm, natural, professional, and optionally use one or two emojis.',
+    'Make it romantic, sweet, cute, warm, natural, and optionally use one or two emojis.',
     'Return only one sentence, without a title or quotation marks, under 180 characters.'
   ].join(' ');
 
@@ -184,17 +184,6 @@ async function dispatchDailyReminder(moment) {
     url: '/'
   });
   await sendToAllSubscriptions(payload);
-}
-
-async function dispatchTestGreeting() {
-  if (!pushConfigured || vietnamDateKey() !== '2026-09-30') return;
-  const greeting = await generateCuteMessage('morning', '', '');
-  await sendToAllSubscriptions(JSON.stringify({
-    title: '💌 Lời chúc thử dành cho Vy',
-    body: `${greeting} Đây là lời nhắn thử từ Lịch của Vy nha 💗`,
-    tag: 'lich-cua-vy-test-1018-2026-09-30',
-    url: '/'
-  }));
 }
 
 app.use(express.json({ limit: '32kb' }));
@@ -259,8 +248,6 @@ app.use((request, response) => {
 cron.schedule('0 6 * * *', () => dispatchDailyReminder('morning'), { timezone: 'Asia/Ho_Chi_Minh' });
 cron.schedule('0 12 * * *', () => dispatchDailyReminder('noon'), { timezone: 'Asia/Ho_Chi_Minh' });
 cron.schedule('0 20 * * *', () => dispatchDailyReminder('evening'), { timezone: 'Asia/Ho_Chi_Minh' });
-// Bản nháp một lần theo yêu cầu: 10:18 ngày 30/09/2026, giờ Việt Nam.
-cron.schedule('18 10 * * *', dispatchTestGreeting, { timezone: 'Asia/Ho_Chi_Minh' });
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`Lịch của Vy đang chạy tại cổng ${port}. Push: ${pushConfigured ? 'đã cấu hình' : 'chưa cấu hình'}.`);
