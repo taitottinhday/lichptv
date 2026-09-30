@@ -5,6 +5,7 @@ import { Room, RoomEvent, Track, VideoPresets } from 'livekit-client';
 const STORAGE_KEY = 'lich-cua-vy-schedule-v2';
 const AUTH_KEY = 'lich-cua-vy-authenticated-v1';
 const ADMIN_TOKEN_KEY = 'lich-cua-vy-admin-token-v1';
+const ADMIN_PUSH_ENABLED_KEY = 'lich-cua-vy-admin-push-enabled-v1';
 const DEMO_USERNAME = 'phanthithaovy';
 const DEMO_PASSWORD = '261004';
 const START_DATE = '2026-09-26';
@@ -408,6 +409,7 @@ function showAdminScreen() {
   $('#appShell').classList.remove('is-unlocked');
   $('#appShell').hidden = true;
   $('#adminScreen').hidden = false;
+  updateAdminNotificationUi();
   startChatPolling('admin');
   loadFoodRequests();
 }
@@ -446,11 +448,29 @@ async function enableAdminNotifications() {
   if (!token) return;
   try {
     await subscribeToWebPush('admin', token);
+    localStorage.setItem(ADMIN_PUSH_ENABLED_KEY, 'true');
     $('#enableAdminNotifications').textContent = 'Đã bật thông báo nhận request';
     showToast('Từ giờ anh sẽ nhận thông báo khi Vy chọn món 💌');
   } catch (error) {
     showToast(error.message || 'Chưa bật được thông báo nhận request.');
   }
+}
+
+async function updateAdminNotificationUi() {
+  const button = $('#enableAdminNotifications');
+  if (!button) return;
+  let enabled = localStorage.getItem(ADMIN_PUSH_ENABLED_KEY) === 'true';
+  if (!enabled && 'serviceWorker' in navigator && 'PushManager' in window) {
+    try {
+      const registration = await navigator.serviceWorker.getRegistration('/');
+      const subscription = await registration?.pushManager.getSubscription();
+      enabled = Boolean(subscription);
+      if (enabled) localStorage.setItem(ADMIN_PUSH_ENABLED_KEY, 'true');
+    } catch {
+      // Hiển thị nút bật lại nếu trình duyệt không đọc được đăng ký cũ.
+    }
+  }
+  button.textContent = enabled ? 'Đã bật thông báo nhận request' : 'Bật thông báo nhận request';
 }
 
 async function loadFoodRequests() {
