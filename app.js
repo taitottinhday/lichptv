@@ -6,6 +6,7 @@ const STORAGE_KEY = 'lich-cua-vy-schedule-v2';
 const AUTH_KEY = 'lich-cua-vy-authenticated-v1';
 const ADMIN_TOKEN_KEY = 'lich-cua-vy-admin-token-v1';
 const ADMIN_PUSH_ENABLED_KEY = 'lich-cua-vy-admin-push-enabled-v1';
+const CHAT_IMAGE_PREFIX = '__lich_chat_image__:';
 const DEMO_USERNAME = 'phanthithaovy';
 const DEMO_PASSWORD = '261004';
 const START_DATE = '2026-09-26';
@@ -124,6 +125,20 @@ function chatTime(createdAt) {
   return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 }
 
+function parseChatMessage(content) {
+  const raw = String(content ?? '');
+  if (!raw.startsWith(CHAT_IMAGE_PREFIX)) return { type: 'text', text: raw };
+  try {
+    const payload = JSON.parse(raw.slice(CHAT_IMAGE_PREFIX.length));
+    if (/^https?:\/\//i.test(payload.url || '')) {
+      return { type: 'image', url: payload.url, caption: String(payload.caption || '') };
+    }
+  } catch {
+    // Hiển thị nội dung thô nếu một tin nhắn ảnh cũ bị hỏng dữ liệu.
+  }
+  return { type: 'text', text: raw };
+}
+
 function renderChatMessages(messages, selector, viewerRole) {
   const container = $(selector);
   if (!container) return;
@@ -131,9 +146,12 @@ function renderChatMessages(messages, selector, viewerRole) {
   container.innerHTML = messages.length ? messages.map((message) => {
     const own = message.sender_role === viewerRole;
     const sender = own ? (viewerRole === 'admin' ? 'Anh' : 'Vy') : (viewerRole === 'admin' ? 'Vy' : 'Anh');
-    const content = escapeHtml(message.content).replace(/\r?\n/g, '<br />');
+    const parsed = parseChatMessage(message.content);
+    const content = parsed.type === 'image'
+      ? `<a class="chat-image-link" href="${escapeHtml(parsed.url)}" target="_blank" rel="noopener"><img class="chat-image" src="${escapeHtml(parsed.url)}" alt="Ảnh ${sender} gửi" loading="lazy" /></a>${parsed.caption ? `<p class="chat-image-caption">${escapeHtml(parsed.caption).replace(/\r?\n/g, '<br />')}</p>` : ''}`
+      : `<p>${escapeHtml(parsed.text).replace(/\r?\n/g, '<br />')}</p>`;
     return `<article class="chat-message ${own ? 'is-mine' : 'is-theirs'}">
-      <div class="chat-bubble"><p>${content}</p><time datetime="${escapeHtml(message.created_at)}">${sender} · ${chatTime(message.created_at)}</time></div>
+      <div class="chat-bubble">${content}<time datetime="${escapeHtml(message.created_at)}">${sender} · ${chatTime(message.created_at)}</time></div>
     </article>`;
   }).join('') : '<p class="chat-empty">Chưa có tin nhắn nào. Nhắn một câu thật ngọt cho người thương nha 💗</p>';
   container.dataset.ready = 'true';
@@ -178,27 +196,33 @@ async function loadChatMessages(viewerRole = 'vy', silent = false) {
 
 async function sendChatMessage(senderRole = 'vy') {
   const input = senderRole === 'admin' ? $('#adminChatInput') : $('#chatInput');
+  const imageInput = senderRole === 'admin' ? $('#adminChatImageInput') : $('#chatImageInput');
   const button = senderRole === 'admin' ? $('#sendAdminChat') : $('#sendChat');
   const status = senderRole === 'admin' ? $('#adminChatStatus') : $('#chatStatus');
   const content = input.value.trim();
-  if (!content) {
-    status.textContent = 'Viết một điều muốn nói trước nha 💗';
+  const file = imageInput?.files?.[0];
+  if (!content && !file) {
+    status.textContent = 'Viết một điều hoặc chọn ảnh muốn gửi trước nha 💗';
     input.focus();
     return;
   }
   const token = senderRole === 'admin' ? localStorage.getItem(ADMIN_TOKEN_KEY) : '';
   button.disabled = true;
   try {
+    status.textContent = file ? 'Đang chuẩn bị ảnh để gửi nha…' : '';
+    const imageDataUrl = file ? await prepareChatImage(file) : '';
     const headers = { 'Content-Type': 'application/json' };
     if (token) headers.Authorization = `Bearer ${token}`;
     const response = await fetch('/api/chat/messages', {
       method: 'POST',
       headers,
-      body: JSON.stringify({ senderRole, content })
+      body: JSON.stringify({ senderRole, content, imageDataUrl })
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || 'Chưa gửi được tin nhắn.');
     input.value = '';
+    if (imageInput) imageInput.value = '';
+    clearChatImagePreview(senderRole);
     status.textContent = senderRole === 'admin' ? 'Đã gửi cho Vy 💌' : 'Đã gửi cho anh 💌';
     await loadChatMessages(senderRole);
   } catch (error) {
@@ -207,6 +231,65 @@ async function sendChatMessage(senderRole = 'vy') {
     button.disabled = false;
     input.focus();
   }
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('Không đọc được ảnh, thử chọn ảnh khác nha.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function prepareChatImage(file) {
+  if (!file.type.startsWith('image/')) throw new Error('Vui lòng chọn một file ảnh nha.');
+  const source = await readFileAsDataUrl(file);
+  const image = await new Promise((resolve, reject) => {
+    const preview = new Image();
+    preview.onload = () => resolve(preview);
+    preview.onerror = () => reject(new Error('Ảnh này chưa được iPhone hỗ trợ, hãy chọn JPG hoặc PNG nha.'));
+    preview.src = source;
+  });
+  const maxDimension = 1600;
+  const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth, image.naturalHeight));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(image.naturalWidth * scale));
+  canvas.height = Math.max(1, Math.round(image.naturalHeight * scale));
+  canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+  return canvas.toDataURL('image/jpeg', 0.84);
+}
+
+function clearChatImagePreview(senderRole) {
+  const preview = $(senderRole === 'admin' ? '#adminChatImagePreview' : '#chatImagePreview');
+  if (preview) preview.hidden = true;
+}
+
+function bindChatImagePicker(senderRole) {
+  const input = $(senderRole === 'admin' ? '#adminChatImageInput' : '#chatImageInput');
+  const preview = $(senderRole === 'admin' ? '#adminChatImagePreview' : '#chatImagePreview');
+  const previewImage = $(senderRole === 'admin' ? '#adminChatImagePreviewImage' : '#chatImagePreviewImage');
+  const removeButton = $(senderRole === 'admin' ? '#removeAdminChatImage' : '#removeChatImage');
+  if (!input || !preview || !previewImage || !removeButton) return;
+  input.addEventListener('change', () => {
+    const file = input.files?.[0];
+    if (!file) {
+      clearChatImagePreview(senderRole);
+      return;
+    }
+    if (!file.type.startsWith('image/')) {
+      input.value = '';
+      clearChatImagePreview(senderRole);
+      showToast('Vy hãy chọn đúng file ảnh nha 💗');
+      return;
+    }
+    previewImage.src = URL.createObjectURL(file);
+    preview.hidden = false;
+  });
+  removeButton.addEventListener('click', () => {
+    input.value = '';
+    clearChatImagePreview(senderRole);
+  });
 }
 
 function stopChatPolling() {
@@ -1101,6 +1184,8 @@ function bindEvents() {
     sendChatMessage('admin');
   });
   bindChatQuickReplies();
+  bindChatImagePicker('vy');
+  bindChatImagePicker('admin');
   $('#startVideoCall').addEventListener('click', () => joinLiveKitCall('vy', true));
   $('#joinVideoCall').addEventListener('click', () => joinLiveKitCall('vy', false));
   $('#toggleCamera').addEventListener('click', () => toggleCallCamera('vy'));

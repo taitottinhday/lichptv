@@ -2,7 +2,7 @@ import express from 'express';
 import cron from 'node-cron';
 import pg from 'pg';
 import webpush from 'web-push';
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
@@ -42,6 +42,10 @@ let memoryFoodRequestId = 0;
 const memoryChatMessages = [];
 let memoryChatMessageId = 0;
 let pushConfigured = false;
+const CHAT_IMAGE_PREFIX = '__lich_chat_image__:';
+const CHAT_STORAGE_BUCKET = 'chat-images';
+const CHAT_IMAGE_MAX_BYTES = 6 * 1024 * 1024;
+let chatStorageReadyPromise;
 
 if (vapidPublicKey && vapidPrivateKey) {
   try {
@@ -100,6 +104,66 @@ async function supabaseRequest(path, options = {}) {
     throw new Error(`Supabase HTTP ${response.status}${detail ? `: ${detail}` : ''}`);
   }
   return data;
+}
+
+async function ensureChatStorageBucket() {
+  if (!supabaseConfigured) throw new Error('Supabase chưa được cấu hình để lưu ảnh chat.');
+  if (!chatStorageReadyPromise) {
+    chatStorageReadyPromise = (async () => {
+      const headers = { apikey: supabaseServiceKey, Authorization: `Bearer ${supabaseServiceKey}` };
+      const existing = await fetch(`${supabaseUrl}/storage/v1/bucket/${CHAT_STORAGE_BUCKET}`, { headers });
+      if (existing.ok) return;
+      const created = await fetch(`${supabaseUrl}/storage/v1/bucket`, {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: CHAT_STORAGE_BUCKET,
+          name: CHAT_STORAGE_BUCKET,
+          public: true,
+          file_size_limit: CHAT_IMAGE_MAX_BYTES,
+          allowed_mime_types: ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+        })
+      });
+      if (!created.ok && created.status !== 409) {
+        const detail = await created.text();
+        throw new Error(`Không tạo được kho ảnh chat (${created.status}): ${detail.slice(0, 180)}`);
+      }
+    })().catch((error) => {
+      chatStorageReadyPromise = null;
+      throw error;
+    });
+  }
+  return chatStorageReadyPromise;
+}
+
+async function uploadChatImage(dataUrl) {
+  if (!supabaseConfigured) throw new Error('Cần cấu hình Supabase để gửi và lưu ảnh chat.');
+  const match = /^data:(image\/(?:jpeg|png|webp|gif));base64,([A-Za-z0-9+/=\s]+)$/.exec(String(dataUrl || ''));
+  if (!match) throw new Error('Ảnh chưa đúng định dạng JPG, PNG, WEBP hoặc GIF.');
+  const mimeType = match[1];
+  const buffer = Buffer.from(match[2].replace(/\s/g, ''), 'base64');
+  if (!buffer.length || buffer.length > CHAT_IMAGE_MAX_BYTES) {
+    throw new Error('Ảnh quá lớn, hãy chọn ảnh nhỏ hơn 6 MB nha.');
+  }
+  await ensureChatStorageBucket();
+  const extension = mimeType.split('/')[1].replace('jpeg', 'jpg');
+  const filePath = `${vietnamDateKey()}/${randomUUID()}.${extension}`;
+  const response = await fetch(`${supabaseUrl}/storage/v1/object/${CHAT_STORAGE_BUCKET}/${filePath}`, {
+    method: 'POST',
+    headers: {
+      apikey: supabaseServiceKey,
+      Authorization: `Bearer ${supabaseServiceKey}`,
+      'Content-Type': mimeType,
+      'x-upsert': 'false',
+      'cache-control': '31536000'
+    },
+    body: buffer
+  });
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`Chưa tải được ảnh lên Supabase (${response.status}): ${detail.slice(0, 180)}`);
+  }
+  return `${supabaseUrl}/storage/v1/object/public/${CHAT_STORAGE_BUCKET}/${filePath}`;
 }
 
 function vietnamDateKey(date = new Date()) {
@@ -274,7 +338,7 @@ async function dispatchDailyReminder(moment) {
   await sendToRole('vy', payload);
 }
 
-app.use(express.json({ limit: '32kb' }));
+app.use(express.json({ limit: '10mb' }));
 
 app.get('/api/health', (_request, response) => response.json({ ok: true, pushConfigured, database: Boolean(pool), supabaseConfigured, livekitConfigured, geminiConfigured: Boolean(geminiApiKey) }));
 
@@ -371,9 +435,15 @@ app.post('/api/chat/messages', async (request, response) => {
     return response.status(401).json({ error: 'Cần đăng nhập góc chat của anh.' });
   }
   const content = String(request.body?.content || '').trim().slice(0, 2000);
-  if (!content) return response.status(400).json({ error: 'Tin nhắn chưa có nội dung.' });
+  const imageDataUrl = String(request.body?.imageDataUrl || '');
+  if (!content && !imageDataUrl) return response.status(400).json({ error: 'Tin nhắn chưa có nội dung hoặc ảnh.' });
 
   try {
+    let storedContent = content;
+    if (imageDataUrl) {
+      const imageUrl = await uploadChatImage(imageDataUrl);
+      storedContent = `${CHAT_IMAGE_PREFIX}${JSON.stringify({ url: imageUrl, caption: content })}`;
+    }
     let message;
     if (supabaseConfigured) {
       const rows = await supabaseRequest('chat_messages', {
@@ -382,7 +452,7 @@ app.post('/api/chat/messages', async (request, response) => {
           'Content-Type': 'application/json',
           Prefer: 'return=representation'
         },
-        body: JSON.stringify({ sender_role: senderRole, content })
+        body: JSON.stringify({ sender_role: senderRole, content: storedContent })
       });
       message = rows?.[0];
     } else if (pool) {
@@ -391,14 +461,14 @@ app.post('/api/chat/messages', async (request, response) => {
         `INSERT INTO chat_messages (sender_role, content)
          VALUES ($1, $2)
          RETURNING id, sender_role, content, created_at`,
-        [senderRole, content]
+        [senderRole, storedContent]
       );
       message = result.rows[0];
     } else {
       message = {
         id: ++memoryChatMessageId,
         sender_role: senderRole,
-        content,
+        content: storedContent,
         created_at: new Date().toISOString()
       };
       memoryChatMessages.push(message);
@@ -407,9 +477,12 @@ app.post('/api/chat/messages', async (request, response) => {
 
     const recipientRole = senderRole === 'vy' ? 'admin' : 'vy';
     const senderName = senderRole === 'vy' ? 'Vy' : 'Anh';
+    const notificationBody = imageDataUrl
+      ? `${senderName} vừa gửi một ảnh${content ? `: ${content.slice(0, 140)}` : ''} 📷`
+      : `${senderName}: ${content.slice(0, 180)}`;
     await sendToRole(recipientRole, JSON.stringify({
       title: senderRole === 'vy' ? '💌 Vy vừa nhắn cho anh' : '💌 Anh vừa nhắn cho Vy',
-      body: `${senderName}: ${content.slice(0, 180)}`,
+      body: notificationBody,
       tag: `chat-message-${message.id}`,
       url: senderRole === 'vy' ? '/?admin=1' : '/'
     }));
