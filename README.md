@@ -30,6 +30,8 @@ Trong app, bấm **Tải lịch vào điện thoại** để tải file `lich-cu
 
 App có thể gửi Web Push trực tiếp cho iPhone lúc **06:00** và **17:00** theo giờ Việt Nam. Trên Railway, tạo thêm một dịch vụ **PostgreSQL** trong cùng project và liên kết biến `DATABASE_URL` cho service `lichptv`.
 
+Bản kiểm tra hiện tại có thêm một thông báo thử lúc **09:30 ngày 30/09/2026**. Sau khi kiểm tra xong, có thể xóa lịch thử trong `server.mjs`.
+
 Tạo cặp VAPID trên máy tính:
 
 ```bash
