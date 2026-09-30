@@ -1,3 +1,3 @@
 // Dán đường dẫn HTTPS trực tiếp tới ảnh của Vy vào giữa hai dấu nháy.
 // Ví dụ: https://i.imgur.com/anh-cua-vy.jpg
-export const AVATAR_IMAGE_URL = 'DAN_LINK_ANH_CUA_VY_VAO_DAY';
+export const AVATAR_IMAGE_URL = 'https://scontent.fhan1-1.fna.fbcdn.net/v/t39.30808-6/494533152_1479713322991423_1046062549446950757_n.jpg?stp=dst-jpg_tt6&cstp=mx1087x1615&ctp=s1087x1615&_nc_cat=110&_nc_map=urlgen_bucketless&ccb=1-7&_nc_sid=833d8c&_nc_eui2=AeHZ4bI4FcEFpv1Us3MvgdM_Z9HUyT2JSJNn0dTJPYlIk5ZgNkV9GBPUxo9NblHNOgdIaxxdyPfoDG1RTAzZldG6&_nc_ohc=GoTLIFG-gXgQ7kNvwGFbR1u&_nc_oc=AdpRF2jPuRkYAe3OoQffjqj29BwQFu6X3_52iKem5Ko0DTcIX8v3tQhwy5EURC95cDA&_nc_zt=23&_nc_ht=scontent.fhan1-1.fna&_nc_gid=1EsBOCW8IrYY_2D6nISmRw&_nc_ss=7b2a8&oh=00_AQPtUftog2-X_ZgVUF1Uo9aVOpRcE4OayAg4PX652swy5Q&oe=6AC23340';
