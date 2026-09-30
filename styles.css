@@ -195,7 +195,7 @@ h3 { margin-bottom: 4px; font-size: 16px; }
 .legend-swatch.shift-day { background: #82c5ae; }
 .legend-swatch.shift-night { background: #a89de5; }
 .legend-swatch.shift-off { background: #f2c96c; }
-.calendar-card { overflow: hidden; border: 1px solid var(--line); border-radius: 22px; background: #fff; box-shadow: var(--shadow); }
+.calendar-card { overflow: hidden; border: 1px solid var(--line); border-radius: 22px; background: #fff; box-shadow: var(--shadow); touch-action: pan-y; -webkit-user-select: none; user-select: none; }
 .weekdays, .calendar-grid { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
 .weekdays { padding: 15px 14px 12px; border-bottom: 1px solid var(--line); color: #a4a2a7; font-size: 10px; font-weight: 700; letter-spacing: .08em; text-align: center; }
 .calendar-grid { padding: 8px 14px 16px; }

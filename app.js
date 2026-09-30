@@ -602,7 +602,7 @@ function displayDate(date, options = { day: 'numeric', month: 'long' }) {
 }
 
 function codeInfo(code) {
-  if (code === 'D') return { title: 'Ca ngày · 12 tiếng', subtitle: '07:30 — 19:30', className: 'day', note: '☀️ Chúc nàng một ca ngày thật suôn sẻ nha!' };
+  if (code === 'D') return { title: 'Ca ngày · 12 tiếng', subtitle: '07:30 — 20:00', className: 'day', note: '☀️ Chúc nàng một ca ngày thật suôn sẻ nha!' };
   if (code === 'N') return { title: 'Ca đêm · 12 tiếng', subtitle: '19:30 — 07:30 hôm sau', className: 'night', note: '🌙 Ca đêm cố lên, tan ca nhớ về nghỉ ngơi nhé!' };
   if (code === '18') return { title: 'Được nghỉ', subtitle: 'Một ngày để nạp lại năng lượng', className: 'off', note: '🧸 Hôm nay nàng được nghỉ rồi, ngủ thật ngon nha!' };
   if (code === '9') return { title: 'Được nghỉ', subtitle: 'Một ngày để nạp lại năng lượng', className: 'off', note: '🌷 Nghỉ ngơi vui vẻ nhé, Vy xứng đáng được yêu chiều!' };
@@ -614,7 +614,7 @@ function shiftWindow(date, code) {
   const end = new Date(date);
   if (code === 'D') {
     start.setHours(7, 30, 0, 0);
-    end.setHours(19, 30, 0, 0);
+    end.setHours(20, 0, 0, 0);
   } else if (code === 'N') {
     start.setHours(19, 30, 0, 0);
     end.setDate(end.getDate() + 1);
@@ -747,7 +747,36 @@ function renderCalendar() {
   }
 }
 
+function changeVisibleMonth(amount) {
+  state.visibleMonth = new Date(state.visibleMonth.getFullYear(), state.visibleMonth.getMonth() + amount, 1);
+  renderCalendar();
+}
+
+function bindCalendarSwipe() {
+  const calendarCard = $('#calendarCard');
+  if (!calendarCard) return;
+  let startX = 0;
+  let startY = 0;
+
+  calendarCard.addEventListener('touchstart', (event) => {
+    const touch = event.changedTouches[0];
+    startX = touch.clientX;
+    startY = touch.clientY;
+  }, { passive: true });
+
+  calendarCard.addEventListener('touchend', (event) => {
+    const touch = event.changedTouches[0];
+    const deltaX = touch.clientX - startX;
+    const deltaY = touch.clientY - startY;
+    if (Math.abs(deltaX) < 55 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) return;
+    state.suppressCalendarClick = true;
+    changeVisibleMonth(deltaX < 0 ? 1 : -1);
+    window.setTimeout(() => { state.suppressCalendarClick = false; }, 350);
+  }, { passive: true });
+}
+
 function openDayModal(key) {
+  if (state.suppressCalendarClick) return;
   state.selectedDate = key;
   state.selectedCode = state.schedule[key] || '18';
   $('#modalDate').textContent = displayDate(parseDate(key), { weekday: 'long', day: 'numeric', month: 'long' });
@@ -825,7 +854,7 @@ function showIosInstallGuidance() {
 }
 
 function reminderDescription(code) {
-  if (code === 'D') return 'đi làm ca D · 07:30–19:30';
+  if (code === 'D') return 'đi làm ca D · 07:30–20:00';
   if (code === 'N') return 'đi làm ca N · 19:30–07:30 hôm sau';
   if (code === '18' || code === '9') return 'được nghỉ';
   if (code === 'eAD') return 'lịch điều chỉnh · eAD';
@@ -1087,13 +1116,12 @@ function bindEvents() {
   $('#exportCalendar').addEventListener('click', exportCalendarFile);
   $('#notificationButton').addEventListener('click', enableNotifications);
   $('#previousMonth').addEventListener('click', () => {
-    state.visibleMonth = new Date(state.visibleMonth.getFullYear(), state.visibleMonth.getMonth() - 1, 1);
-    renderCalendar();
+    changeVisibleMonth(-1);
   });
   $('#nextMonth').addEventListener('click', () => {
-    state.visibleMonth = new Date(state.visibleMonth.getFullYear(), state.visibleMonth.getMonth() + 1, 1);
-    renderCalendar();
+    changeVisibleMonth(1);
   });
+  bindCalendarSwipe();
   $('#closeModal').addEventListener('click', closeDayModal);
   $('#dayModal').addEventListener('click', (event) => {
     if (event.target === $('#dayModal')) closeDayModal();

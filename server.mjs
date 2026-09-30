@@ -116,7 +116,7 @@ function addDays(key, amount) {
 }
 
 function shiftDescription(code) {
-  if (code === 'D') return 'đi làm ca D, 07:30–19:30';
+  if (code === 'D') return 'đi làm ca D, 07:30–20:00';
   if (code === 'N') return 'đi làm ca N, 19:30–07:30 hôm sau';
   if (code === '18' || code === '9') return 'được nghỉ';
   if (code === 'eAD') return 'có lịch điều chỉnh eAD';
