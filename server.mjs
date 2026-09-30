@@ -128,7 +128,7 @@ async function dispatchTestReminder() {
   if (!pushConfigured || vietnamDateKey() !== '2026-09-30') return;
   await sendToAllSubscriptions(JSON.stringify({
     title: '🔔 Thông báo thử của Lịch của Vy',
-    body: 'Nếu Vy thấy tin này lúc 09:30 thì nhắc lịch đã hoạt động rồi 💗',
+    body: 'Nếu Vy thấy tin này lúc 09:45 thì nhắc lịch đã hoạt động rồi 💗',
     tag: 'lich-cua-vy-test-2026-09-30',
     url: '/'
   }));
@@ -172,8 +172,8 @@ app.use((request, response) => {
 
 cron.schedule('0 6 * * *', () => dispatchReminder('today'), { timezone: 'Asia/Ho_Chi_Minh' });
 cron.schedule('0 17 * * *', () => dispatchReminder('tomorrow'), { timezone: 'Asia/Ho_Chi_Minh' });
-// Lịch thử một lần theo yêu cầu: 09:30 ngày 30/09/2026, giờ Việt Nam.
-cron.schedule('30 9 * * *', dispatchTestReminder, { timezone: 'Asia/Ho_Chi_Minh' });
+// Lịch thử một lần theo yêu cầu: 09:45 ngày 30/09/2026, giờ Việt Nam.
+cron.schedule('45 9 * * *', dispatchTestReminder, { timezone: 'Asia/Ho_Chi_Minh' });
 
 app.listen(port, '0.0.0.0', () => {
   console.log(`Lịch của Vy đang chạy tại cổng ${port}. Push: ${pushConfigured ? 'đã cấu hình' : 'chưa cấu hình'}.`);
