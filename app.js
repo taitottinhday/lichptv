@@ -1,4 +1,5 @@
 import { defaultSchedule } from './schedule-data.js';
+import { AVATAR_IMAGE_URL } from './avatar-config.js';
 
 const STORAGE_KEY = 'lich-cua-vy-schedule-v2';
 const AUTH_KEY = 'lich-cua-vy-authenticated-v1';
@@ -32,6 +33,20 @@ function loadSchedule() {
 
 function saveSchedule() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state.schedule));
+}
+
+function applyAvatarImage() {
+  const imageUrl = AVATAR_IMAGE_URL.trim();
+  if (!/^https:\/\//i.test(imageUrl)) return;
+
+  $$('.avatar-image').forEach((image) => {
+    const fallback = image.previousElementSibling;
+    image.addEventListener('load', () => {
+      image.hidden = false;
+      if (fallback) fallback.hidden = true;
+    }, { once: true });
+    image.src = imageUrl;
+  });
 }
 
 function localDateKey(date) {
@@ -510,6 +525,7 @@ function bindEvents() {
 }
 
 function init() {
+  applyAvatarImage();
   bindEvents();
   setAuthenticated(localStorage.getItem(AUTH_KEY) === 'true');
   renderOverview();

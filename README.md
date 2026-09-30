@@ -30,7 +30,17 @@ Trong app, bấm **Tải lịch vào điện thoại** để tải file `lich-cu
 
 App có thể gửi Web Push trực tiếp cho iPhone lúc **06:00** và **17:00** theo giờ Việt Nam. Trên Railway, tạo thêm một dịch vụ **PostgreSQL** trong cùng project và liên kết biến `DATABASE_URL` cho service `lichptv`.
 
-Bản kiểm tra hiện tại có thêm một thông báo thử lúc **09:45 ngày 30/09/2026**. Sau khi kiểm tra xong, có thể xóa lịch thử trong `server.mjs`.
+Sau khi bấm **Bật nhắc**, app sẽ gửi ngay một thông báo chào mừng để xác nhận iPhone đã đăng ký thành công. Lịch tự động chỉ chạy ở hai mốc **06:00** và **17:00**.
+
+### Đổi ảnh của Vy
+
+Mở file `avatar-config.js`, thay phần `DAN_LINK_ANH_CUA_VY_VAO_DAY` bằng đường dẫn HTTPS trực tiếp tới ảnh, ví dụ:
+
+```js
+export const AVATAR_IMAGE_URL = 'https://i.imgur.com/anh-cua-vy.jpg';
+```
+
+Ảnh cần để công khai và URL phải mở thẳng ra file ảnh (`.jpg`, `.png` hoặc `.webp`), không phải đường dẫn trang Google Drive/Facebook. Sau đó chạy build và deploy lại.
 
 Tạo cặp VAPID trên máy tính:
 
