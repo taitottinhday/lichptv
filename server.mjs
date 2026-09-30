@@ -147,7 +147,7 @@ app.get('/api/app-icon', async (_request, response) => {
         .jpeg({ quality: 92 })
         .toBuffer();
     }
-    return response.type('image/jpeg').set('Cache-Control', 'public, max-age=31536000, immutable').send(appIconBuffer);
+    return response.type('image/jpeg').set('Cache-Control', 'public, max-age=3600').send(appIconBuffer);
   } catch (error) {
     console.error('Không tạo được icon từ ảnh Vy:', error.message);
     return response.status(502).send('Không tải được ảnh đại diện.');

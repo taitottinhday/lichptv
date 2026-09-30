@@ -9,7 +9,7 @@
   "lang": "vi",
   "icons": [
     {
-      "src": "/api/app-icon",
+      "src": "/api/app-icon?v=2",
       "sizes": "512x512",
       "type": "image/jpeg",
       "purpose": "any"
