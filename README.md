@@ -83,6 +83,18 @@ alter table public.chat_messages enable row level security;
 
 Railway cần có hai biến `SUPABASE_URL` và `SUPABASE_SERVICE_ROLE_KEY` để app lưu lịch sử chat vào Supabase. Nếu chưa có hai biến này, app sẽ dùng PostgreSQL Railway; nếu cũng không có PostgreSQL thì chỉ dùng bộ nhớ tạm trong lúc chơi thử.
 
+## Gọi video bằng LiveKit
+
+Railway cần có đủ ba biến:
+
+```text
+LIVEKIT_URL=wss://ten-project.livekit.cloud
+LIVEKIT_API_KEY=...
+LIVEKIT_API_SECRET=...
+```
+
+Trong app, Vy bấm **Gọi video cho anh**; anh mở thông báo rồi bấm **Tham gia video**. Góc của anh cũng có nút gọi cho Vy. Lần đầu gọi, mỗi điện thoại cần cho phép camera và micro. LiveKit chỉ dùng để truyền cuộc gọi trực tiếp; app không tự lưu video cuộc gọi.
+
 ### Đổi ảnh của Vy
 
 Mở file `avatar-config.js`, thay phần `DAN_LINK_ANH_CUA_VY_VAO_DAY` bằng đường dẫn HTTPS trực tiếp tới ảnh, ví dụ:

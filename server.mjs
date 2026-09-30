@@ -6,6 +6,7 @@ import { randomUUID } from 'node:crypto';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
+import { AccessToken } from 'livekit-server-sdk';
 import { defaultSchedule } from './schedule-data.js';
 import { AVATAR_IMAGE_URL } from './avatar-config.js';
 
@@ -18,6 +19,12 @@ const pool = databaseUrl ? new Pool({ connectionString: databaseUrl, ssl: databa
 const supabaseUrl = process.env.SUPABASE_URL?.trim().replace(/\/$/, '');
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || process.env.SUPABASE_SECRET_KEY?.trim();
 const supabaseConfigured = Boolean(supabaseUrl && supabaseServiceKey);
+const livekitRawUrl = process.env.LIVEKIT_URL?.trim();
+const livekitUrl = livekitRawUrl?.replace(/^http:\/\//i, 'ws://').replace(/^https:\/\//i, 'wss://');
+const livekitApiKey = process.env.LIVEKIT_API_KEY?.trim();
+const livekitApiSecret = process.env.LIVEKIT_API_SECRET?.trim();
+const livekitConfigured = Boolean(livekitUrl && livekitApiKey && livekitApiSecret);
+const livekitRoomName = 'lich-cua-vy-private';
 const memorySubscriptions = new Map();
 let appIconBuffer;
 const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
@@ -246,7 +253,7 @@ async function dispatchDailyReminder(moment) {
 
 app.use(express.json({ limit: '32kb' }));
 
-app.get('/api/health', (_request, response) => response.json({ ok: true, pushConfigured, database: Boolean(pool), supabaseConfigured, geminiConfigured: Boolean(geminiApiKey) }));
+app.get('/api/health', (_request, response) => response.json({ ok: true, pushConfigured, database: Boolean(pool), supabaseConfigured, livekitConfigured, geminiConfigured: Boolean(geminiApiKey) }));
 
 app.post('/api/admin/login', (request, response) => {
   const { username, password } = request.body || {};
@@ -256,6 +263,44 @@ app.post('/api/admin/login', (request, response) => {
   const token = randomUUID();
   adminSessions.add(token);
   return response.json({ ok: true, token });
+});
+
+app.post('/api/livekit/token', async (request, response) => {
+  const role = request.body?.role === 'admin' ? 'admin' : 'vy';
+  if (role === 'admin' && !isAdminRequest(request)) {
+    return response.status(401).json({ error: 'Cần đăng nhập góc của anh trước khi gọi.' });
+  }
+  if (!livekitConfigured) {
+    return response.status(503).json({ error: 'LiveKit chưa được cấu hình trên Railway.' });
+  }
+  try {
+    const displayName = role === 'admin' ? 'Anh' : 'Vy';
+    const accessToken = new AccessToken(livekitApiKey, livekitApiSecret, {
+      identity: role === 'admin' ? 'anh' : 'vy',
+      name: displayName,
+      ttl: '2h'
+    });
+    accessToken.addGrant({
+      roomJoin: true,
+      room: livekitRoomName,
+      canPublish: true,
+      canSubscribe: true
+    });
+    const participantToken = await accessToken.toJwt();
+    if (request.body?.announce !== false) {
+      const recipientRole = role === 'admin' ? 'vy' : 'admin';
+      await sendToRole(recipientRole, JSON.stringify({
+        title: role === 'admin' ? '📹 Anh đang gọi video cho Vy' : '📹 Vy đang gọi video cho anh',
+        body: 'Mở Lịch của Vy rồi bấm “Tham gia video” nha 💗',
+        tag: `video-call-${Date.now()}`,
+        url: role === 'admin' ? '/?call=1' : '/?admin=1&call=1'
+      }));
+    }
+    return response.json({ serverUrl: livekitUrl, participantToken, roomName: livekitRoomName });
+  } catch (error) {
+    console.error('Không tạo được token LiveKit:', error.message);
+    return response.status(500).json({ error: 'Chưa tạo được phòng gọi video.' });
+  }
 });
 
 app.get('/api/chat/messages', async (request, response) => {

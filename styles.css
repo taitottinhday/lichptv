@@ -133,6 +133,23 @@ h3 { margin-bottom: 4px; font-size: 16px; }
 .chat-compose textarea:focus { border-color: #bca8e1; box-shadow: 0 0 0 4px rgba(188, 168, 225, .15); }
 .chat-compose .button { flex: 0 0 auto; margin: 0; }
 .chat-status { min-height: 17px; margin: 8px 0 0; color: #8b699a; font-size: 11px; font-weight: 600; }
+.call-section { margin-top: 28px; padding: 24px; border: 1px solid #f0d9df; border-radius: 25px; background: linear-gradient(145deg, #fff, #fff8fa); box-shadow: var(--shadow); }
+.call-section .section-heading { align-items: center; }
+.call-section h2 { margin-bottom: 0; font-size: clamp(24px, 3vw, 32px); }
+.call-status-pill { color: #a85c70; font-size: 12px; font-weight: 600; }
+.call-intro { margin: 9px 0 16px; color: var(--muted); font-size: 13px; }
+.call-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+.call-stage { margin-top: 14px; padding: 12px; border: 1px solid #f0dfe4; border-radius: 18px; background: #302b35; }
+.call-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 9px; min-height: 170px; }
+.call-tile { position: relative; min-height: 170px; overflow: hidden; border-radius: 13px; background: #17141a; }
+.call-video { display: block; width: 100%; height: 100%; min-height: 170px; object-fit: cover; }
+.call-tile audio { display: none; }
+.call-participant-name { position: absolute; z-index: 1; left: 9px; bottom: 8px; padding: 4px 8px; border-radius: 999px; background: rgba(0, 0, 0, .48); color: #fff; font-size: 10px; }
+.call-controls { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 12px; }
+.call-controls .button { padding: 8px 12px; font-size: 11px; }
+.button-danger { background: #cf536e; color: #fff; }
+.call-status { min-height: 17px; margin: 9px 0 0; color: #a85c70; font-size: 11px; font-weight: 600; }
+.admin-call-section { margin-top: 25px; background: linear-gradient(145deg, #fff, #fff8fc); box-shadow: none; }
 .admin-screen { min-height: 100svh; padding: 28px; background: radial-gradient(circle at 15% 0%, #fff7fa 0 28%, transparent 53%), #f7f3f5; }
 .admin-card { width: min(100%, 840px); margin: 0 auto; padding: 30px; border: 1px solid var(--line); border-radius: 28px; background: rgba(255, 255, 255, .92); box-shadow: 0 22px 70px rgba(63, 43, 54, .12); }
 .admin-heading { display: flex; align-items: start; justify-content: space-between; gap: 20px; }
@@ -247,4 +264,10 @@ h3 { margin-bottom: 4px; font-size: 16px; }
   .chat-section .section-heading { align-items: flex-start; flex-direction: column; gap: 7px; }
   .chat-compose { align-items: stretch; flex-direction: column; }
   .chat-compose .button { width: 100%; }
+  .call-section { padding: 18px; }
+  .call-section .section-heading { align-items: flex-start; flex-direction: column; gap: 7px; }
+  .call-actions { flex-direction: column; }
+  .call-actions .button { width: 100%; }
+  .call-controls { display: grid; grid-template-columns: 1fr 1fr; }
+  .call-controls .button-danger { grid-column: 1 / -1; }
 }

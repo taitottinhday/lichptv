@@ -155,6 +155,30 @@
           <p class="chat-status" id="chatStatus" role="status" aria-live="polite"></p>
         </section>
 
+        <section class="call-section" id="callSection" aria-labelledby="callHeading">
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">GÓC HẸN RIÊNG</p>
+              <h2 id="callHeading">Gọi video với anh 📹</h2>
+            </div>
+            <span class="call-status-pill">Qua Wi‑Fi hoặc 4G</span>
+          </div>
+          <p class="call-intro">Bấm gọi để mở phòng riêng của hai đứa. Khi được hỏi, Vy cho phép camera và micro nha.</p>
+          <div class="call-actions">
+            <button class="button button-primary" id="startVideoCall" type="button">📹 Gọi video cho anh</button>
+            <button class="button button-light" id="joinVideoCall" type="button">Tham gia video</button>
+          </div>
+          <div class="call-stage" id="callStage" hidden>
+            <div class="call-grid" id="callVideos"></div>
+            <div class="call-controls">
+              <button class="button button-light" id="toggleCamera" type="button" disabled>Tắt camera</button>
+              <button class="button button-light" id="toggleMicrophone" type="button" disabled>Tắt mic</button>
+              <button class="button button-danger" id="endCall" type="button" disabled>Kết thúc</button>
+            </div>
+          </div>
+          <p class="call-status" id="callStatus" role="status" aria-live="polite"></p>
+        </section>
+
         <section class="calendar-section" aria-labelledby="calendarHeading">
           <div class="section-heading">
             <div>
@@ -231,6 +255,29 @@
             <button class="button button-primary" id="sendAdminChat" type="submit">Gửi cho Vy 💌</button>
           </form>
           <p class="chat-status" id="adminChatStatus" role="status" aria-live="polite"></p>
+        </section>
+        <section class="call-section admin-call-section" id="adminCallSection" aria-labelledby="adminCallHeading">
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">GÓC HẸN RIÊNG</p>
+              <h2 id="adminCallHeading">Gọi video với Vy 📹</h2>
+            </div>
+            <span class="call-status-pill">Phòng riêng của hai đứa</span>
+          </div>
+          <p class="call-intro">Bấm gọi để Vy nhận thông báo, hoặc tham gia khi Vy đã gọi trước.</p>
+          <div class="call-actions">
+            <button class="button button-primary" id="startAdminVideoCall" type="button">📹 Gọi video cho Vy</button>
+            <button class="button button-light" id="joinAdminVideoCall" type="button">Tham gia video</button>
+          </div>
+          <div class="call-stage" id="adminCallStage" hidden>
+            <div class="call-grid" id="adminCallVideos"></div>
+            <div class="call-controls">
+              <button class="button button-light" id="toggleAdminCamera" type="button" disabled>Tắt camera</button>
+              <button class="button button-light" id="toggleAdminMicrophone" type="button" disabled>Tắt mic</button>
+              <button class="button button-danger" id="endAdminCall" type="button" disabled>Kết thúc</button>
+            </div>
+          </div>
+          <p class="call-status" id="adminCallStatus" role="status" aria-live="polite"></p>
         </section>
         <div id="foodRequestList" class="food-request-list"></div>
       </div>

@@ -1,5 +1,6 @@
 import { defaultSchedule } from './schedule-data.js';
 import { AVATAR_IMAGE_URL } from './avatar-config.js';
+import { Room, RoomEvent, Track, VideoPresets } from 'livekit-client';
 
 const STORAGE_KEY = 'lich-cua-vy-schedule-v2';
 const AUTH_KEY = 'lich-cua-vy-authenticated-v1';
@@ -35,6 +36,8 @@ const state = {
 };
 
 let nativeNotificationsPromise;
+let livekitRoom;
+let activeCallRole;
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -201,6 +204,183 @@ function bindChatQuickReplies() {
     input.value = `${input.value}${input.value ? ' ' : ''}${button.dataset.chatQuick}`;
     input.focus();
   }));
+}
+
+function callElements(role) {
+  const admin = role === 'admin';
+  return {
+    section: $(admin ? '#adminCallSection' : '#callSection'),
+    stage: $(admin ? '#adminCallStage' : '#callStage'),
+    videos: $(admin ? '#adminCallVideos' : '#callVideos'),
+    status: $(admin ? '#adminCallStatus' : '#callStatus'),
+    start: $(admin ? '#startAdminVideoCall' : '#startVideoCall'),
+    join: $(admin ? '#joinAdminVideoCall' : '#joinVideoCall'),
+    camera: $(admin ? '#toggleAdminCamera' : '#toggleCamera'),
+    microphone: $(admin ? '#toggleAdminMicrophone' : '#toggleMicrophone'),
+    end: $(admin ? '#endAdminCall' : '#endCall')
+  };
+}
+
+function setCallStatus(role, message) {
+  const elements = callElements(role);
+  if (elements.status) elements.status.textContent = message;
+}
+
+function setCallControls(role, connected) {
+  const elements = callElements(role);
+  if (!elements.stage) return;
+  elements.stage.hidden = !connected;
+  elements.start.disabled = connected;
+  elements.join.disabled = connected;
+  elements.camera.disabled = !connected;
+  elements.microphone.disabled = !connected;
+  elements.end.disabled = !connected;
+}
+
+function ensureCallTile(role, identity, name) {
+  const elements = callElements(role);
+  let tile = [...elements.videos.querySelectorAll('.call-tile')].find((item) => item.dataset.identity === identity);
+  if (!tile) {
+    tile = document.createElement('div');
+    tile.className = 'call-tile';
+    tile.dataset.identity = identity;
+    tile.innerHTML = `<span class="call-participant-name">${escapeHtml(name || identity)}</span>`;
+    elements.videos.appendChild(tile);
+  }
+  return tile;
+}
+
+function attachCallTrack(role, track, participant) {
+  const tile = ensureCallTile(role, participant.identity, participant.name || participant.identity);
+  if (track.kind === Track.Kind.Video) {
+    tile.querySelectorAll('video').forEach((element) => element.remove());
+    const video = track.attach();
+    video.className = 'call-video';
+    video.autoplay = true;
+    video.playsInline = true;
+    tile.prepend(video);
+  } else if (track.kind === Track.Kind.Audio) {
+    tile.querySelectorAll('audio').forEach((element) => element.remove());
+    const audio = track.attach();
+    audio.autoplay = true;
+    audio.setAttribute('aria-label', `Âm thanh của ${participant.name || participant.identity}`);
+    tile.appendChild(audio);
+  }
+}
+
+function removeCallTrack(track) {
+  track.detach().forEach((element) => element.remove());
+}
+
+function updateCallStatus(role) {
+  if (!livekitRoom || activeCallRole !== role) return;
+  const remoteCount = livekitRoom.remoteParticipants.size;
+  setCallStatus(role, remoteCount ? 'Đã kết nối với người thương 💗' : 'Đang chờ người kia tham gia phòng…');
+}
+
+async function joinLiveKitCall(role = 'vy', announce = false) {
+  const elements = callElements(role);
+  if (!elements.status) return;
+  if (livekitRoom) await leaveLiveKitCall();
+  elements.start.disabled = true;
+  elements.join.disabled = true;
+  setCallStatus(role, 'Đang mở phòng video…');
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (role === 'admin') {
+      const token = sessionStorage.getItem(ADMIN_TOKEN_KEY);
+      if (!token) throw new Error('Anh cần đăng nhập góc của anh trước nha.');
+      headers.Authorization = `Bearer ${token}`;
+    }
+    const tokenResponse = await fetch('/api/livekit/token', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ role, announce })
+    });
+    const tokenData = await tokenResponse.json().catch(() => ({}));
+    if (!tokenResponse.ok) throw new Error(tokenData.error || 'Chưa mở được phòng video.');
+
+    const room = new Room({
+      adaptiveStream: true,
+      dynacast: true,
+      videoCaptureDefaults: { resolution: VideoPresets.h720.resolution }
+    });
+    livekitRoom = room;
+    activeCallRole = role;
+    elements.videos.innerHTML = '';
+    room.on(RoomEvent.TrackSubscribed, (track, _publication, participant) => attachCallTrack(role, track, participant));
+    room.on(RoomEvent.TrackUnsubscribed, (track) => removeCallTrack(track));
+    room.on(RoomEvent.ParticipantDisconnected, (participant) => {
+      const tile = [...elements.videos.querySelectorAll('.call-tile')].find((item) => item.dataset.identity === participant.identity);
+      if (tile) tile.remove();
+      updateCallStatus(role);
+    });
+    room.on(RoomEvent.ParticipantConnected, () => updateCallStatus(role));
+    room.on(RoomEvent.Disconnected, () => {
+      if (livekitRoom !== room) return;
+      livekitRoom = null;
+      activeCallRole = null;
+      setCallControls(role, false);
+      setCallStatus(role, 'Cuộc gọi đã kết thúc.');
+    });
+
+    await room.connect(tokenData.serverUrl, tokenData.participantToken);
+    await room.localParticipant.enableCameraAndMicrophone();
+    const localCamera = room.localParticipant.getTrackPublication(Track.Source.Camera)?.track;
+    if (localCamera) attachCallTrack(role, localCamera, room.localParticipant);
+    room.remoteParticipants.forEach((participant) => {
+      participant.trackPublications.forEach((publication) => {
+        if (publication.track) attachCallTrack(role, publication.track, participant);
+      });
+    });
+    setCallControls(role, true);
+    updateCallStatus(role);
+  } catch (error) {
+    if (livekitRoom) {
+      await livekitRoom.disconnect().catch(() => {});
+      livekitRoom = null;
+      activeCallRole = null;
+    }
+    setCallControls(role, false);
+    setCallStatus(role, error.message || 'Chưa mở được phòng video.');
+  }
+}
+
+async function leaveLiveKitCall() {
+  const role = activeCallRole;
+  if (livekitRoom) await livekitRoom.disconnect();
+  livekitRoom = null;
+  activeCallRole = null;
+  if (role) {
+    const elements = callElements(role);
+    elements.videos.innerHTML = '';
+    setCallControls(role, false);
+    setCallStatus(role, 'Đã rời cuộc gọi.');
+  }
+}
+
+async function toggleCallCamera(role) {
+  if (!livekitRoom || activeCallRole !== role) return;
+  const enabled = !livekitRoom.localParticipant.isCameraEnabled;
+  await livekitRoom.localParticipant.setCameraEnabled(enabled);
+  callElements(role).camera.textContent = enabled ? 'Tắt camera' : 'Bật camera';
+}
+
+async function toggleCallMicrophone(role) {
+  if (!livekitRoom || activeCallRole !== role) return;
+  const enabled = !livekitRoom.localParticipant.isMicrophoneEnabled;
+  await livekitRoom.localParticipant.setMicrophoneEnabled(enabled);
+  callElements(role).microphone.textContent = enabled ? 'Tắt mic' : 'Bật mic';
+}
+
+function handleIncomingCallHint() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('call') !== '1') return;
+  const role = params.get('admin') === '1' ? 'admin' : 'vy';
+  const elements = callElements(role);
+  elements.section?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  showToast('Có người thương đang gọi video 💗 Bấm “Tham gia video” nha.');
+  window.history.replaceState({}, document.title, window.location.pathname);
 }
 
 function showAdminScreen() {
@@ -842,6 +1022,16 @@ function bindEvents() {
     sendChatMessage('admin');
   });
   bindChatQuickReplies();
+  $('#startVideoCall').addEventListener('click', () => joinLiveKitCall('vy', true));
+  $('#joinVideoCall').addEventListener('click', () => joinLiveKitCall('vy', false));
+  $('#toggleCamera').addEventListener('click', () => toggleCallCamera('vy'));
+  $('#toggleMicrophone').addEventListener('click', () => toggleCallMicrophone('vy'));
+  $('#endCall').addEventListener('click', leaveLiveKitCall);
+  $('#startAdminVideoCall').addEventListener('click', () => joinLiveKitCall('admin', true));
+  $('#joinAdminVideoCall').addEventListener('click', () => joinLiveKitCall('admin', false));
+  $('#toggleAdminCamera').addEventListener('click', () => toggleCallCamera('admin'));
+  $('#toggleAdminMicrophone').addEventListener('click', () => toggleCallMicrophone('admin'));
+  $('#endAdminCall').addEventListener('click', leaveLiveKitCall);
   $('#logoutButton').addEventListener('click', handleLogout);
   $('#enableNotification').addEventListener('click', enableNotifications);
   $('#exportCalendar').addEventListener('click', exportCalendarFile);
@@ -892,6 +1082,7 @@ function init() {
     });
   }
   if (sessionStorage.getItem(ADMIN_TOKEN_KEY)) showAdminScreen();
+  handleIncomingCallHint();
 }
 
 init();

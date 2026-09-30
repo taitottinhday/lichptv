@@ -16,6 +16,8 @@
     "@capacitor/ios": "^7.4.3",
     "@capacitor/local-notifications": "^7.0.3",
     "express": "^5.2.1",
+    "livekit-client": "^2.22.3",
+    "livekit-server-sdk": "^2.19.1",
     "node-cron": "^4.6.0",
     "pg": "^8.23.0",
     "sharp": "^0.35.5",
