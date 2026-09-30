@@ -6,7 +6,7 @@ import { randomUUID } from 'node:crypto';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
-import { AccessToken } from 'livekit-server-sdk';
+import { AccessToken, LiveKitAPI } from 'livekit-server-sdk';
 import { defaultSchedule } from './schedule-data.js';
 import { AVATAR_IMAGE_URL } from './avatar-config.js';
 
@@ -21,6 +21,7 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || proc
 const supabaseConfigured = Boolean(supabaseUrl && supabaseServiceKey);
 const livekitRawUrl = process.env.LIVEKIT_URL?.trim();
 const livekitUrl = livekitRawUrl?.replace(/^http:\/\//i, 'ws://').replace(/^https:\/\//i, 'wss://');
+const livekitHttpUrl = livekitUrl?.replace(/^ws:\/\//i, 'http://').replace(/^wss:\/\//i, 'https://');
 const livekitApiKey = process.env.LIVEKIT_API_KEY?.trim();
 const livekitApiSecret = process.env.LIVEKIT_API_SECRET?.trim();
 const livekitConfigured = Boolean(livekitUrl && livekitApiKey && livekitApiSecret);
@@ -300,6 +301,19 @@ app.post('/api/livekit/token', async (request, response) => {
   } catch (error) {
     console.error('Không tạo được token LiveKit:', error.message);
     return response.status(500).json({ error: 'Chưa tạo được phòng gọi video.' });
+  }
+});
+
+app.get('/api/livekit/check', async (request, response) => {
+  if (!isAdminRequest(request)) return response.status(401).json({ error: 'Cần đăng nhập góc của anh.' });
+  if (!livekitConfigured) return response.status(503).json({ ok: false, error: 'LiveKit chưa được cấu hình.' });
+  try {
+    const livekitApi = new LiveKitAPI({ host: livekitHttpUrl, apiKey: livekitApiKey, secret: livekitApiSecret });
+    const rooms = await livekitApi.room.listRooms();
+    return response.json({ ok: true, roomCount: rooms.length });
+  } catch (error) {
+    console.error('Kiểm tra LiveKit thất bại:', error.message);
+    return response.status(502).json({ ok: false, error: 'LIVEKIT_URL, LIVEKIT_API_KEY và LIVEKIT_API_SECRET chưa cùng một project.' });
   }
 });
 
