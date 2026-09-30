@@ -133,9 +133,21 @@ function renderChatMessages(messages, selector, viewerRole) {
   if (shouldStickToBottom) container.scrollTop = container.scrollHeight;
 }
 
+function handleAdminSessionExpired() {
+  localStorage.removeItem(ADMIN_TOKEN_KEY);
+  stopChatPolling();
+  $('#adminScreen').hidden = true;
+  $('#appShell').hidden = true;
+  $('#loginScreen').hidden = false;
+  $('#loginForm').hidden = true;
+  $('#showAdminLogin').hidden = true;
+  $('#adminLoginPanel').hidden = false;
+  $('#adminLoginError').textContent = 'Phiên của anh đã hết hạn, đăng nhập lại một lần nha.';
+}
+
 async function loadChatMessages(viewerRole = 'vy', silent = false) {
   if (state.chatLoading) return;
-  const token = viewerRole === 'admin' ? sessionStorage.getItem(ADMIN_TOKEN_KEY) : '';
+  const token = viewerRole === 'admin' ? localStorage.getItem(ADMIN_TOKEN_KEY) : '';
   if (viewerRole === 'admin' && !token) return;
   state.chatLoading = true;
   const status = viewerRole === 'admin' ? $('#adminChatStatus') : $('#chatStatus');
@@ -143,6 +155,10 @@ async function loadChatMessages(viewerRole = 'vy', silent = false) {
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     const response = await fetch(`/api/chat/messages?role=${viewerRole}`, { headers });
     const data = await response.json().catch(() => ({}));
+    if (response.status === 401 && viewerRole === 'admin') {
+      handleAdminSessionExpired();
+      return;
+    }
     if (!response.ok) throw new Error(data.error || 'Chưa tải được tin nhắn.');
     renderChatMessages(data.messages || [], viewerRole === 'admin' ? '#adminChatMessages' : '#chatMessages', viewerRole);
     if (status && !silent) status.textContent = '';
@@ -163,7 +179,7 @@ async function sendChatMessage(senderRole = 'vy') {
     input.focus();
     return;
   }
-  const token = senderRole === 'admin' ? sessionStorage.getItem(ADMIN_TOKEN_KEY) : '';
+  const token = senderRole === 'admin' ? localStorage.getItem(ADMIN_TOKEN_KEY) : '';
   button.disabled = true;
   try {
     const headers = { 'Content-Type': 'application/json' };
@@ -288,7 +304,7 @@ async function joinLiveKitCall(role = 'vy', announce = false) {
   try {
     const headers = { 'Content-Type': 'application/json' };
     if (role === 'admin') {
-      const token = sessionStorage.getItem(ADMIN_TOKEN_KEY);
+      const token = localStorage.getItem(ADMIN_TOKEN_KEY);
       if (!token) throw new Error('Anh cần đăng nhập góc của anh trước nha.');
       headers.Authorization = `Bearer ${token}`;
     }
@@ -298,6 +314,10 @@ async function joinLiveKitCall(role = 'vy', announce = false) {
       body: JSON.stringify({ role, announce })
     });
     const tokenData = await tokenResponse.json().catch(() => ({}));
+    if (tokenResponse.status === 401 && role === 'admin') {
+      handleAdminSessionExpired();
+      return;
+    }
     if (!tokenResponse.ok) throw new Error(tokenData.error || 'Chưa mở được phòng video.');
 
     const room = new Room({
@@ -394,7 +414,7 @@ function showAdminScreen() {
 
 function leaveAdminScreen() {
   stopChatPolling();
-  sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+  localStorage.removeItem(ADMIN_TOKEN_KEY);
   $('#adminScreen').hidden = true;
   $('#appShell').hidden = false;
   $('#loginScreen').hidden = false;
@@ -413,7 +433,7 @@ async function handleAdminLogin(event) {
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Đăng nhập chưa thành công.');
-    sessionStorage.setItem(ADMIN_TOKEN_KEY, data.token);
+    localStorage.setItem(ADMIN_TOKEN_KEY, data.token);
     error.textContent = '';
     showAdminScreen();
   } catch (loginError) {
@@ -422,7 +442,7 @@ async function handleAdminLogin(event) {
 }
 
 async function enableAdminNotifications() {
-  const token = sessionStorage.getItem(ADMIN_TOKEN_KEY);
+  const token = localStorage.getItem(ADMIN_TOKEN_KEY);
   if (!token) return;
   try {
     await subscribeToWebPush('admin', token);
@@ -434,13 +454,17 @@ async function enableAdminNotifications() {
 }
 
 async function loadFoodRequests() {
-  const token = sessionStorage.getItem(ADMIN_TOKEN_KEY);
+  const token = localStorage.getItem(ADMIN_TOKEN_KEY);
   if (!token) return;
   const list = $('#foodRequestList');
   list.innerHTML = '<p class="empty-request">Đang tải các món Vy muốn ăn...</p>';
   try {
     const response = await fetch('/api/food-requests', { headers: { Authorization: `Bearer ${token}` } });
     const data = await response.json();
+    if (response.status === 401) {
+      handleAdminSessionExpired();
+      return;
+    }
     if (!response.ok) throw new Error(data.error || 'Chưa tải được request.');
     const displayRequests = data.requests.map((request) => ({
       ...request,
@@ -491,7 +515,7 @@ async function loadFoodRequests() {
 }
 
 async function updateFoodRequest(id, status) {
-  const token = sessionStorage.getItem(ADMIN_TOKEN_KEY);
+  const token = localStorage.getItem(ADMIN_TOKEN_KEY);
   await fetch(`/api/food-requests/${id}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -505,7 +529,7 @@ async function sendFoodResponse(id, responseText, status = 'pending') {
     showToast('Anh hãy ghi lời nhắn cho Vy trước nha 💕');
     return;
   }
-  const token = sessionStorage.getItem(ADMIN_TOKEN_KEY);
+  const token = localStorage.getItem(ADMIN_TOKEN_KEY);
   try {
     const response = await fetch(`/api/food-requests/${id}/respond`, {
       method: 'POST',
@@ -1081,7 +1105,7 @@ function init() {
       console.error('Không đăng ký được service worker:', error);
     });
   }
-  if (sessionStorage.getItem(ADMIN_TOKEN_KEY)) showAdminScreen();
+  if (localStorage.getItem(ADMIN_TOKEN_KEY)) showAdminScreen();
   handleIncomingCallHint();
 }
 

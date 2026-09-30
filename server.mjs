@@ -2,7 +2,7 @@ import express from 'express';
 import cron from 'node-cron';
 import pg from 'pg';
 import webpush from 'web-push';
-import { randomUUID } from 'node:crypto';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
@@ -35,7 +35,8 @@ const geminiApiKey = process.env.GEMINI_API_KEY?.trim();
 const geminiModel = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 const adminUsername = process.env.ADMIN_USERNAME || 'anh';
 const adminPassword = process.env.ADMIN_PASSWORD || '261004';
-const adminSessions = new Set();
+const adminSessionSecret = process.env.ADMIN_SESSION_SECRET || adminPassword;
+const adminSessionTtlMs = 30 * 24 * 60 * 60 * 1000;
 const memoryFoodRequests = [];
 let memoryFoodRequestId = 0;
 const memoryChatMessages = [];
@@ -174,7 +175,28 @@ async function sendToRole(role, payload) {
 
 function isAdminRequest(request) {
   const token = request.headers.authorization?.replace(/^Bearer\s+/i, '');
-  return Boolean(token && adminSessions.has(token));
+  if (!token) return false;
+  const [payload, signature] = token.split('.');
+  if (!payload || !signature) return false;
+  try {
+    const expectedSignature = createHmac('sha256', adminSessionSecret).update(payload).digest('base64url');
+    const providedBytes = Buffer.from(signature);
+    const expectedBytes = Buffer.from(expectedSignature);
+    if (providedBytes.length !== expectedBytes.length || !timingSafeEqual(providedBytes, expectedBytes)) return false;
+    const session = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    return session.role === 'admin' && Number(session.exp) > Date.now();
+  } catch {
+    return false;
+  }
+}
+
+function createAdminSessionToken() {
+  const payload = Buffer.from(JSON.stringify({
+    role: 'admin',
+    exp: Date.now() + adminSessionTtlMs
+  })).toString('base64url');
+  const signature = createHmac('sha256', adminSessionSecret).update(payload).digest('base64url');
+  return `${payload}.${signature}`;
 }
 
 const fallbackMessages = {
@@ -261,8 +283,7 @@ app.post('/api/admin/login', (request, response) => {
   if (username !== adminUsername || password !== adminPassword) {
     return response.status(401).json({ error: 'Sai tài khoản hoặc mật khẩu.' });
   }
-  const token = randomUUID();
-  adminSessions.add(token);
+  const token = createAdminSessionToken();
   return response.json({ ok: true, token });
 });
 
