@@ -25,11 +25,10 @@ const QUICK_RESPONSES = {
 
 const state = {
   schedule: loadSchedule(),
-  visibleMonth: new Date(2026, 9, 1),
+  visibleMonth: new Date(),
   selectedDate: null,
   selectedCode: null,
-  selectedFood: null,
-  selectedFoodCategory: null,
+  selectedFoods: [],
   toastTimer: null,
   countdownTimer: null,
   chatTimer: null,
@@ -72,17 +71,25 @@ function renderFoodMenu() {
     </div>
   `).join('');
   $$('.food-option').forEach((button) => button.addEventListener('click', () => {
-    state.selectedFood = button.dataset.food;
-    state.selectedFoodCategory = button.dataset.category;
-    $$('.food-option').forEach((item) => item.classList.toggle('selected', item === button));
-    $('#foodRequestStatus').textContent = `Em đang chọn: ${state.selectedFood} 💗`;
+    const selectedIndex = state.selectedFoods.findIndex((food) => food.item === button.dataset.food);
+    if (selectedIndex >= 0) {
+      state.selectedFoods.splice(selectedIndex, 1);
+      button.classList.remove('selected');
+    } else {
+      state.selectedFoods.push({ item: button.dataset.food, category: button.dataset.category });
+      button.classList.add('selected');
+    }
+    const selectedItems = state.selectedFoods.map((food) => food.item);
+    $('#foodRequestStatus').textContent = selectedItems.length
+      ? `Em đang chọn: ${selectedItems.join(', ')} 💗`
+      : 'Em chưa chọn món nào, chọn món em thích nha 💕';
   }));
 }
 
 async function submitFoodRequest() {
   const note = $('#foodNote').value.trim();
-  if (!state.selectedFood && !note) {
-    $('#foodRequestStatus').textContent = 'Em chọn một món hoặc ghi chú món em thích trước nha 💕';
+  if (!state.selectedFoods.length && !note) {
+    $('#foodRequestStatus').textContent = 'Em chọn một hoặc nhiều món, hoặc ghi chú món em thích trước nha 💕';
     return;
   }
   const button = $('#sendFoodRequest');
@@ -92,8 +99,8 @@ async function submitFoodRequest() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        category: state.selectedFoodCategory || 'Món em ghi chú',
-        item: state.selectedFood || 'Món theo ghi chú',
+        category: [...new Set(state.selectedFoods.map((food) => food.category))].join(' · ') || 'Món em ghi chú',
+        item: state.selectedFoods.map((food) => food.item).join(', ') || 'Món theo ghi chú',
         note
       })
     });
@@ -101,8 +108,7 @@ async function submitFoodRequest() {
     if (!response.ok) throw new Error(data.error || 'Chưa gửi được request món ăn.');
     $('#foodRequestStatus').textContent = 'Anh nhận được rồi nha, để anh đi mua cho em 💌';
     $('#foodNote').value = '';
-    state.selectedFood = null;
-    state.selectedFoodCategory = null;
+    state.selectedFoods = [];
     $$('.food-option').forEach((item) => item.classList.remove('selected'));
     showToast('Đã gửi món em thích cho anh rồi 💗');
   } catch (error) {
@@ -728,7 +734,7 @@ function renderCalendar() {
     cell.type = 'button';
     cell.className = `day-cell${key === todayKey ? ' is-today' : ''}${key === selectedKey ? ' is-selected' : ''}`;
     cell.setAttribute('aria-label', `${displayDate(date)}: ${info.title}`);
-    cell.innerHTML = `<span class="day-number">${day}</span>${code ? `<span class="shift-chip ${info.className}">${code}</span>` : ''}`;
+    cell.innerHTML = `${key === todayKey ? '<span class="today-label">Hôm nay</span>' : ''}<span class="day-number">${day}</span>${code ? `<span class="shift-chip ${info.className}">${code}</span>` : ''}`;
     cell.addEventListener('click', () => openDayModal(key));
     grid.appendChild(cell);
   }
