@@ -65,6 +65,34 @@
       </header>
 
       <main>
+        <section class="calendar-section" id="calendarSection" aria-labelledby="calendarHeading">
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">LỊCH LÀM VIỆC</p>
+              <h2 id="calendarHeading">Lịch của Vy</h2>
+            </div>
+            <div class="month-controls">
+              <button class="icon-button soft" id="previousMonth" type="button" aria-label="Tháng trước">‹</button>
+              <span id="monthLabel">Tháng 10, 2026</span>
+              <button class="icon-button soft" id="nextMonth" type="button" aria-label="Tháng sau">›</button>
+            </div>
+          </div>
+
+          <div class="legend" aria-label="Chú thích ca làm">
+            <span><i class="legend-swatch shift-day"></i>D · 12h ngày</span>
+            <span><i class="legend-swatch shift-night"></i>N · 12h đêm</span>
+            <span><i class="legend-swatch shift-off"></i>18 / 9 · nghỉ</span>
+          </div>
+
+          <div class="calendar-card" id="calendarCard">
+            <div class="weekdays" aria-hidden="true">
+              <span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span>
+            </div>
+            <div class="calendar-grid" id="calendarGrid"></div>
+          </div>
+          <p class="calendar-hint">Chạm vào một ngày để xem chi tiết · Vuốt trái/phải để đổi tháng.</p>
+        </section>
+
         <section class="hero-card" aria-labelledby="welcomeTitle">
           <div class="hero-copy">
             <div class="status-pill"><span class="status-dot"></span><span id="currentGreeting">Phan Thị Thảo Vy · số 6</span></div>
@@ -186,34 +214,6 @@
             </div>
           </div>
           <p class="call-status" id="callStatus" role="status" aria-live="polite"></p>
-        </section>
-
-        <section class="calendar-section" id="calendarSection" aria-labelledby="calendarHeading">
-          <div class="section-heading">
-            <div>
-              <p class="section-kicker">LỊCH LÀM VIỆC</p>
-              <h2 id="calendarHeading">Lịch của Vy</h2>
-            </div>
-            <div class="month-controls">
-              <button class="icon-button soft" id="previousMonth" type="button" aria-label="Tháng trước">‹</button>
-              <span id="monthLabel">Tháng 10, 2026</span>
-              <button class="icon-button soft" id="nextMonth" type="button" aria-label="Tháng sau">›</button>
-            </div>
-          </div>
-
-          <div class="legend" aria-label="Chú thích ca làm">
-            <span><i class="legend-swatch shift-day"></i>D · 12h ngày</span>
-            <span><i class="legend-swatch shift-night"></i>N · 12h đêm</span>
-            <span><i class="legend-swatch shift-off"></i>18 / 9 · nghỉ</span>
-          </div>
-
-            <div class="calendar-card" id="calendarCard">
-            <div class="weekdays" aria-hidden="true">
-              <span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span>
-            </div>
-            <div class="calendar-grid" id="calendarGrid"></div>
-          </div>
-          <p class="calendar-hint">Chạm vào một ngày để xem chi tiết · Vuốt trái/phải để đổi tháng.</p>
         </section>
 
         <section class="tips-card">
