@@ -142,6 +142,17 @@ function parseChatMessage(content) {
 function renderChatMessages(messages, selector, viewerRole) {
   const container = $(selector);
   if (!container) return;
+  // Chat được kiểm tra mỗi 4 giây. Nếu không có tin mới, không thay lại toàn
+  // bộ DOM vì thao tác đó làm trình duyệt đưa khung chat về đầu.
+  const messageSignature = JSON.stringify(messages.map(({ id, sender_role, content, created_at }) => ({
+    id,
+    sender_role,
+    content,
+    created_at
+  })));
+  if (container.dataset.messageSignature === messageSignature) return;
+
+  const previousScrollTop = container.scrollTop;
   const shouldStickToBottom = !container.dataset.ready || container.scrollHeight - container.scrollTop - container.clientHeight < 90;
   container.innerHTML = messages.length ? messages.map((message) => {
     const own = message.sender_role === viewerRole;
@@ -155,7 +166,14 @@ function renderChatMessages(messages, selector, viewerRole) {
     </article>`;
   }).join('') : '<p class="chat-empty">Chưa có tin nhắn nào. Nhắn một câu thật ngọt cho người thương nha 💗</p>';
   container.dataset.ready = 'true';
-  if (shouldStickToBottom) container.scrollTop = container.scrollHeight;
+  container.dataset.messageSignature = messageSignature;
+
+  if (shouldStickToBottom) {
+    container.scrollTop = container.scrollHeight;
+  } else {
+    // Người dùng đang đọc tin cũ: giữ nguyên đúng vị trí đó dù có tin mới.
+    container.scrollTop = previousScrollTop;
+  }
 }
 
 function handleAdminSessionExpired() {
