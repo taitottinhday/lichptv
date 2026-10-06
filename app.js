@@ -865,7 +865,7 @@ function bindCallSurfaceInteractions(role) {
 }
 
 function closeCallPanels(role) {
-  const elements = ensureCallExperience(role);
+  const elements = callElements(role);
   const panels = [elements.filters, elements.toolSheet, elements.miniChat];
   const wasOpen = panels.some((panel) => panel && !panel.hidden);
   if (elements.filters) {
@@ -1525,15 +1525,20 @@ function drawCuteFaceEffect(pipeline, faceLandmarks) {
 function renderFaceFilterFrame(pipeline, timestamp) {
   if (activeFilterPipeline !== pipeline) return;
   const { sourceVideo, faceLandmarker } = pipeline;
-  if (sourceVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && sourceVideo.videoWidth) {
-    let result = null;
-    if (faceLandmarker && timestamp - pipeline.lastInferenceAt > 55 && sourceVideo.currentTime !== pipeline.lastVideoTime) {
-      result = faceLandmarker.detectForVideo(sourceVideo, timestamp);
-      pipeline.lastInferenceAt = timestamp;
-      pipeline.lastVideoTime = sourceVideo.currentTime;
-      pipeline.faceLandmarks = result.faceLandmarks?.[0] || null;
+  try {
+    if (sourceVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && sourceVideo.videoWidth) {
+      if (faceLandmarker && timestamp - pipeline.lastInferenceAt > 55 && sourceVideo.currentTime !== pipeline.lastVideoTime) {
+        const result = faceLandmarker.detectForVideo(sourceVideo, timestamp);
+        pipeline.lastInferenceAt = timestamp;
+        pipeline.lastVideoTime = sourceVideo.currentTime;
+        pipeline.faceLandmarks = result.faceLandmarks?.[0] || null;
+      }
+      drawCuteFaceEffect(pipeline, pipeline.faceLandmarks);
     }
-    drawCuteFaceEffect(pipeline, pipeline.faceLandmarks);
+  } catch (error) {
+    pipeline.faceLandmarks = null;
+    try { drawCallSource(pipeline, null); } catch { /* keep the animation loop alive */ }
+    console.warn('Face filter tạm thời lỗi, đã dùng camera gốc:', error.message);
   }
   pipeline.animationFrame = requestAnimationFrame(renderFaceFilterFrame);
 }
