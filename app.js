@@ -1215,9 +1215,22 @@ function toggleCallFilters(role, forceOpen = null) {
   if (open) elements.filters.querySelector('[data-call-filter].active')?.focus({ preventScroll: true });
 }
 
+function isCanvasCallTrackReliable() {
+  const userAgent = navigator.userAgent || '';
+  const isIosDevice = /iPhone|iPad|iPod/i.test(userAgent)
+    || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  return !isIosDevice;
+}
+
 async function setCallVideoSource(role, useCanvas) {
   const pipeline = activeFilterPipeline?.role === role ? activeFilterPipeline : null;
   if (!pipeline?.localVideoTrack || !pipeline.canvasStream) return false;
+  if (useCanvas && !isCanvasCallTrackReliable()) {
+    pipeline.usingCanvas = false;
+    callElements(role).stage.classList.remove('has-face-filter');
+    setCallStatus(role, 'iPhone đang giữ camera gốc để không mất hình nha.');
+    return false;
+  }
   const targetTrack = useCanvas
     ? pipeline.canvasStream.getVideoTracks()[0]
     : pipeline.sourceStream.getVideoTracks()[0];
@@ -1226,6 +1239,7 @@ async function setCallVideoSource(role, useCanvas) {
     await pipeline.localVideoTrack.replaceTrack(targetTrack);
     pipeline.usingCanvas = useCanvas;
     const elements = callElements(role);
+    elements.stage.classList.toggle('has-face-filter', useCanvas && Boolean(pipeline.faceLandmarker));
     const localTile = elements.videos?.querySelector('.call-tile.is-local-preview');
     if (localTile && !elements.section.hidden) {
       attachCallTrack(role, pipeline.localVideoTrack, {
@@ -1624,7 +1638,7 @@ async function startFaceFilterPipeline(role, options = {}) {
     try {
       if (!canvasStream) throw new Error('Thiết bị chưa hỗ trợ xuất video filter từ canvas.');
       pipeline.faceLandmarker = await loadFaceLandmarker();
-      if (activeFilterPipeline === pipeline) elements.stage.classList.add('has-face-filter');
+      if (activeFilterPipeline === pipeline && pipeline.usingCanvas) elements.stage.classList.add('has-face-filter');
     } catch (error) {
       console.warn('Không tải được face filter, dùng camera nguyên bản:', error.message);
       if (activeFilterPipeline === pipeline && !elements.section.hidden) {
@@ -1636,7 +1650,7 @@ async function startFaceFilterPipeline(role, options = {}) {
   else await loadModel();
   pipeline.localVideoTrack = new LocalVideoTrack(sourceStream.getVideoTracks()[0], { name: 'camera' });
   pipeline.localAudioTrack = new LocalAudioTrack(sourceStream.getAudioTracks()[0], { name: 'microphone' });
-  elements.stage.classList.toggle('has-face-filter', Boolean(pipeline.faceLandmarker && canvasStream));
+  elements.stage.classList.remove('has-face-filter');
   if (canvasStream) drawCuteFaceEffect(pipeline, null);
   pipeline.animationFrame = requestAnimationFrame(renderFaceFilterFrame);
   return pipeline;
