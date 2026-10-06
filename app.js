@@ -824,7 +824,11 @@ function bindCallSurfaceInteractions(role) {
   if (!elements.stage || elements.stage.dataset.surfaceBound) return;
   elements.stage.dataset.surfaceBound = 'true';
   elements.stage.addEventListener('click', (event) => {
-    if (event.target.closest('.call-controls, .call-shortcuts, .call-tool-sheet, .call-filters, .call-close, .call-incoming, button')) return;
+    if (event.target.closest('.call-controls, .call-shortcuts, .call-tool-sheet, .call-filters, .call-mini-chat, .call-close, .call-incoming, button')) return;
+    if (closeCallPanels(role)) {
+      showCallControls(role, true);
+      return;
+    }
     if (getCallUiState(role).status === 'connected') showCallControls(role, getCallUiState(role).controlsHidden);
   });
   elements.videos.addEventListener('pointerdown', (event) => {
@@ -858,6 +862,22 @@ function bindCallSurfaceInteractions(role) {
     tile.addEventListener('pointerup', end);
     tile.addEventListener('pointercancel', end);
   });
+}
+
+function closeCallPanels(role) {
+  const elements = ensureCallExperience(role);
+  const panels = [elements.filters, elements.toolSheet, elements.miniChat];
+  const wasOpen = panels.some((panel) => panel && !panel.hidden);
+  if (elements.filters) {
+    elements.filters.hidden = true;
+    elements.filters.style.display = 'none';
+    elements.filters.classList.remove('is-open');
+  }
+  if (elements.toolSheet) elements.toolSheet.hidden = true;
+  if (elements.miniChat) elements.miniChat.hidden = true;
+  elements.shortcuts?.querySelectorAll('[data-call-tool]').forEach((button) => button.classList.remove('active'));
+  elements.filterToggle?.setAttribute('aria-expanded', 'false');
+  return wasOpen;
 }
 
 function closeCallToolSheet(role) {
