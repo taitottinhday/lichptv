@@ -1605,6 +1605,7 @@ async function startFaceFilterPipeline(role, options = {}) {
     : new LocalVideoTrack(sourceStream.getVideoTracks()[0], { name: 'camera' });
   pipeline.localAudioTrack = new LocalAudioTrack(sourceStream.getAudioTracks()[0], { name: 'microphone' });
   elements.stage.classList.toggle('has-face-filter', Boolean(pipeline.faceLandmarker && canvasStream));
+  if (canvasStream) drawCuteFaceEffect(pipeline, null);
   pipeline.animationFrame = requestAnimationFrame(renderFaceFilterFrame);
   return pipeline;
 }
@@ -1645,7 +1646,13 @@ function attachCallTrack(role, track, participant) {
     video.className = 'call-video';
     video.autoplay = true;
     video.playsInline = true;
+    video.muted = isLocal;
+    video.setAttribute('playsinline', '');
+    video.setAttribute('webkit-playsinline', '');
     tile.prepend(video);
+    const startPlayback = () => { video.play().catch(() => {}); };
+    video.addEventListener('loadedmetadata', startPlayback, { once: true });
+    startPlayback();
   } else if (track.kind === Track.Kind.Audio) {
     tile.querySelectorAll('audio').forEach((element) => element.remove());
     const audio = track.attach();
