@@ -7,6 +7,7 @@ const AUTH_KEY = 'lich-cua-vy-authenticated-v1';
 const ADMIN_TOKEN_KEY = 'lich-cua-vy-admin-token-v1';
 const ADMIN_PUSH_ENABLED_KEY = 'lich-cua-vy-admin-push-enabled-v1';
 const CHAT_IMAGE_PREFIX = '__lich_chat_image__:';
+const CHAT_TIME_ZONE = 'Asia/Ho_Chi_Minh';
 const DEMO_USERNAME = 'phanthithaovy';
 const DEMO_PASSWORD = '261004';
 const START_DATE = '2026-09-26';
@@ -33,7 +34,9 @@ const state = {
   toastTimer: null,
   countdownTimer: null,
   chatTimer: null,
-  chatLoading: false
+  chatLoading: false,
+  adminVisibleMonth: new Date(),
+  adminSchedule: { ...defaultSchedule }
 };
 
 let nativeNotificationsPromise;
@@ -58,6 +61,18 @@ function loadSchedule() {
 
 function saveSchedule() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state.schedule));
+  syncScheduleToServer().catch(() => {
+    showToast('Lịch đã lưu trên máy Vy, nhưng chưa đồng bộ được với máy anh.');
+  });
+}
+
+async function syncScheduleToServer() {
+  const response = await fetch('/api/schedule', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ schedule: state.schedule })
+  });
+  if (!response.ok) throw new Error('Schedule sync failed');
 }
 
 function renderFoodMenu() {
@@ -122,7 +137,30 @@ async function submitFoodRequest() {
 function chatTime(createdAt) {
   const date = new Date(createdAt);
   if (Number.isNaN(date.getTime())) return '';
-  return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+  return date.toLocaleTimeString('vi-VN', { timeZone: CHAT_TIME_ZONE, hour: '2-digit', minute: '2-digit' });
+}
+
+function chatDateKey(createdAt) {
+  const date = new Date(createdAt);
+  if (Number.isNaN(date.getTime())) return '';
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: CHAT_TIME_ZONE,
+    year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(date);
+}
+
+function chatDateLabel(createdAt) {
+  const key = chatDateKey(createdAt);
+  if (!key) return 'Ngày không xác định';
+  const todayKey = chatDateKey(new Date());
+  if (key === todayKey) return 'Hôm nay';
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  if (key === chatDateKey(yesterday)) return 'Hôm qua';
+  return new Intl.DateTimeFormat('vi-VN', {
+    timeZone: CHAT_TIME_ZONE,
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+  }).format(new Date(createdAt));
 }
 
 function parseChatMessage(content) {
@@ -154,14 +192,20 @@ function renderChatMessages(messages, selector, viewerRole) {
 
   const previousScrollTop = container.scrollTop;
   const shouldStickToBottom = !container.dataset.ready || container.scrollHeight - container.scrollTop - container.clientHeight < 90;
+  let previousDateKey = '';
   container.innerHTML = messages.length ? messages.map((message) => {
     const own = message.sender_role === viewerRole;
     const sender = own ? (viewerRole === 'admin' ? 'Anh' : 'Vy') : (viewerRole === 'admin' ? 'Vy' : 'Anh');
     const parsed = parseChatMessage(message.content);
+    const currentDateKey = chatDateKey(message.created_at);
+    const dateSeparator = currentDateKey !== previousDateKey
+      ? `<div class="chat-date-separator" role="separator"><span>${escapeHtml(chatDateLabel(message.created_at))}</span></div>`
+      : '';
+    previousDateKey = currentDateKey;
     const content = parsed.type === 'image'
       ? `<a class="chat-image-link" href="${escapeHtml(parsed.url)}" target="_blank" rel="noopener"><img class="chat-image" src="${escapeHtml(parsed.url)}" alt="Ảnh ${sender} gửi" loading="lazy" /></a>${parsed.caption ? `<p class="chat-image-caption">${escapeHtml(parsed.caption).replace(/\r?\n/g, '<br />')}</p>` : ''}`
       : `<p>${escapeHtml(parsed.text).replace(/\r?\n/g, '<br />')}</p>`;
-    return `<article class="chat-message ${own ? 'is-mine' : 'is-theirs'}">
+    return `${dateSeparator}<article class="chat-message ${own ? 'is-mine' : 'is-theirs'}">
       <div class="chat-bubble">${content}<time datetime="${escapeHtml(message.created_at)}">${sender} · ${chatTime(message.created_at)}</time></div>
     </article>`;
   }).join('') : '<p class="chat-empty">Chưa có tin nhắn nào. Nhắn một câu thật ngọt cho người thương nha 💗</p>';
@@ -520,10 +564,11 @@ function handleIncomingNotificationTarget() {
     food: '#foodSection',
     'vy-chat': '#vyChatSection',
     'admin-chat': '#adminChatSection',
-    'food-requests': '#foodRequestList'
+    'food-requests': '#foodRequestList',
+    'admin-calendar': '#adminScheduleSection'
   };
   const target = $(selectorBySection[section]);
-  const adminTarget = section === 'admin-chat' || section === 'food-requests';
+  const adminTarget = section === 'admin-chat' || section === 'food-requests' || section === 'admin-calendar';
   const screen = adminTarget ? $('#adminScreen') : $('#appShell');
   if (!target || screen?.hidden) return false;
   window.setTimeout(() => {
@@ -559,8 +604,10 @@ function showAdminScreen() {
   $('#appShell').hidden = true;
   $('#adminScreen').hidden = false;
   updateAdminNotificationUi();
+  renderAdminCalendar();
   startChatPolling('admin');
   loadFoodRequests();
+  loadAdminSchedule();
 }
 
 function leaveAdminScreen() {
@@ -681,6 +728,82 @@ async function loadFoodRequests() {
     });
   } catch (error) {
     list.innerHTML = `<p class="empty-request">${error.message}</p>`;
+  }
+}
+
+async function loadSharedSchedule() {
+  try {
+    const response = await fetch('/api/schedule');
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Chưa tải được lịch dùng chung.');
+    if (data.hasStoredEntries) {
+      state.schedule = { ...defaultSchedule, ...(data.schedule || {}) };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.schedule));
+      renderOverview();
+      renderCalendar();
+    } else {
+      await syncScheduleToServer();
+    }
+  } catch (error) {
+    console.warn('Không tải được lịch dùng chung:', error.message);
+  }
+}
+
+function renderAdminCalendar() {
+  const grid = $('#adminCalendarGrid');
+  if (!grid) return;
+  const year = state.adminVisibleMonth.getFullYear();
+  const month = state.adminVisibleMonth.getMonth();
+  $('#adminMonthLabel').textContent = new Intl.DateTimeFormat('vi-VN', { month: 'long', year: 'numeric' }).format(state.adminVisibleMonth);
+  grid.innerHTML = '';
+  const firstDay = new Date(year, month, 1);
+  const offset = (firstDay.getDay() + 6) % 7;
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const todayKey = localDateKey(todayAtMidnight());
+  const schedule = state.adminSchedule || defaultSchedule;
+  for (let index = 0; index < offset; index += 1) {
+    const cell = document.createElement('div');
+    cell.className = 'day-cell empty';
+    grid.appendChild(cell);
+  }
+  for (let day = 1; day <= daysInMonth; day += 1) {
+    const date = new Date(year, month, day);
+    const key = localDateKey(date);
+    const code = schedule[key];
+    const info = codeInfo(code);
+    const cell = document.createElement('div');
+    cell.className = `day-cell${key === todayKey ? ' is-today' : ''}`;
+    cell.setAttribute('aria-label', `${displayDate(date)}: ${info.title}`);
+    cell.innerHTML = `${key === todayKey ? '<span class="today-label">Hôm nay</span>' : ''}<span class="day-number">${day}</span>${code ? `<span class="shift-chip ${info.className}">${escapeHtml(code)}</span>` : ''}`;
+    grid.appendChild(cell);
+  }
+  const totalCells = offset + daysInMonth;
+  const trailing = (7 - (totalCells % 7)) % 7;
+  for (let index = 0; index < trailing; index += 1) {
+    const cell = document.createElement('div');
+    cell.className = 'day-cell empty';
+    grid.appendChild(cell);
+  }
+}
+
+async function loadAdminSchedule() {
+  const token = localStorage.getItem(ADMIN_TOKEN_KEY);
+  if (!token) return;
+  const status = $('#adminScheduleStatus');
+  if (status) status.textContent = 'Đang tải lịch của Vy...';
+  try {
+    const response = await fetch('/api/schedule?role=admin', { headers: { Authorization: `Bearer ${token}` } });
+    const data = await response.json();
+    if (response.status === 401) {
+      handleAdminSessionExpired();
+      return;
+    }
+    if (!response.ok) throw new Error(data.error || 'Chưa tải được lịch của Vy.');
+    state.adminSchedule = { ...defaultSchedule, ...(data.schedule || {}) };
+    renderAdminCalendar();
+    if (status) status.textContent = data.updatedAt ? `Cập nhật lần cuối ${new Intl.DateTimeFormat('vi-VN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(data.updatedAt))}` : 'Lịch mặc định của Vy';
+  } catch (error) {
+    if (status) status.textContent = error.message;
   }
 }
 
@@ -969,6 +1092,7 @@ function handleLogin(event) {
     setAuthenticated(true);
     renderOverview();
     renderCalendar();
+    loadSharedSchedule();
     handleIncomingNotificationTarget();
     showToast('Đăng nhập thành công, chào Vy yêu 💗');
     return;
@@ -1245,6 +1369,7 @@ function bindEvents() {
   $('#adminLogout').addEventListener('click', leaveAdminScreen);
   $('#enableAdminNotifications').addEventListener('click', enableAdminNotifications);
   $('#refreshFoodRequests').addEventListener('click', loadFoodRequests);
+  $('#refreshAdminSchedule').addEventListener('click', loadAdminSchedule);
   $('#sendFoodRequest').addEventListener('click', submitFoodRequest);
   $('#chatForm').addEventListener('submit', (event) => {
     event.preventDefault();
@@ -1276,6 +1401,14 @@ function bindEvents() {
   });
   $('#nextMonth').addEventListener('click', () => {
     changeVisibleMonth(1);
+  });
+  $('#adminPreviousMonth').addEventListener('click', () => {
+    state.adminVisibleMonth = new Date(state.adminVisibleMonth.getFullYear(), state.adminVisibleMonth.getMonth() - 1, 1);
+    renderAdminCalendar();
+  });
+  $('#adminNextMonth').addEventListener('click', () => {
+    state.adminVisibleMonth = new Date(state.adminVisibleMonth.getFullYear(), state.adminVisibleMonth.getMonth() + 1, 1);
+    renderAdminCalendar();
   });
   bindCalendarSwipe();
   $('#closeModal').addEventListener('click', closeDayModal);
@@ -1317,6 +1450,7 @@ function init() {
     });
   }
   if (localStorage.getItem(ADMIN_TOKEN_KEY)) showAdminScreen();
+  if (localStorage.getItem(AUTH_KEY) === 'true') loadSharedSchedule();
   handleIncomingCallHint();
   handleIncomingNotificationTarget();
 }

@@ -116,6 +116,9 @@ h3 { margin-bottom: 4px; font-size: 16px; }
 .chat-status-pill { color: #7565a1; font-size: 12px; font-weight: 600; }
 .chat-intro { margin: 9px 0 16px; color: var(--muted); font-size: 13px; }
 .chat-thread { display: flex; flex-direction: column; gap: 9px; min-height: 105px; max-height: 380px; overflow-y: auto; padding: 15px; border: 1px solid #eee7f4; border-radius: 18px; background: #faf8fd; scroll-behavior: smooth; }
+.chat-date-separator { display: flex; align-items: center; gap: 10px; margin: 8px 0 3px; color: #a39ba9; font-size: 10px; font-weight: 700; letter-spacing: .02em; text-align: center; }
+.chat-date-separator::before, .chat-date-separator::after { height: 1px; flex: 1; background: #e9e3ed; content: ''; }
+.chat-date-separator span { padding: 5px 10px; border-radius: 999px; background: #eeeaf2; white-space: nowrap; }
 .chat-message { display: flex; max-width: 86%; }
 .chat-message.is-mine { align-self: flex-end; justify-content: flex-end; }
 .chat-message.is-theirs { align-self: flex-start; }
@@ -170,6 +173,14 @@ h3 { margin-bottom: 4px; font-size: 16px; }
 .admin-heading h1 { margin: 8px 0; font-family: 'Playfair Display', Georgia, serif; font-size: 30px; }
 .admin-subtitle { margin: 0; color: var(--muted); font-size: 13px; }
 .admin-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; padding-top: 18px; border-top: 1px dashed #eedce3; }
+.admin-schedule-section { margin-top: 25px; padding: 22px; border: 1px solid #eee2e8; border-radius: 22px; background: linear-gradient(145deg, #fff, #fffafd); }
+.admin-schedule-section h2 { margin-bottom: 0; font-size: clamp(24px, 3vw, 31px); }
+.admin-month-controls { justify-content: space-between; margin: 16px 0 10px; }
+.admin-calendar-card { box-shadow: none; }
+.admin-calendar-card .day-cell { cursor: default; }
+.admin-calendar-card .day-cell:hover { transform: none; background: #fff; }
+.admin-calendar-card .day-cell.is-today:hover { background: linear-gradient(145deg, #fff0f5, #fff9fb); }
+.admin-schedule-status { min-height: 17px; margin: 10px 0 0; color: var(--muted); font-size: 11px; }
 .food-request-list { display: grid; gap: 12px; margin-top: 22px; }
 .food-request-item { display: flex; align-items: start; justify-content: space-between; flex-wrap: wrap; gap: 15px; padding: 16px; border: 1px solid #f0dce3; border-radius: 18px; background: #fff9fb; }
 .food-request-item > div:first-child { flex: 1 1 260px; }

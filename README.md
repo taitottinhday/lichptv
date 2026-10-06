@@ -62,6 +62,7 @@ App đã có luồng chat riêng cho hai người:
 - Vy nhắn ở phần **Nhắn cho anh yêu** sau khi đăng nhập tài khoản Vy.
 - Anh nhắn ở phần **Nhắn cho Vy** trong góc admin.
 - Khi đã cấu hình Supabase, tin nhắn được lưu trong bảng `chat_messages` của Supabase và tự tải lại mỗi 4 giây.
+- Tin nhắn được chia theo mốc ngày kiểu Messenger/Zalo: **Hôm nay**, **Hôm qua** hoặc ngày đầy đủ.
 - Khi người kia đã bật Web Push, tin nhắn mới sẽ gửi thông báo ra màn hình khóa.
 - Hiện tại là tin nhắn chữ và emoji; ảnh, video, ghi âm, gọi thoại sẽ làm ở bản tiếp theo.
 
@@ -79,9 +80,17 @@ create index if not exists chat_messages_created_at_idx
   on public.chat_messages (created_at desc);
 
 alter table public.chat_messages enable row level security;
+
+create table if not exists public.schedule_entries (
+  date_key date primary key,
+  code text not null check (code in ('D', 'N', '18', '9', 'eAD')),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.schedule_entries enable row level security;
 ```
 
-Railway cần có hai biến `SUPABASE_URL` và `SUPABASE_SERVICE_ROLE_KEY` để app lưu lịch sử chat vào Supabase. Nếu chưa có hai biến này, app sẽ dùng PostgreSQL Railway; nếu cũng không có PostgreSQL thì chỉ dùng bộ nhớ tạm trong lúc chơi thử.
+Lịch của Vy được đồng bộ lên server mỗi khi Vy lưu ca mới. Trong góc của anh có thêm mục **Anh xem lịch của Vy** ở chế độ chỉ xem. Railway tự tạo bảng `schedule_entries` khi dùng PostgreSQL; nếu dùng Supabase, chạy thêm SQL ở trên một lần. Railway cần có hai biến `SUPABASE_URL` và `SUPABASE_SERVICE_ROLE_KEY` để app lưu lịch sử chat và lịch dùng chung vào Supabase. Nếu chưa có hai biến này, app sẽ dùng PostgreSQL Railway; nếu cũng không có PostgreSQL thì chỉ dùng bộ nhớ tạm trong lúc chơi thử.
 
 ## Gọi video bằng LiveKit
 

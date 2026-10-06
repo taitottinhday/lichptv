@@ -244,7 +244,27 @@
         <div class="admin-actions">
           <button class="button button-dark" id="enableAdminNotifications" type="button">Bật thông báo nhận request</button>
           <button class="button button-light" id="refreshFoodRequests" type="button">Làm mới</button>
+          <button class="button button-light" id="refreshAdminSchedule" type="button">Làm mới lịch</button>
         </div>
+        <section class="admin-schedule-section" id="adminScheduleSection" aria-labelledby="adminScheduleHeading">
+          <div class="section-heading">
+            <div>
+              <p class="section-kicker">LỊCH CỦA VY</p>
+              <h2 id="adminScheduleHeading">Anh xem lịch của Vy 📅</h2>
+            </div>
+            <span class="chat-status-pill">Chỉ xem</span>
+          </div>
+          <div class="month-controls admin-month-controls">
+            <button class="icon-button soft" id="adminPreviousMonth" type="button" aria-label="Tháng trước">‹</button>
+            <span id="adminMonthLabel">Tháng 10, 2026</span>
+            <button class="icon-button soft" id="adminNextMonth" type="button" aria-label="Tháng sau">›</button>
+          </div>
+          <div class="calendar-card admin-calendar-card">
+            <div class="weekdays"><span>T2</span><span>T3</span><span>T4</span><span>T5</span><span>T6</span><span>T7</span><span>CN</span></div>
+            <div class="calendar-grid" id="adminCalendarGrid"></div>
+          </div>
+          <p class="admin-schedule-status" id="adminScheduleStatus" role="status" aria-live="polite">Đang tải lịch của Vy...</p>
+        </section>
         <section class="chat-section admin-chat-section" id="adminChatSection" aria-labelledby="adminChatHeading">
           <div class="section-heading">
             <div>

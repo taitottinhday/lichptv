@@ -41,6 +41,8 @@ const memoryFoodRequests = [];
 let memoryFoodRequestId = 0;
 const memoryChatMessages = [];
 let memoryChatMessageId = 0;
+const memorySchedule = {};
+let memoryScheduleUpdatedAt = null;
 let pushConfigured = false;
 const CHAT_IMAGE_PREFIX = '__lich_chat_image__:';
 const CHAT_STORAGE_BUCKET = 'chat-images';
@@ -78,6 +80,11 @@ const databaseReady = pool
       sender_role TEXT NOT NULL CHECK (sender_role IN ('vy', 'admin')),
       content TEXT NOT NULL,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS schedule_entries (
+      date_key TEXT PRIMARY KEY,
+      code TEXT NOT NULL CHECK (code IN ('D', 'N', '18', '9', 'eAD')),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
     );`)
   : Promise.resolve();
 
@@ -190,6 +197,75 @@ function shiftDescription(code) {
 function prettyDate(key) {
   const [, month, day] = key.split('-');
   return `${day}/${month}`;
+}
+
+function scheduleEntries(schedule) {
+  return Object.entries(schedule || {})
+    .filter(([dateKey, code]) => /^\d{4}-\d{2}-\d{2}$/.test(dateKey) && ['D', 'N', '18', '9', 'eAD'].includes(code))
+    .slice(0, 500);
+}
+
+async function readSharedSchedule() {
+  const schedule = { ...defaultSchedule };
+  let hasStoredEntries = false;
+  let updatedAt = null;
+  if (supabaseConfigured) {
+    const rows = await supabaseRequest('schedule_entries?select=date_key,code,updated_at&order=date_key.asc');
+    (rows || []).forEach((row) => {
+      schedule[row.date_key] = row.code;
+      hasStoredEntries = true;
+      if (row.updated_at && (!updatedAt || row.updated_at > updatedAt)) updatedAt = row.updated_at;
+    });
+  } else if (pool) {
+    await databaseReady;
+    const result = await pool.query('SELECT date_key, code, updated_at FROM schedule_entries ORDER BY date_key ASC');
+    result.rows.forEach((row) => {
+      schedule[row.date_key] = row.code;
+      hasStoredEntries = true;
+      if (row.updated_at && (!updatedAt || row.updated_at > updatedAt)) updatedAt = row.updated_at;
+    });
+  } else {
+    Object.assign(schedule, memorySchedule);
+    hasStoredEntries = Object.keys(memorySchedule).length > 0;
+    updatedAt = memoryScheduleUpdatedAt;
+  }
+  return { schedule, hasStoredEntries, updatedAt };
+}
+
+async function writeSharedSchedule(schedule) {
+  const entries = scheduleEntries(schedule);
+  if (!entries.length) throw new Error('Lịch chưa có dữ liệu hợp lệ.');
+  if (supabaseConfigured) {
+    await supabaseRequest('schedule_entries?on_conflict=date_key', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify(entries.map(([date_key, code]) => ({ date_key, code })))
+    });
+    return;
+  }
+  if (pool) {
+    await databaseReady;
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      for (const [dateKey, code] of entries) {
+        await client.query(
+          `INSERT INTO schedule_entries (date_key, code, updated_at) VALUES ($1, $2, NOW())
+           ON CONFLICT (date_key) DO UPDATE SET code = EXCLUDED.code, updated_at = NOW()`,
+          [dateKey, code]
+        );
+      }
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+    return;
+  }
+  entries.forEach(([dateKey, code]) => { memorySchedule[dateKey] = code; });
+  memoryScheduleUpdatedAt = new Date().toISOString();
 }
 
 async function saveSubscription(subscription, role = 'vy') {
@@ -399,6 +475,28 @@ app.get('/api/livekit/check', async (request, response) => {
   } catch (error) {
     console.error('Kiểm tra LiveKit thất bại:', error.message);
     return response.status(502).json({ ok: false, error: 'LIVEKIT_URL, LIVEKIT_API_KEY và LIVEKIT_API_SECRET chưa cùng một project.' });
+  }
+});
+
+app.get('/api/schedule', async (request, response) => {
+  if (request.query.role === 'admin' && !isAdminRequest(request)) {
+    return response.status(401).json({ error: 'Cần đăng nhập góc của anh trước khi xem lịch.' });
+  }
+  try {
+    return response.json(await readSharedSchedule());
+  } catch (error) {
+    console.error('Không đọc được lịch dùng chung:', error.message);
+    return response.status(500).json({ error: 'Chưa đọc được lịch của Vy.' });
+  }
+});
+
+app.put('/api/schedule', async (request, response) => {
+  try {
+    await writeSharedSchedule(request.body?.schedule);
+    return response.json({ ok: true, updatedAt: new Date().toISOString() });
+  } catch (error) {
+    console.error('Không đồng bộ được lịch:', error.message);
+    return response.status(500).json({ error: 'Chưa đồng bộ được lịch của Vy.' });
   }
 });
 
