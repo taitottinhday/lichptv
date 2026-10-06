@@ -523,6 +523,50 @@ function drawHeart(context, x, y, size, color) {
   context.restore();
 }
 
+function drawEmoji(context, emoji, x, y, size) {
+  if (!x || !y) return;
+  context.save();
+  context.font = `${Math.max(18, size)}px "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
+  context.textAlign = 'center';
+  context.textBaseline = 'middle';
+  context.fillText(emoji, x, y);
+  context.restore();
+}
+
+function drawFreckles(context, cheek, faceWidth, faceHeight) {
+  if (!cheek) return;
+  context.save();
+  context.fillStyle = 'rgba(177, 94, 78, .8)';
+  const dotSize = Math.max(1.8, faceWidth * .012);
+  [-.1, -.05, 0, .05, .1].forEach((offset, index) => {
+    context.beginPath();
+    context.arc(cheek.x + offset * faceWidth, cheek.y - (index % 2) * faceHeight * .035, dotSize, 0, Math.PI * 2);
+    context.fill();
+  });
+  context.restore();
+}
+
+function drawGlasses(context, leftEye, rightEye, faceWidth, faceHeight, color = '#29243d') {
+  if (!leftEye || !rightEye) return;
+  const lensRadiusX = faceWidth * .16;
+  const lensRadiusY = faceHeight * .065;
+  context.save();
+  context.fillStyle = `${color}cc`;
+  context.strokeStyle = '#fff';
+  context.lineWidth = Math.max(2, faceWidth * .012);
+  [leftEye, rightEye].forEach((eye) => {
+    context.beginPath();
+    context.ellipse(eye.x, eye.y, lensRadiusX, lensRadiusY, 0, 0, Math.PI * 2);
+    context.fill();
+    context.stroke();
+  });
+  context.beginPath();
+  context.moveTo(leftEye.x + lensRadiusX * .82, leftEye.y);
+  context.lineTo(rightEye.x - lensRadiusX * .82, rightEye.y);
+  context.stroke();
+  context.restore();
+}
+
 function drawCuteFaceEffect(pipeline, faceLandmarks) {
   const { context, canvas, sourceVideo, filter } = pipeline;
   const width = canvas.width;
@@ -537,6 +581,9 @@ function drawCuteFaceEffect(pipeline, faceLandmarks) {
   const chin = landmarkPoint(faceLandmarks, 152, width, height);
   const leftCheek = landmarkPoint(faceLandmarks, 205, width, height);
   const rightCheek = landmarkPoint(faceLandmarks, 425, width, height);
+  const leftEye = landmarkPoint(faceLandmarks, 33, width, height);
+  const rightEye = landmarkPoint(faceLandmarks, 263, width, height);
+  const mouth = landmarkPoint(faceLandmarks, 13, width, height);
   const faceWidth = distanceBetween(leftFace, rightFace);
   const faceHeight = distanceBetween(forehead, chin);
   if (!forehead || !faceWidth) return;
@@ -599,6 +646,35 @@ function drawCuteFaceEffect(pipeline, faceLandmarks) {
     context.font = `${Math.max(22, faceWidth * .11)}px "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
     context.textAlign = 'center';
     context.fillText('✨', forehead.x, forehead.y - faceHeight * .28);
+  } else if (filter === 'cat') {
+    drawEmoji(context, '🐱', forehead.x, forehead.y - faceHeight * .22, Math.max(44, faceWidth * .28));
+    drawEmoji(context, '💗', leftCheek?.x, leftCheek?.y, Math.max(18, faceWidth * .1));
+    drawEmoji(context, '💗', rightCheek?.x, rightCheek?.y, Math.max(18, faceWidth * .1));
+  } else if (filter === 'puppy') {
+    drawEmoji(context, '🐶', forehead.x, forehead.y - faceHeight * .18, Math.max(42, faceWidth * .26));
+    drawEmoji(context, '🦴', forehead.x + faceWidth * .4, forehead.y + faceHeight * .05, Math.max(20, faceWidth * .12));
+  } else if (filter === 'glasses') {
+    drawGlasses(context, leftEye, rightEye, faceWidth, faceHeight, '#433b72');
+    drawEmoji(context, '✨', forehead.x, forehead.y - faceHeight * .3, Math.max(20, faceWidth * .1));
+  } else if (filter === 'freckles') {
+    drawFreckles(context, leftCheek, faceWidth, faceHeight);
+    drawFreckles(context, rightCheek, faceWidth, faceHeight);
+    drawEmoji(context, '🌼', forehead.x, forehead.y - faceHeight * .32, Math.max(24, faceWidth * .14));
+  } else if (filter === 'butterfly') {
+    drawEmoji(context, '🦋', forehead.x - faceWidth * .38, forehead.y - faceHeight * .18, Math.max(26, faceWidth * .16));
+    drawEmoji(context, '🦋', forehead.x + faceWidth * .38, forehead.y - faceHeight * .08, Math.max(22, faceWidth * .14));
+    drawHeart(context, forehead.x, forehead.y - faceHeight * .37, faceWidth * .08, '#a9e9ff');
+  } else if (filter === 'kiss') {
+    drawEmoji(context, '💋', mouth?.x || forehead.x, mouth?.y || forehead.y + faceHeight * .25, Math.max(30, faceWidth * .17));
+    drawEmoji(context, '💗', forehead.x + faceWidth * .32, forehead.y - faceHeight * .23, Math.max(22, faceWidth * .12));
+  } else if (filter === 'star') {
+    drawEmoji(context, '✨', forehead.x - faceWidth * .4, forehead.y - faceHeight * .12, Math.max(24, faceWidth * .14));
+    drawEmoji(context, '⭐', forehead.x, forehead.y - faceHeight * .4, Math.max(28, faceWidth * .16));
+    drawEmoji(context, '✨', forehead.x + faceWidth * .4, forehead.y - faceHeight * .16, Math.max(20, faceWidth * .12));
+  } else if (filter === 'devil') {
+    drawEmoji(context, '😈', forehead.x, forehead.y - faceHeight * .2, Math.max(42, faceWidth * .25));
+    drawEmoji(context, '🔥', leftCheek?.x, leftCheek?.y, Math.max(20, faceWidth * .11));
+    drawEmoji(context, '🔥', rightCheek?.x, rightCheek?.y, Math.max(20, faceWidth * .11));
   }
 }
 

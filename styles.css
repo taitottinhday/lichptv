@@ -205,6 +205,14 @@ h3 { margin-bottom: 4px; font-size: 16px; }
 .filter-preview-flower { background: linear-gradient(145deg, #f28cb3, #ffc66d); }
 .filter-preview-crown { background: linear-gradient(145deg, #7057b2, #efb762); }
 .filter-preview-blush { background: linear-gradient(145deg, #f48cac, #f8d3c0); }
+.filter-preview-cat { background: linear-gradient(145deg, #6a568c, #f4a9c7); }
+.filter-preview-puppy { background: linear-gradient(145deg, #c8805a, #f4c99d); }
+.filter-preview-glasses { background: linear-gradient(145deg, #433b72, #a89de5); }
+.filter-preview-freckles { background: linear-gradient(145deg, #f5b16a, #ffd9a1); }
+.filter-preview-butterfly { background: linear-gradient(145deg, #7cc6e5, #c8a4ed); }
+.filter-preview-kiss { background: linear-gradient(145deg, #e65e96, #ffb1c8); }
+.filter-preview-star { background: linear-gradient(145deg, #22254c, #7f75d1); }
+.filter-preview-devil { background: linear-gradient(145deg, #7b204f, #f05a71); }
 .filter-card.active .filter-preview { border-color: #ffb0d0; box-shadow: 0 0 0 3px rgba(255, 176, 208, .24), 0 7px 16px rgba(0, 0, 0, .2); transform: translateY(-2px); }
 .call-stage:not(.has-face-filter)[data-filter="soft"] .call-video { filter: saturate(1.08) brightness(1.08) contrast(.94); }
 .call-stage:not(.has-face-filter)[data-filter="hearts"]::before { position: absolute; z-index: 2; inset: 12px 18px auto; content: '💗  ✨  💕'; color: #ffafd1; font-size: 24px; letter-spacing: 18px; pointer-events: none; text-shadow: 0 4px 15px rgba(255, 74, 143, .6); }
