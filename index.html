@@ -65,6 +65,17 @@
       </header>
 
       <main>
+        <section class="love-counter-card" id="loveCounter" aria-labelledby="loveCounterHeading">
+          <div class="love-counter-glow" aria-hidden="true">❤</div>
+          <div class="love-counter-main">
+            <p class="section-kicker">OUR LITTLE LOVE STORY</p>
+            <h2 id="loveCounterHeading">Mình yêu nhau được</h2>
+            <div class="love-counter-units" aria-live="polite"><div><strong id="loveYears">0</strong><span>năm</span></div><div><strong id="loveMonths">0</strong><span>tháng</span></div><div><strong id="loveDays">0</strong><span>ngày</span></div></div>
+            <p class="love-counter-since">Từ ngày 03/11/2022 · <b id="loveTotalDays">0 ngày</b></p>
+            <p class="love-counter-milestone" id="loveMilestone">Mỗi ngày bên nhau đều là một cột mốc nhỏ 💗</p>
+          </div>
+          <div class="love-counter-avatars" aria-hidden="true"><span>💗</span><span>🌷</span><span>💗</span></div>
+        </section>
         <section class="calendar-section" id="calendarSection" aria-labelledby="calendarHeading">
           <div class="section-heading">
             <div>
@@ -161,6 +172,15 @@
           <p class="food-request-status" id="foodRequestStatus" role="status" aria-live="polite"></p>
         </section>
 
+        <section class="mood-section" id="moodSection" aria-labelledby="moodHeading">
+          <div class="section-heading"><div><p class="section-kicker">MỖI NGÀY MỘT CHÚT YÊU THƯƠNG</p><h2 id="moodHeading">Hôm nay em thấy thế nào? 🌷</h2></div><span class="chat-status-pill">Mood của Vy</span></div>
+          <div class="mood-picker" role="group" aria-label="Chọn tâm trạng hôm nay">
+            <button type="button" data-mood="happy" title="Vui">😊<span>Vui</span></button><button type="button" data-mood="loved" title="Được yêu">🥰<span>Được yêu</span></button><button type="button" data-mood="tired" title="Hơi mệt">😴<span>Hơi mệt</span></button><button type="button" data-mood="sad" title="Buồn">🥺<span>Buồn</span></button><button type="button" data-mood="excited" title="Háo hức">✨<span>Háo hức</span></button>
+          </div>
+          <div class="mood-compose"><input id="moodNote" maxlength="240" placeholder="Kể anh nghe một chút nha…" /><button class="button button-primary" id="saveMood" type="button">Lưu mood 💗</button></div>
+          <p class="mood-status" id="moodStatus" role="status" aria-live="polite"></p>
+        </section>
+
         <section class="chat-section" id="vyChatSection" aria-labelledby="chatHeading">
           <div class="section-heading">
             <div>
@@ -220,6 +240,8 @@
           <div class="call-stage" id="callStage" hidden>
             <div class="call-grid" id="callVideos"></div>
             <div class="call-controls">
+              <button class="button call-control-icon call-snapshot" data-call-snapshot="vy" type="button" title="Chụp ảnh cuộc gọi">📸</button>
+              <div class="call-reaction-tray" aria-label="Reaction khi gọi"><button class="call-reaction-button" data-call-reaction="❤️" type="button">❤️</button><button class="call-reaction-button" data-call-reaction="😂" type="button">😂</button><button class="call-reaction-button" data-call-reaction="✨" type="button">✨</button><button class="call-reaction-button" data-call-reaction="🥰" type="button">🥰</button></div>
               <button class="button button-light call-control-icon" id="toggleCamera" type="button" disabled>◉ Camera</button>
               <button class="button button-light call-control-icon" id="toggleMicrophone" type="button" disabled>◉ Mic</button>
               <button class="button button-light call-control-icon" id="toggleCallFilters" type="button" disabled>✨ Filter</button>
@@ -280,6 +302,15 @@
           <button class="button button-light" id="refreshFoodRequests" type="button">Làm mới</button>
           <button class="button button-light" id="refreshAdminSchedule" type="button">Làm mới lịch</button>
         </div>
+        <section class="love-counter-card admin-love-counter" id="adminLoveCounter" aria-labelledby="adminLoveCounterHeading">
+          <div class="love-counter-glow" aria-hidden="true">❤</div>
+          <div class="love-counter-main"><p class="section-kicker">OUR LITTLE LOVE STORY</p><h2 id="adminLoveCounterHeading">Mình yêu nhau được</h2><div class="love-counter-units" aria-live="polite"><div><strong id="adminLoveYears">0</strong><span>năm</span></div><div><strong id="adminLoveMonths">0</strong><span>tháng</span></div><div><strong id="adminLoveDays">0</strong><span>ngày</span></div></div><p class="love-counter-since">Từ ngày 03/11/2022 · <b id="adminLoveTotalDays">0 ngày</b></p><p class="love-counter-milestone" id="adminLoveMilestone">Cảm ơn anh và Vy đã chọn nhau mỗi ngày 💗</p></div><div class="love-counter-avatars" aria-hidden="true"><span>💗</span><span>🌷</span><span>💗</span></div>
+        </section>
+        <section class="mood-section admin-mood-section" id="adminMoodSection" aria-labelledby="adminMoodHeading">
+          <div class="section-heading"><div><p class="section-kicker">CHECK-IN CỦA VY</p><h2 id="adminMoodHeading">Hôm nay Vy đang thấy…</h2></div><button class="button button-light" id="refreshMood" type="button">Làm mới</button></div>
+          <div class="admin-mood-display" id="adminMoodDisplay">Chưa có check-in hôm nay của Vy.</div>
+        </section>
+
         <section class="admin-schedule-section" id="adminScheduleSection" aria-labelledby="adminScheduleHeading">
           <div class="section-heading">
             <div>
@@ -356,6 +387,8 @@
           <div class="call-stage" id="adminCallStage" hidden>
             <div class="call-grid" id="adminCallVideos"></div>
             <div class="call-controls">
+              <button class="button call-control-icon call-snapshot" data-call-snapshot="admin" type="button" title="Chụp ảnh cuộc gọi">📸</button>
+              <div class="call-reaction-tray" aria-label="Reaction khi gọi"><button class="call-reaction-button" data-call-reaction="❤️" type="button">❤️</button><button class="call-reaction-button" data-call-reaction="😂" type="button">😂</button><button class="call-reaction-button" data-call-reaction="✨" type="button">✨</button><button class="call-reaction-button" data-call-reaction="🥰" type="button">🥰</button></div>
               <button class="button button-light call-control-icon" id="toggleAdminCamera" type="button" disabled>◉ Camera</button>
               <button class="button button-light call-control-icon" id="toggleAdminMicrophone" type="button" disabled>◉ Mic</button>
               <button class="button button-light call-control-icon" id="toggleAdminCallFilters" type="button" disabled>✨ Filter</button>

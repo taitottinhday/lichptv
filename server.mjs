@@ -41,6 +41,7 @@ const memoryFoodRequests = [];
 let memoryFoodRequestId = 0;
 const memoryChatMessages = [];
 let memoryChatMessageId = 0;
+const memoryChatReactions = new Map();
 const memorySchedule = {};
 let memoryScheduleUpdatedAt = null;
 let pushConfigured = false;
@@ -80,6 +81,13 @@ const databaseReady = pool
       sender_role TEXT NOT NULL CHECK (sender_role IN ('vy', 'admin')),
       content TEXT NOT NULL,
       created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    CREATE TABLE IF NOT EXISTS chat_message_reactions (
+      message_id BIGINT REFERENCES chat_messages(id) ON DELETE CASCADE,
+      role TEXT NOT NULL CHECK (role IN ('vy', 'admin')),
+      reaction TEXT NOT NULL CHECK (reaction IN ('💗', '😂', '😮', '✨', '🥰')),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      PRIMARY KEY (message_id, role)
     );
     CREATE TABLE IF NOT EXISTS schedule_entries (
       date_key TEXT PRIMARY KEY,
@@ -506,6 +514,30 @@ app.put('/api/schedule', async (request, response) => {
   }
 });
 
+async function attachChatReactions(messages) {
+  const result = messages.map((message) => ({ ...message, reactions: {} }));
+  if (!result.length) return result;
+  if (supabaseConfigured) {
+    const rows = await supabaseRequest(`chat_message_reactions?select=message_id,role,reaction&message_id=in.(${result.map((message) => message.id).join(',')})`);
+    const byId = new Map(result.map((message) => [String(message.id), message]));
+    (rows || []).forEach((row) => { const message = byId.get(String(row.message_id)); if (message) message.reactions[row.role] = row.reaction; });
+    return result;
+  }
+  if (pool) {
+    await databaseReady;
+    const rows = await pool.query('SELECT message_id, role, reaction FROM chat_message_reactions WHERE message_id = ANY($1::bigint[])', [result.map((message) => message.id)]);
+    const byId = new Map(result.map((message) => [String(message.id), message]));
+    rows.rows.forEach((row) => { const message = byId.get(String(row.message_id)); if (message) message.reactions[row.role] = row.reaction; });
+    return result;
+  }
+  result.forEach((message) => { message.reactions = { ...(memoryChatReactions.get(String(message.id)) || {}) }; });
+  return result;
+}
+
+async function attachChatReactionsSafe(messages) {
+  try { return await attachChatReactions(messages); } catch (error) { console.warn('Reaction table chưa sẵn sàng:', error.message); return messages.map((message) => ({ ...message, reactions: {} })); }
+}
+
 app.get('/api/chat/messages', async (request, response) => {
   const viewerRole = request.query.role === 'admin' ? 'admin' : 'vy';
   if (viewerRole === 'admin' && !isAdminRequest(request)) {
@@ -514,7 +546,7 @@ app.get('/api/chat/messages', async (request, response) => {
   try {
     if (supabaseConfigured) {
       const rows = await supabaseRequest('chat_messages?select=id,sender_role,content,created_at&order=id.desc&limit=100');
-      return response.json({ messages: (rows || []).reverse() });
+      return response.json({ messages: await attachChatReactionsSafe((rows || []).reverse()) });
     }
     if (pool) {
       await databaseReady;
@@ -524,9 +556,9 @@ app.get('/api/chat/messages', async (request, response) => {
          ORDER BY id DESC
          LIMIT 100`
       );
-      return response.json({ messages: result.rows.reverse() });
+      return response.json({ messages: await attachChatReactionsSafe(result.rows.reverse()) });
     }
-    return response.json({ messages: memoryChatMessages.slice(-100) });
+    return response.json({ messages: await attachChatReactionsSafe(memoryChatMessages.slice(-100)) });
   } catch (error) {
     console.error('Không đọc được lịch sử chat:', error.message);
     return response.status(500).json({ error: 'Chưa tải được lịch sử tin nhắn.' });
@@ -594,6 +626,28 @@ app.post('/api/chat/messages', async (request, response) => {
   } catch (error) {
     console.error('Không gửi được tin nhắn:', error.message);
     return response.status(500).json({ error: 'Chưa gửi được tin nhắn.' });
+  }
+});
+
+app.post('/api/chat/messages/:messageId/reaction', async (request, response) => {
+  const role = request.body?.role === 'admin' ? 'admin' : 'vy';
+  if (role === 'admin' && !isAdminRequest(request)) return response.status(401).json({ error: 'Cần đăng nhập góc chat của anh.' });
+  const reaction = ['💗', '😂', '😮', '✨', '🥰'].includes(request.body?.reaction) ? request.body.reaction : '💗';
+  try {
+    if (supabaseConfigured) {
+      await supabaseRequest('chat_message_reactions?on_conflict=message_id,role', { method: 'POST', headers: { 'Content-Type': 'application/json', Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify({ message_id: Number(request.params.messageId), role, reaction }) });
+    } else if (pool) {
+      await databaseReady;
+      await pool.query('INSERT INTO chat_message_reactions (message_id, role, reaction) VALUES ($1, $2, $3) ON CONFLICT (message_id, role) DO UPDATE SET reaction = EXCLUDED.reaction, updated_at = NOW()', [request.params.messageId, role, reaction]);
+    } else {
+      const reactions = memoryChatReactions.get(String(request.params.messageId)) || {};
+      reactions[role] = reactions[role] === reaction ? null : reaction;
+      memoryChatReactions.set(String(request.params.messageId), reactions);
+    }
+    return response.json({ ok: true, reaction });
+  } catch (error) {
+    console.error('Không lưu được reaction chat:', error.message);
+    return response.status(500).json({ error: 'Chưa lưu được reaction. Nếu dùng Supabase, hãy chạy SQL trong README.' });
   }
 });
 

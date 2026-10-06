@@ -8,6 +8,7 @@ const ADMIN_TOKEN_KEY = 'lich-cua-vy-admin-token-v1';
 const ADMIN_PUSH_ENABLED_KEY = 'lich-cua-vy-admin-push-enabled-v1';
 const CHAT_IMAGE_PREFIX = '__lich_chat_image__:';
 const CHAT_TIME_ZONE = 'Asia/Ho_Chi_Minh';
+const LOVE_START_DATE = new Date(2022, 10, 3, 0, 0, 0);
 const FACE_LANDMARKER_MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
 const FACE_LANDMARKER_WASM_URL = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm';
 const DEMO_USERNAME = 'phanthithaovy';
@@ -37,6 +38,8 @@ const state = {
   countdownTimer: null,
   chatTimer: null,
   chatLoading: false,
+  loveCounterTimer: null,
+  selectedMood: 'loved',
   adminVisibleMonth: new Date(),
   adminSchedule: { ...defaultSchedule }
 };
@@ -54,6 +57,103 @@ const $$ = (selector) => [...document.querySelectorAll(selector)];
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character]));
+}
+
+function loveDuration(now = new Date()) {
+  if (now < LOVE_START_DATE) return { years: 0, months: 0, days: 0, totalDays: 0 };
+  let cursor = new Date(LOVE_START_DATE);
+  let years = 0;
+  let months = 0;
+  while (new Date(cursor.getFullYear() + 1, cursor.getMonth(), cursor.getDate()) <= now) {
+    cursor.setFullYear(cursor.getFullYear() + 1);
+    years += 1;
+  }
+  while (new Date(cursor.getFullYear(), cursor.getMonth() + 1, cursor.getDate()) <= now) {
+    cursor.setMonth(cursor.getMonth() + 1);
+    months += 1;
+  }
+  const days = Math.floor((now - cursor) / 86400000);
+  const totalDays = Math.floor((now - LOVE_START_DATE) / 86400000);
+  return { years, months, days, totalDays };
+}
+
+function nextLoveMilestone(now = new Date()) {
+  const totalDays = loveDuration(now).totalDays;
+  const options = [];
+  [100, 365, 500, 1000, 1500, 2000].forEach((days) => {
+    if (days > totalDays) options.push({ days, label: `${days} ngày yêu nhau` });
+  });
+  const anniversary = new Date(now.getFullYear(), 10, 3);
+  if (anniversary <= now) anniversary.setFullYear(anniversary.getFullYear() + 1);
+  options.push({ days: Math.ceil((anniversary - now) / 86400000), label: `kỷ niệm ${anniversary.getFullYear() - LOVE_START_DATE.getFullYear()} năm` });
+  options.sort((a, b) => a.days - b.days);
+  return options[0];
+}
+
+function renderLoveCounter() {
+  const duration = loveDuration();
+  const milestone = nextLoveMilestone();
+  ['love', 'adminLove'].forEach((prefix) => {
+    const set = (suffix, value) => { const element = $(`#${prefix}${suffix}`); if (element) element.textContent = value; };
+    set('Years', duration.years);
+    set('Months', duration.months);
+    set('Days', duration.days);
+    set('TotalDays', `${duration.totalDays} ngày`);
+    set('Milestone', `Còn ${milestone.days} ngày nữa tới ${milestone.label} ✨`);
+  });
+}
+
+async function loadMood(role = 'vy') {
+  if (role === 'admin') {
+    const display = $('#adminMoodDisplay');
+    if (display) display.textContent = 'Mood check-in được giữ riêng trên thiết bị của Vy.';
+    return;
+  }
+  let localMood = null;
+  try { localMood = JSON.parse(localStorage.getItem('lich-cua-vy-mood-v1') || 'null'); } catch { localStorage.removeItem('lich-cua-vy-mood-v1'); }
+  if (localMood) {
+    state.selectedMood = localMood.mood || state.selectedMood;
+    $('#moodNote').value = localMood.note || '';
+    $$('.mood-picker [data-mood]').forEach((button) => button.classList.toggle('active', button.dataset.mood === state.selectedMood));
+    $('#moodStatus').textContent = `Đã lưu trên máy này: ${localMood.emoji || ''} ${localMood.label || ''}`;
+  }
+  return;
+  const token = role === 'admin' ? localStorage.getItem(ADMIN_TOKEN_KEY) : '';
+  if (role === 'admin' && !token) return;
+  const headers = token ? { Authorization: `Bearer ${token}` } : {};
+  try {
+    const response = await fetch(`/api/moods?role=${role}`, { headers });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'Chưa tải được mood.');
+    const mood = data.mood;
+    if (role === 'admin') {
+      const display = $('#adminMoodDisplay');
+      if (display) display.innerHTML = mood ? `${escapeHtml(mood.emoji || '💗')} <b>${escapeHtml(mood.label || 'Mood của Vy')}</b>${mood.note ? ` · ${escapeHtml(mood.note)}` : ''}<small> · ${escapeHtml(mood.date_key || '')}</small>` : 'Chưa có check-in hôm nay của Vy.';
+    } else if (mood) {
+      state.selectedMood = mood.mood || state.selectedMood;
+      $('#moodNote').value = mood.note || '';
+      $$('.mood-picker [data-mood]').forEach((button) => button.classList.toggle('active', button.dataset.mood === state.selectedMood));
+      $('#moodStatus').textContent = `Đã lưu: ${mood.emoji || ''} ${mood.label || ''}`;
+    }
+  } catch (error) {
+    const target = role === 'admin' ? $('#adminMoodDisplay') : $('#moodStatus');
+    if (target) target.textContent = error.message;
+  }
+}
+
+async function saveMood() {
+  const status = $('#moodStatus');
+  const note = $('#moodNote').value.trim();
+  const moodMeta = { happy: ['😊', 'Vui'], loved: ['🥰', 'Được yêu'], tired: ['😴', 'Hơi mệt'], sad: ['🥺', 'Buồn'], excited: ['✨', 'Háo hức'] }[state.selectedMood] || ['💗', 'Được yêu'];
+  localStorage.setItem('lich-cua-vy-mood-v1', JSON.stringify({ mood: state.selectedMood, note, emoji: moodMeta[0], label: moodMeta[1], savedAt: new Date().toISOString() }));
+  status.textContent = 'Đã lưu mood riêng trên thiết bị này 💗';
+  return;
+  try {
+    const response = await fetch('/api/moods', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ role: 'vy', mood: state.selectedMood, note }) });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'Chưa lưu được mood.');
+    status.textContent = 'Anh đã nhận được mood của em rồi nha 💌';
+  } catch (error) { status.textContent = error.message; }
 }
 
 function loadSchedule() {
@@ -208,15 +308,38 @@ function renderChatMessages(messages, selector, viewerRole) {
       ? `<div class="chat-date-separator" role="separator"><span>${escapeHtml(chatDateLabel(message.created_at))}</span></div>`
       : '';
     previousDateKey = currentDateKey;
-    const content = parsed.type === 'image'
+    let content = parsed.type === 'image'
       ? `<a class="chat-image-link" href="${escapeHtml(parsed.url)}" target="_blank" rel="noopener"><img class="chat-image" src="${escapeHtml(parsed.url)}" alt="Ảnh ${sender} gửi" loading="lazy" /></a>${parsed.caption ? `<p class="chat-image-caption">${escapeHtml(parsed.caption).replace(/\r?\n/g, '<br />')}</p>` : ''}`
       : `<p>${escapeHtml(parsed.text).replace(/\r?\n/g, '<br />')}</p>`;
-    return `${dateSeparator}<article class="chat-message ${own ? 'is-mine' : 'is-theirs'}">
+    return `${dateSeparator}<article class="chat-message ${own ? 'is-mine' : 'is-theirs'}" data-message-id="${escapeHtml(message.id)}">
       <div class="chat-bubble">${content}<time datetime="${escapeHtml(message.created_at)}">${sender} · ${chatTime(message.created_at)}</time></div>
     </article>`;
   }).join('') : '<p class="chat-empty">Chưa có tin nhắn nào. Nhắn một câu thật ngọt cho người thương nha 💗</p>';
   container.dataset.ready = 'true';
   container.dataset.messageSignature = messageSignature;
+  messages.forEach((message) => {
+    const article = container.querySelector(`article[data-message-id="${String(message.id)}"]`);
+    const bubble = article?.querySelector('.chat-bubble');
+    if (!bubble) return;
+    const tools = document.createElement('div');
+    tools.className = 'chat-message-tools';
+    const counts = Object.values(message.reactions || {}).reduce((result, reaction) => { if (reaction) result[reaction] = (result[reaction] || 0) + 1; return result; }, {});
+    Object.entries(counts).forEach(([reaction, count]) => { const badge = document.createElement('span'); badge.className = 'chat-reaction-count'; badge.textContent = `${reaction} ${count > 1 ? count : ''}`; tools.appendChild(badge); });
+    const button = document.createElement('button');
+    button.className = 'chat-reaction-button'; button.type = 'button'; button.dataset.chatReaction = String(message.id); button.setAttribute('aria-label', 'Thả reaction'); button.textContent = '💗';
+    tools.appendChild(button); bubble.appendChild(tools);
+  });
+  container.querySelectorAll('[data-chat-reaction]').forEach((button) => button.addEventListener('click', async () => {
+    const token = viewerRole === 'admin' ? localStorage.getItem(ADMIN_TOKEN_KEY) : '';
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers.Authorization = `Bearer ${token}`;
+    button.disabled = true;
+    try {
+      const response = await fetch(`/api/chat/messages/${button.dataset.chatReaction}/reaction`, { method: 'POST', headers, body: JSON.stringify({ role: viewerRole, reaction: '💗' }) });
+      if (!response.ok) throw new Error('Chưa thả reaction được nha.');
+      await loadChatMessages(viewerRole, true);
+    } catch (error) { showToast(error.message); } finally { button.disabled = false; }
+  }));
 
   if (shouldStickToBottom) {
     container.scrollTop = container.scrollHeight;
@@ -841,6 +964,12 @@ async function joinLiveKitCall(role = 'vy', announce = false, callType = 'video'
       updateCallStatus(role);
     });
     room.on(RoomEvent.ParticipantConnected, () => updateCallStatus(role));
+    room.on(RoomEvent.DataReceived, (payload) => {
+      try {
+        const message = JSON.parse(new TextDecoder().decode(payload));
+        if (message.type === 'call-reaction' && message.emoji) showCallReaction(role, message.emoji);
+      } catch { /* ignore non-app call data */ }
+    });
     room.on(RoomEvent.Disconnected, () => {
       if (livekitRoom !== room) return;
       livekitRoom = null;
@@ -904,6 +1033,35 @@ async function toggleCallMicrophone(role) {
   const enabled = !livekitRoom.localParticipant.isMicrophoneEnabled;
   await livekitRoom.localParticipant.setMicrophoneEnabled(enabled);
   callElements(role).microphone.textContent = enabled ? 'Tắt mic' : 'Bật mic';
+}
+
+function showCallReaction(role, emoji) {
+  const stage = callElements(role).stage;
+  if (!stage) return;
+  const item = document.createElement('span');
+  item.className = 'call-reaction-float';
+  item.textContent = emoji;
+  stage.appendChild(item);
+  window.setTimeout(() => item.remove(), 1900);
+}
+
+async function sendCallReaction(role, emoji) {
+  if (!livekitRoom || activeCallRole !== role) return;
+  showCallReaction(role, emoji);
+  try { await livekitRoom.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'call-reaction', emoji })), { reliable: true }); } catch (error) { console.warn('Không gửi được reaction cuộc gọi:', error.message); }
+}
+
+function captureCallSnapshot(role) {
+  const video = callElements(role).videos.querySelector('video');
+  if (!video || !video.videoWidth) { setCallStatus(role, 'Chưa có hình ảnh để chụp nha.'); return; }
+  const canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+  const link = document.createElement('a');
+  link.download = `lich-cua-vy-${Date.now()}.jpg`;
+  link.href = canvas.toDataURL('image/jpeg', .92);
+  link.click();
+  setCallStatus(role, 'Đã lưu ảnh cuộc gọi vào máy rồi nha 📸');
 }
 
 function handleIncomingCallHint() {
@@ -983,6 +1141,7 @@ function showAdminScreen() {
   startChatPolling('admin');
   loadFoodRequests();
   loadAdminSchedule();
+  loadMood('admin');
 }
 
 function leaveAdminScreen() {
@@ -1746,6 +1905,12 @@ function bindEvents() {
   $('#refreshFoodRequests').addEventListener('click', loadFoodRequests);
   $('#refreshAdminSchedule').addEventListener('click', loadAdminSchedule);
   $('#sendFoodRequest').addEventListener('click', submitFoodRequest);
+  $$('.mood-picker [data-mood]').forEach((button) => button.addEventListener('click', () => {
+    state.selectedMood = button.dataset.mood;
+    $$('.mood-picker [data-mood]').forEach((item) => item.classList.toggle('active', item === button));
+  }));
+  $('#saveMood').addEventListener('click', saveMood);
+  $('#refreshMood').addEventListener('click', () => loadMood('admin'));
   $('#chatForm').addEventListener('submit', (event) => {
     event.preventDefault();
     sendChatMessage('vy');
@@ -1767,6 +1932,11 @@ function bindEvents() {
   $('#toggleMicrophone').addEventListener('click', () => toggleCallMicrophone('vy'));
   $('#toggleCallFilters').addEventListener('click', () => toggleCallFilters('vy'));
   $('#endCall').addEventListener('click', leaveLiveKitCall);
+  $$('[data-call-snapshot]').forEach((button) => button.addEventListener('click', () => captureCallSnapshot(button.dataset.callSnapshot)));
+  $$('[data-call-reaction]').forEach((button) => button.addEventListener('click', () => {
+    const role = button.closest('.call-overlay')?.id === 'adminCallSection' ? 'admin' : 'vy';
+    sendCallReaction(role, button.dataset.callReaction);
+  }));
   $('#startAdminVoiceCall').addEventListener('click', () => joinLiveKitCall('admin', true, 'voice'));
   $('#startAdminVideoCall').addEventListener('click', () => joinLiveKitCall('admin', true));
   $('#joinAdminVideoCall').addEventListener('click', () => joinLiveKitCall('admin', false));
@@ -1828,9 +1998,12 @@ function init() {
   setAuthenticated(localStorage.getItem(AUTH_KEY) === 'true');
   renderOverview();
   renderCalendar();
+  renderLoveCounter();
+  loadMood('vy');
   updateNotificationUi();
   renderLiveCountdown();
   state.countdownTimer = setInterval(renderLiveCountdown, 30000);
+  state.loveCounterTimer = setInterval(renderLoveCounter, 1000);
   $('#lastUpdated').textContent = `Cập nhật ${new Intl.DateTimeFormat('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }).format(new Date())}`;
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js', { scope: '/' }).catch((error) => {

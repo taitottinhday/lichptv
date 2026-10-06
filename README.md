@@ -81,6 +81,16 @@ create index if not exists chat_messages_created_at_idx
 
 alter table public.chat_messages enable row level security;
 
+create table if not exists public.chat_message_reactions (
+  message_id bigint references public.chat_messages(id) on delete cascade,
+  role text not null check (role in ('vy', 'admin')),
+  reaction text not null check (reaction in ('💗', '😂', '😮', '✨', '🥰')),
+  updated_at timestamptz not null default now(),
+  primary key (message_id, role)
+);
+
+alter table public.chat_message_reactions enable row level security;
+
 create table if not exists public.schedule_entries (
   date_key date primary key,
   code text not null check (code in ('D', 'N', '18', '9', 'eAD')),
@@ -91,6 +101,13 @@ alter table public.schedule_entries enable row level security;
 ```
 
 Lịch của Vy được đồng bộ lên server mỗi khi Vy lưu ca mới. Trong góc của anh có thêm mục **Anh xem lịch của Vy** ở chế độ chỉ xem. Railway tự tạo bảng `schedule_entries` khi dùng PostgreSQL; nếu dùng Supabase, chạy thêm SQL ở trên một lần. Railway cần có hai biến `SUPABASE_URL` và `SUPABASE_SERVICE_ROLE_KEY` để app lưu lịch sử chat và lịch dùng chung vào Supabase. Nếu chưa có hai biến này, app sẽ dùng PostgreSQL Railway; nếu cũng không có PostgreSQL thì chỉ dùng bộ nhớ tạm trong lúc chơi thử.
+
+## Tính năng yêu thương
+
+- Thẻ đếm ngày yêu nhau theo thời gian thực từ **03/11/2022**, có tổng số ngày và cột mốc tiếp theo ở cả luồng Vy và góc của anh.
+- Chat có nhóm theo ngày, reaction 💗 và lịch sử đồng bộ server.
+- Khi gọi có reaction bay trên màn hình và nút chụp ảnh; 16 filter cute bám khuôn mặt vẫn chạy qua MediaPipe.
+- Mood check-in của Vy được lưu cục bộ trên đúng thiết bị đó, không tự động tải ghi chú cá nhân lên server.
 
 ## Gọi video bằng LiveKit
 
