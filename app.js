@@ -54,6 +54,7 @@ let activeFilterPipeline;
 let incomingAlertTimer;
 let incomingAudioContext;
 let incomingAlertRole;
+const callUiStates = new Map();
 
 const CALL_BACKGROUND_PRESETS = [
   { id: 'none', label: 'Gốc', emoji: '◌', background: 'transparent' },
@@ -553,6 +554,7 @@ function callElements(role) {
     waiting: $(admin ? '#adminCallWaiting' : '#callWaiting'),
     waitingTitle: $(admin ? '#adminCallWaitingTitle' : '#callWaitingTitle'),
     waitingStatus: $(admin ? '#adminCallWaitingStatus' : '#callWaitingStatus'),
+    timer: $(admin ? '#adminCallTimer' : '#callTimer'),
     close: $(admin ? '#closeAdminCall' : '#closeCall'),
     status: $(admin ? '#adminCallStatus' : '#callStatus'),
     start: $(admin ? '#startAdminVideoCall' : '#startVideoCall'),
@@ -575,6 +577,14 @@ function ensureCallExperience(role) {
     waiting.className = 'call-waiting-hero';
     waiting.innerHTML = `<div class="call-waiting-avatar"><img src="${AVATAR_IMAGE_URL}" alt="" /></div><h3 id="${admin ? 'adminCallWaitingTitle' : 'callWaitingTitle'}">${admin ? 'Vy' : 'Anh'}</h3><p id="${admin ? 'adminCallWaitingStatus' : 'callWaitingStatus'}">Đang gọi…</p>`;
     elements.section.insertBefore(waiting, elements.incoming);
+  }
+  if (!elements.timer) {
+    const timer = document.createElement('span');
+    timer.id = admin ? 'adminCallTimer' : 'callTimer';
+    timer.className = 'call-timer';
+    timer.hidden = true;
+    timer.textContent = '00:00';
+    elements.section.querySelector('.section-heading')?.appendChild(timer);
   }
   if (!elements.shortcuts) {
     const shortcuts = document.createElement('div');
@@ -603,8 +613,113 @@ function ensureCallExperience(role) {
     refreshed.shortcuts.dataset.bound = 'true';
     refreshed.shortcuts.querySelectorAll('[data-call-tool]').forEach((button) => button.addEventListener('click', () => setCallTool(role, button.dataset.callTool)));
     refreshed.toolSheet.querySelector('[data-call-sheet-close]')?.addEventListener('click', () => closeCallToolSheet(role));
+    bindCallSurfaceInteractions(role);
   }
   return refreshed;
+}
+
+function getCallUiState(role) {
+  if (!callUiStates.has(role)) callUiStates.set(role, { status: 'idle', startedAt: 0, timer: null, idleTimer: null, controlsHidden: false });
+  return callUiStates.get(role);
+}
+
+function setCallUiState(role, status) {
+  const state = getCallUiState(role);
+  state.status = status;
+  const elements = callElements(role);
+  elements.section?.classList.toggle('is-incoming', status === 'incoming');
+  elements.section?.classList.toggle('is-connecting', status === 'connecting');
+  elements.section?.classList.toggle('is-connected', status === 'connected');
+  elements.section?.classList.toggle('is-ended', status === 'ended' || status === 'declined');
+}
+
+function formatCallDuration(totalSeconds) {
+  const minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+  const seconds = Math.floor(totalSeconds % 60).toString().padStart(2, '0');
+  return `${minutes}:${seconds}`;
+}
+
+function stopCallUiTimer(role) {
+  const state = getCallUiState(role);
+  if (state.timer) window.clearInterval(state.timer);
+  state.timer = null;
+  state.startedAt = 0;
+  const elements = callElements(role);
+  if (elements.timer) {
+    elements.timer.hidden = true;
+    elements.timer.textContent = '00:00';
+  }
+}
+
+function startCallUiTimer(role) {
+  const state = getCallUiState(role);
+  if (state.timer) return;
+  state.startedAt = Date.now();
+  setCallUiState(role, 'connected');
+  const elements = callElements(role);
+  if (elements.timer) elements.timer.hidden = false;
+  const tick = () => {
+    const elapsed = Math.floor((Date.now() - state.startedAt) / 1000);
+    if (elements.timer) elements.timer.textContent = formatCallDuration(elapsed);
+  };
+  tick();
+  state.timer = window.setInterval(tick, 1000);
+}
+
+function showCallControls(role, visible = true) {
+  const state = getCallUiState(role);
+  const elements = callElements(role);
+  state.controlsHidden = !visible;
+  elements.section?.classList.toggle('call-ui-idle', !visible);
+  if (visible) scheduleCallControlsHide(role);
+}
+
+function scheduleCallControlsHide(role) {
+  const state = getCallUiState(role);
+  if (state.idleTimer) window.clearTimeout(state.idleTimer);
+  if (state.status !== 'connected') return;
+  state.idleTimer = window.setTimeout(() => showCallControls(role, false), 4000);
+}
+
+function bindCallSurfaceInteractions(role) {
+  const elements = callElements(role);
+  if (!elements.stage || elements.stage.dataset.surfaceBound) return;
+  elements.stage.dataset.surfaceBound = 'true';
+  elements.stage.addEventListener('click', (event) => {
+    if (event.target.closest('.call-controls, .call-shortcuts, .call-tool-sheet, .call-filters, .call-close, .call-incoming, button')) return;
+    if (getCallUiState(role).status === 'connected') showCallControls(role, getCallUiState(role).controlsHidden);
+  });
+  elements.videos.addEventListener('pointerdown', (event) => {
+    const tile = event.target.closest('.call-tile.is-local-preview');
+    if (!tile || !elements.videos.classList.contains('has-remote')) return;
+    const startX = event.clientX;
+    const startY = event.clientY;
+    const startLeft = tile.offsetLeft;
+    const startTop = tile.offsetTop;
+    const stageRect = elements.videos.getBoundingClientRect();
+    const tileRect = tile.getBoundingClientRect();
+    let moved = false;
+    tile.setPointerCapture?.(event.pointerId);
+    const move = (moveEvent) => {
+      const nextLeft = Math.max(8, Math.min(stageRect.width - tileRect.width - 8, startLeft + moveEvent.clientX - startX));
+      const nextTop = Math.max(62, Math.min(stageRect.height - tileRect.height - 90, startTop + moveEvent.clientY - startY));
+      if (Math.abs(moveEvent.clientX - startX) > 4 || Math.abs(moveEvent.clientY - startY) > 4) moved = true;
+      tile.style.left = `${nextLeft}px`;
+      tile.style.top = `${nextTop}px`;
+      tile.style.right = 'auto';
+      tile.style.bottom = 'auto';
+    };
+    const end = () => {
+      tile.releasePointerCapture?.(event.pointerId);
+      tile.removeEventListener('pointermove', move);
+      tile.removeEventListener('pointerup', end);
+      tile.removeEventListener('pointercancel', end);
+      tile.classList.toggle('is-dragging', moved);
+    };
+    tile.addEventListener('pointermove', move);
+    tile.addEventListener('pointerup', end);
+    tile.addEventListener('pointercancel', end);
+  });
 }
 
 function closeCallToolSheet(role) {
@@ -638,6 +753,7 @@ function setCallTool(role, tool) {
   if (tool === 'effects') {
     closeCallToolSheet(role);
     toggleCallFilters(role, true);
+    elements.shortcuts?.querySelector('[data-call-tool="effects"]')?.classList.add('active');
     return;
   }
   if (tool === 'background' || tool === 'color') {
@@ -758,7 +874,13 @@ function setCallControls(role, connected) {
 function openCallOverlay(role) {
   const elements = ensureCallExperience(role);
   if (!elements.section) return;
+  setCallUiState(role, 'connecting');
+  stopCallUiTimer(role);
+  const uiState = getCallUiState(role);
+  if (uiState.idleTimer) window.clearTimeout(uiState.idleTimer);
+  uiState.controlsHidden = false;
   elements.section.hidden = false;
+  elements.section.classList.remove('call-ui-idle');
   elements.incoming.hidden = true;
   elements.stage.hidden = true;
   elements.waiting.hidden = false;
@@ -772,6 +894,10 @@ function openCallOverlay(role) {
 function closeCallOverlay(role) {
   const elements = ensureCallExperience(role);
   if (!elements.section) return;
+  const uiState = getCallUiState(role);
+  if (uiState.idleTimer) window.clearTimeout(uiState.idleTimer);
+  stopCallUiTimer(role);
+  setCallUiState(role, 'idle');
   elements.section.hidden = true;
   elements.section.classList.remove('is-ringing');
   elements.incoming.hidden = true;
@@ -841,6 +967,7 @@ function showIncomingCall(role, callType = 'video') {
   elements.incoming.hidden = false;
   elements.waiting.hidden = true;
   elements.section.classList.add('is-ringing');
+  setCallUiState(role, 'incoming');
   startIncomingCallAlert(role);
   setCallStatus(role, `${caller} đang chờ em nhận máy 💗`);
 }
@@ -1307,7 +1434,14 @@ function removeCallTrack(track) {
 function updateCallStatus(role) {
   if (!livekitRoom || activeCallRole !== role) return;
   const remoteCount = livekitRoom.remoteParticipants.size;
-  setCallStatus(role, remoteCount ? 'Đã kết nối với người thương 💗' : 'Đang chờ người kia tham gia phòng…');
+  if (remoteCount) {
+    startCallUiTimer(role);
+    showCallControls(role, true);
+    setCallStatus(role, 'Đã kết nối với người thương 💗');
+  } else {
+    setCallUiState(role, 'connecting');
+    setCallStatus(role, 'Đang chờ người kia tham gia phòng…');
+  }
 }
 
 async function joinLiveKitCall(role = 'vy', announce = false, callType = 'video') {
@@ -1316,6 +1450,7 @@ async function joinLiveKitCall(role = 'vy', announce = false, callType = 'video'
   if (livekitRoom) await leaveLiveKitCall();
   activeCallType = callType;
   openCallOverlay(role);
+  setCallUiState(role, 'connecting');
   elements.start.disabled = true;
   elements.join.disabled = true;
   setCallStatus(role, callType === 'voice' ? 'Đang gọi thoại cho người thương…' : 'Đang gọi video cho người thương…');
@@ -1365,6 +1500,8 @@ async function joinLiveKitCall(role = 'vy', announce = false, callType = 'video'
       if (livekitRoom !== room) return;
       livekitRoom = null;
       activeCallRole = null;
+      stopCallUiTimer(role);
+      setCallUiState(role, 'ended');
       setCallControls(role, false);
       setCallStatus(role, 'Cuộc gọi đã kết thúc.');
     });
@@ -1407,6 +1544,7 @@ async function leaveLiveKitCall() {
   livekitRoom = null;
   activeCallRole = null;
   if (role) {
+    setCallUiState(role, 'ended');
     const elements = callElements(role);
     elements.videos.innerHTML = '';
     setCallControls(role, false);
@@ -1522,6 +1660,7 @@ function acceptIncomingCall(role) {
 
 function declineIncomingCall(role) {
   stopIncomingCallAlert();
+  setCallUiState(role, 'declined');
   setCallStatus(role, 'Đã từ chối cuộc gọi.');
   closeCallOverlay(role);
 }
