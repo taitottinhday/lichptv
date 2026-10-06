@@ -94,11 +94,22 @@ function renderLoveCounter() {
   const duration = loveDuration();
   const milestone = nextLoveMilestone();
   ['love', 'adminLove'].forEach((prefix) => {
+    if (prefix === 'adminLove' && !$('#adminLoveTotalDaysBig')) {
+      const main = $('#adminLoveCounter .love-counter-main');
+      if (main) {
+        const total = document.createElement('div');
+        total.className = 'love-total-days';
+        total.setAttribute('aria-live', 'polite');
+        total.innerHTML = '<strong id="adminLoveTotalDaysBig">0</strong><span>ngày yêu nhau</span>';
+        main.prepend(total);
+      }
+    }
     const set = (suffix, value) => { const element = $(`#${prefix}${suffix}`); if (element) element.textContent = value; };
     set('Years', duration.years);
     set('Months', duration.months);
     set('Days', duration.days);
     set('TotalDays', `${duration.totalDays} ngày`);
+    set('TotalDaysBig', duration.totalDays);
     set('Milestone', `Còn ${milestone.days} ngày nữa tới ${milestone.label} ✨`);
   });
 }
