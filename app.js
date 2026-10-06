@@ -924,11 +924,13 @@ function setCallTool(role, tool) {
   const pipeline = activeFilterPipeline?.role === role ? activeFilterPipeline : null;
   if (tool === 'blur') {
     if (!pipeline) return setCallStatus(role, 'Camera chưa sẵn sàng để làm mờ nha.');
+    setCallVideoSource(role, true).catch(() => {});
     pipeline.backgroundMode = pipeline.backgroundMode === 'blur' ? 'none' : 'blur';
     elements.stage.classList.toggle('is-background-blurred', pipeline.backgroundMode === 'blur');
     setCallStatus(role, pipeline.backgroundMode === 'blur' ? 'Đã bật làm mờ phông nền.' : 'Đã tắt làm mờ phông nền.');
   } else if (tool === 'edit') {
     if (!pipeline) return setCallStatus(role, 'Camera chưa sẵn sàng để chỉnh sửa nha.');
+    setCallVideoSource(role, true).catch(() => {});
     pipeline.editEnabled = !pipeline.editEnabled;
     elements.stage.classList.toggle('is-edited', pipeline.editEnabled);
     setCallStatus(role, pipeline.editEnabled ? 'Đã bật chỉnh sửa hình ảnh.' : 'Đã tắt chỉnh sửa hình ảnh.');
@@ -939,6 +941,7 @@ function applyCallBackground(role, presetId) {
   const preset = CALL_BACKGROUND_PRESETS.find((item) => item.id === presetId) || CALL_BACKGROUND_PRESETS[0];
   const pipeline = activeFilterPipeline?.role === role ? activeFilterPipeline : null;
   if (!pipeline) return setCallStatus(role, 'Camera chưa sẵn sàng để đổi phông nền nha.');
+  setCallVideoSource(role, true).catch(() => {});
   pipeline.backgroundPreset = preset.id;
   pipeline.backgroundMode = preset.id === 'none' ? 'none' : 'replace';
   const elements = callElements(role);
@@ -950,6 +953,7 @@ function applyCallColor(role, presetId) {
   const preset = CALL_COLOR_PRESETS.find((item) => item.id === presetId) || CALL_COLOR_PRESETS[0];
   const pipeline = activeFilterPipeline?.role === role ? activeFilterPipeline : null;
   if (!pipeline) return setCallStatus(role, 'Camera chưa sẵn sàng để đổi màu nha.');
+  setCallVideoSource(role, true).catch(() => {});
   pipeline.colorFilter = preset.id;
   callElements(role).stage.dataset.color = preset.id;
   setCallStatus(role, preset.id === 'none' ? 'Đã dùng màu gốc.' : `Đã chọn bộ lọc màu ${preset.label}.`);
@@ -1189,7 +1193,10 @@ function setCallFilter(role, filter) {
   const elements = callElements(role);
   if (!elements.stage || !elements.filters) return;
   elements.stage.dataset.filter = filter;
-  if (activeFilterPipeline?.role === role) activeFilterPipeline.filter = filter;
+  if (activeFilterPipeline?.role === role) {
+    activeFilterPipeline.filter = filter;
+    setCallVideoSource(role, filter !== 'none').catch(() => {});
+  }
   elements.filters.querySelectorAll('[data-call-filter]').forEach((button) => {
     button.classList.toggle('active', button.dataset.callFilter === filter);
   });
@@ -1206,6 +1213,32 @@ function toggleCallFilters(role, forceOpen = null) {
   if (heading && open) heading.textContent = 'Chọn hiệu ứng';
   elements.filterToggle.setAttribute('aria-expanded', String(open));
   if (open) elements.filters.querySelector('[data-call-filter].active')?.focus({ preventScroll: true });
+}
+
+async function setCallVideoSource(role, useCanvas) {
+  const pipeline = activeFilterPipeline?.role === role ? activeFilterPipeline : null;
+  if (!pipeline?.localVideoTrack || !pipeline.canvasStream) return false;
+  const targetTrack = useCanvas
+    ? pipeline.canvasStream.getVideoTracks()[0]
+    : pipeline.sourceStream.getVideoTracks()[0];
+  if (!targetTrack || pipeline.localVideoTrack.mediaStreamTrack === targetTrack) return true;
+  try {
+    await pipeline.localVideoTrack.replaceTrack(targetTrack);
+    pipeline.usingCanvas = useCanvas;
+    const elements = callElements(role);
+    const localTile = elements.videos?.querySelector('.call-tile.is-local-preview');
+    if (localTile && !elements.section.hidden) {
+      attachCallTrack(role, pipeline.localVideoTrack, {
+        identity: role === 'admin' ? 'anh' : 'vy',
+        name: role === 'admin' ? 'Anh' : 'Vy'
+      });
+    }
+    return true;
+  } catch (error) {
+    pipeline.usingCanvas = false;
+    console.warn('Không đổi được nguồn video filter:', error.message);
+    return false;
+  }
 }
 
 async function loadFaceLandmarker() {
@@ -1582,6 +1615,7 @@ async function startFaceFilterPipeline(role, options = {}) {
     lastVideoTime: -1,
     faceLandmarker: null,
     animationFrame: null,
+    usingCanvas: false,
     localVideoTrack: null,
     localAudioTrack: null
   };
@@ -1600,9 +1634,7 @@ async function startFaceFilterPipeline(role, options = {}) {
   };
   if (options.deferFaceModel) loadModel();
   else await loadModel();
-  pipeline.localVideoTrack = canvasStream
-    ? new LocalVideoTrack(canvasStream.getVideoTracks()[0], { name: 'cute-face-filter' })
-    : new LocalVideoTrack(sourceStream.getVideoTracks()[0], { name: 'camera' });
+  pipeline.localVideoTrack = new LocalVideoTrack(sourceStream.getVideoTracks()[0], { name: 'camera' });
   pipeline.localAudioTrack = new LocalAudioTrack(sourceStream.getAudioTracks()[0], { name: 'microphone' });
   elements.stage.classList.toggle('has-face-filter', Boolean(pipeline.faceLandmarker && canvasStream));
   if (canvasStream) drawCuteFaceEffect(pipeline, null);
