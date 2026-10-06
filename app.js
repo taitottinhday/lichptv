@@ -51,6 +51,9 @@ let activeCallType = 'video';
 let pendingIncomingCall = null;
 let faceLandmarkerPromise;
 let activeFilterPipeline;
+let incomingAlertTimer;
+let incomingAudioContext;
+let incomingAlertRole;
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -542,9 +545,29 @@ function setCallStatus(role, message) {
   if (elements.status) elements.status.textContent = message;
 }
 
+function ensureSwitchCameraButton(role) {
+  const elements = callElements(role);
+  const controls = elements.stage?.querySelector('.call-controls');
+  if (!controls || !elements.filterToggle) return null;
+  let button = controls.querySelector('[data-switch-call-camera]');
+  if (!button) {
+    button = document.createElement('button');
+    button.className = 'button button-light call-control-icon';
+    button.type = 'button';
+    button.dataset.switchCallCamera = role;
+    button.title = 'Đổi camera trước/sau';
+    button.setAttribute('aria-label', 'Đổi camera trước sau');
+    button.textContent = 'Đổi camera';
+    controls.insertBefore(button, elements.filterToggle);
+    button.addEventListener('click', () => switchCallCamera(role));
+  }
+  return button;
+}
+
 function setCallControls(role, connected) {
   const elements = callElements(role);
   if (!elements.stage) return;
+  const switchCamera = ensureSwitchCameraButton(role);
   elements.stage.hidden = !connected;
   elements.incoming.hidden = true;
   elements.start.disabled = connected;
@@ -552,6 +575,7 @@ function setCallControls(role, connected) {
   elements.camera.disabled = !connected || activeCallType === 'voice';
   elements.microphone.disabled = !connected;
   elements.filterToggle.disabled = !connected || activeCallType === 'voice';
+  if (switchCamera) switchCamera.disabled = !connected || activeCallType === 'voice';
   elements.filterToggle.setAttribute('aria-expanded', connected && !elements.filters.hidden ? 'true' : 'false');
   if (connected && activeCallType === 'video') {
     elements.filters.hidden = false;
@@ -577,11 +601,55 @@ function closeCallOverlay(role) {
   const elements = callElements(role);
   if (!elements.section) return;
   elements.section.hidden = true;
+  elements.section.classList.remove('is-ringing');
   elements.incoming.hidden = true;
   elements.stage.hidden = true;
   elements.filters.hidden = true;
   elements.videos.innerHTML = '';
   pendingIncomingCall = null;
+  stopIncomingCallAlert();
+}
+
+function playIncomingCallTone() {
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    if (!incomingAudioContext) incomingAudioContext = new AudioContextClass();
+    const context = incomingAudioContext;
+    const now = context.currentTime;
+    const gain = context.createGain();
+    gain.gain.setValueAtTime(.0001, now);
+    gain.gain.exponentialRampToValueAtTime(.12, now + .03);
+    gain.gain.exponentialRampToValueAtTime(.0001, now + .38);
+    gain.connect(context.destination);
+    const oscillator = context.createOscillator();
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(880, now);
+    oscillator.frequency.setValueAtTime(660, now + .19);
+    oscillator.connect(gain);
+    oscillator.start(now);
+    oscillator.stop(now + .4);
+  } catch (error) { console.warn('Không phát được chuông cuộc gọi:', error.message); }
+}
+
+function stopIncomingCallAlert() {
+  if (incomingAlertTimer) window.clearInterval(incomingAlertTimer);
+  incomingAlertTimer = null;
+  incomingAlertRole = null;
+  if (navigator.vibrate) navigator.vibrate(0);
+  if (incomingAudioContext) {
+    incomingAudioContext.close().catch(() => {});
+    incomingAudioContext = null;
+  }
+}
+
+function startIncomingCallAlert(role) {
+  stopIncomingCallAlert();
+  incomingAlertRole = role;
+  const vibrate = () => { if (navigator.vibrate) navigator.vibrate([450, 180, 450, 180, 800]); };
+  vibrate();
+  playIncomingCallTone();
+  incomingAlertTimer = window.setInterval(() => { vibrate(); playIncomingCallTone(); }, 2200);
 }
 
 function showIncomingCall(role, callType = 'video') {
@@ -597,6 +665,8 @@ function showIncomingCall(role, callType = 'video') {
     : 'Bấm nhận để mở camera và micro, rồi mình gặp nhau nha.';
   elements.accept.textContent = callType === 'voice' ? 'Nhận cuộc gọi' : 'Nhận video';
   elements.incoming.hidden = false;
+  elements.section.classList.add('is-ringing');
+  startIncomingCallAlert(role);
   setCallStatus(role, `${caller} đang chờ em nhận máy 💗`);
 }
 
@@ -897,6 +967,7 @@ async function startFaceFilterPipeline(role) {
     context,
     canvasStream,
     filter: 'none',
+    facingMode: 'user',
     faceLandmarks: null,
     lastInferenceAt: 0,
     lastVideoTime: -1,
@@ -948,7 +1019,10 @@ function ensureCallTile(role, identity, name) {
 
 function attachCallTrack(role, track, participant) {
   const tile = ensureCallTile(role, participant.identity, participant.name || participant.identity);
-  tile.classList.toggle('is-local-preview', participant.identity === (role === 'admin' ? 'anh' : 'vy'));
+  const isLocal = participant.identity === (role === 'admin' ? 'anh' : 'vy');
+  tile.classList.toggle('is-local-preview', isLocal);
+  tile.classList.toggle('is-selfie-preview', isLocal && (activeFilterPipeline?.facingMode || 'user') === 'user');
+  callElements(role).videos.classList.toggle('has-remote', [...callElements(role).videos.querySelectorAll('.call-tile')].some((item) => !item.classList.contains('is-local-preview')));
   if (track.kind === Track.Kind.Video) {
     tile.querySelectorAll('video').forEach((element) => element.remove());
     const video = track.attach();
@@ -1016,6 +1090,7 @@ async function joinLiveKitCall(role = 'vy', announce = false, callType = 'video'
     room.on(RoomEvent.ParticipantDisconnected, (participant) => {
       const tile = [...elements.videos.querySelectorAll('.call-tile')].find((item) => item.dataset.identity === participant.identity);
       if (tile) tile.remove();
+      elements.videos.classList.toggle('has-remote', [...elements.videos.querySelectorAll('.call-tile')].some((item) => !item.classList.contains('is-local-preview')));
       updateCallStatus(role);
     });
     room.on(RoomEvent.ParticipantConnected, () => updateCallStatus(role));
@@ -1080,6 +1155,13 @@ async function leaveLiveKitCall() {
 
 async function toggleCallCamera(role) {
   if (!livekitRoom || activeCallRole !== role) return;
+  const pipeline = activeFilterPipeline?.role === role ? activeFilterPipeline : null;
+  const sourceTrack = pipeline?.sourceStream?.getVideoTracks?.()[0];
+  if (sourceTrack) {
+    sourceTrack.enabled = !sourceTrack.enabled;
+    callElements(role).camera.textContent = sourceTrack.enabled ? 'Tắt camera' : 'Bật camera';
+    return;
+  }
   const enabled = !livekitRoom.localParticipant.isCameraEnabled;
   await livekitRoom.localParticipant.setCameraEnabled(enabled);
   callElements(role).camera.textContent = enabled ? 'Tắt camera' : 'Bật camera';
@@ -1090,6 +1172,24 @@ async function toggleCallMicrophone(role) {
   const enabled = !livekitRoom.localParticipant.isMicrophoneEnabled;
   await livekitRoom.localParticipant.setMicrophoneEnabled(enabled);
   callElements(role).microphone.textContent = enabled ? 'Tắt mic' : 'Bật mic';
+}
+
+async function switchCallCamera(role) {
+  const pipeline = activeFilterPipeline?.role === role ? activeFilterPipeline : null;
+  const track = pipeline?.sourceStream?.getVideoTracks?.()[0];
+  if (!track) { setCallStatus(role, 'Cuộc gọi này chưa bật camera để đổi nha.'); return; }
+  const current = track.getSettings().facingMode || pipeline.facingMode || 'user';
+  const next = current === 'environment' ? 'user' : 'environment';
+  try {
+    await track.applyConstraints({ facingMode: { ideal: next } });
+    pipeline.facingMode = next;
+    const tile = callElements(role).videos.querySelector('.call-tile.is-local-preview');
+    tile?.classList.toggle('is-selfie-preview', next === 'user');
+    setCallStatus(role, next === 'user' ? 'Đã chuyển sang camera trước.' : 'Đã chuyển sang camera sau.');
+  } catch (error) {
+    setCallStatus(role, 'Thiết bị này không hỗ trợ đổi camera khi đang gọi.');
+    console.warn('Không đổi được camera:', error.message);
+  }
 }
 
 function showCallReaction(role, emoji) {
@@ -1125,17 +1225,22 @@ function handleIncomingCallHint() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('call') !== '1') return;
   const role = params.get('admin') === '1' ? 'admin' : 'vy';
+  const action = params.get('callAction');
   showIncomingCall(role, params.get('kind') === 'voice' ? 'voice' : 'video');
   window.history.replaceState({}, document.title, window.location.pathname);
+  if (action === 'accept') window.setTimeout(() => acceptIncomingCall(role), 250);
+  if (action === 'decline') window.setTimeout(() => declineIncomingCall(role), 250);
 }
 
 function acceptIncomingCall(role) {
   const callType = pendingIncomingCall?.role === role ? pendingIncomingCall.callType : 'video';
+  stopIncomingCallAlert();
   pendingIncomingCall = null;
   joinLiveKitCall(role, false, callType);
 }
 
 function declineIncomingCall(role) {
+  stopIncomingCallAlert();
   setCallStatus(role, 'Đã từ chối cuộc gọi.');
   closeCallOverlay(role);
 }
