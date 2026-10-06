@@ -553,6 +553,12 @@ function setCallControls(role, connected) {
   elements.microphone.disabled = !connected;
   elements.filterToggle.disabled = !connected || activeCallType === 'voice';
   elements.filterToggle.setAttribute('aria-expanded', connected && !elements.filters.hidden ? 'true' : 'false');
+  if (connected && activeCallType === 'video') {
+    elements.filters.hidden = false;
+    elements.filters.style.display = 'block';
+    elements.filters.classList.add('is-open');
+    elements.filterToggle.setAttribute('aria-expanded', 'true');
+  }
   elements.end.disabled = !connected;
 }
 
@@ -606,9 +612,10 @@ function setCallFilter(role, filter) {
 
 function toggleCallFilters(role) {
   const elements = callElements(role);
-  if (!elements.filters || elements.filterToggle?.disabled) return;
+  if (!elements.filters) return;
   const open = elements.filters.hidden;
   elements.filters.hidden = !open;
+  elements.filters.style.display = open ? 'block' : 'none';
   elements.filters.classList.toggle('is-open', open);
   elements.filterToggle.setAttribute('aria-expanded', String(open));
   if (open) elements.filters.querySelector('[data-call-filter].active')?.focus({ preventScroll: true });
