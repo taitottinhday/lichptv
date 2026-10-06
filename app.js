@@ -1903,21 +1903,31 @@ async function switchCallCamera(role) {
   const pipeline = activeFilterPipeline?.role === role ? activeFilterPipeline : null;
   const track = pipeline?.sourceStream?.getVideoTracks?.()[0];
   if (!track) { setCallStatus(role, 'Cuộc gọi này chưa bật camera để đổi nha.'); return; }
-  const current = track.getSettings().facingMode || pipeline.facingMode || 'user';
+  const current = pipeline.facingMode || track.getSettings().facingMode || 'user';
   const next = current === 'environment' ? 'user' : 'environment';
   try {
-    let nextTrack = null;
+    let nextTrack = track;
+    let changedInPlace = false;
     try {
+      await track.applyConstraints({ facingMode: { exact: next } });
+      const appliedFacingMode = track.getSettings().facingMode;
+      changedInPlace = !appliedFacingMode || appliedFacingMode === next;
+    } catch {
+      changedInPlace = false;
+    }
+    if (!changedInPlace) {
       const replacementStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { exact: next }, width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: false
       });
       nextTrack = replacementStream.getVideoTracks()[0];
-    } catch {
-      await track.applyConstraints({ facingMode: { exact: next } });
-      nextTrack = track;
+      const replacementFacingMode = nextTrack?.getSettings().facingMode;
+      if (!nextTrack || (replacementFacingMode && replacementFacingMode !== next)) {
+        replacementStream.getTracks().forEach((replacement) => replacement.stop());
+        throw new Error('Thiết bị không trả đúng camera được yêu cầu.');
+      }
     }
-    if (nextTrack !== track) {
+    if (!changedInPlace) {
       const audioTracks = pipeline.sourceStream.getAudioTracks();
       const nextStream = new MediaStream([nextTrack, ...audioTracks]);
       pipeline.sourceStream.getVideoTracks().forEach((oldTrack) => oldTrack.stop());
@@ -1925,12 +1935,12 @@ async function switchCallCamera(role) {
       pipeline.sourceVideo.srcObject = nextStream;
       await pipeline.sourceVideo.play().catch(() => {});
       if (!pipeline.usingCanvas) await pipeline.localVideoTrack?.replaceTrack(nextTrack);
-      if (pipeline.localVideoTrack && !callElements(role).section.hidden) {
-        attachCallTrack(role, pipeline.localVideoTrack, {
-          identity: role === 'admin' ? 'anh' : 'vy',
-          name: role === 'admin' ? 'Anh' : 'Vy'
-        });
-      }
+    }
+    if (pipeline.localVideoTrack && !callElements(role).section.hidden) {
+      attachCallTrack(role, pipeline.localVideoTrack, {
+        identity: role === 'admin' ? 'anh' : 'vy',
+        name: role === 'admin' ? 'Anh' : 'Vy'
+      });
     }
     pipeline.facingMode = next;
     const tile = callElements(role).videos.querySelector('.call-tile.is-local-preview');
