@@ -55,6 +55,24 @@ let incomingAlertTimer;
 let incomingAudioContext;
 let incomingAlertRole;
 
+const CALL_BACKGROUND_PRESETS = [
+  { id: 'none', label: 'Gốc', emoji: '◌', background: 'transparent' },
+  { id: 'sunset', label: 'Hoàng hôn', emoji: '🌅', background: 'linear-gradient(145deg, #ff9a9e, #fad0c4 52%, #fbc2eb)' },
+  { id: 'ocean', label: 'Đại dương', emoji: '🌊', background: 'linear-gradient(145deg, #0f4c75, #3282b8 52%, #bbe1fa)' },
+  { id: 'aurora', label: 'Cực quang', emoji: '🌌', background: 'linear-gradient(145deg, #141e30, #243b55 48%, #7f53ac)' },
+  { id: 'hearts', label: 'Tim hồng', emoji: '💗', background: 'radial-gradient(circle at 20% 20%, #ffb6d9 0 4%, transparent 5%), radial-gradient(circle at 80% 35%, #ffd0e6 0 5%, transparent 6%), linear-gradient(145deg, #7f1d5a, #e83e8c)' },
+  { id: 'lavender', label: 'Lavender', emoji: '🪻', background: 'linear-gradient(145deg, #654ea3, #eaafc8)' }
+];
+
+const CALL_COLOR_PRESETS = [
+  { id: 'none', label: 'Gốc', emoji: '◌', filter: 'none' },
+  { id: 'dreamy', label: 'Dreamy', emoji: '✨', filter: 'saturate(1.15) brightness(1.08) contrast(.94)' },
+  { id: 'warm', label: 'Ấm áp', emoji: '☀️', filter: 'sepia(.18) saturate(1.22) brightness(1.04)' },
+  { id: 'cool', label: 'Băng tuyết', emoji: '❄️', filter: 'hue-rotate(155deg) saturate(.86) brightness(1.08)' },
+  { id: 'pink', label: 'Hồng xinh', emoji: '🌸', filter: 'hue-rotate(315deg) saturate(1.32) brightness(1.05)' },
+  { id: 'mono', label: 'Đen trắng', emoji: '◐', filter: 'grayscale(1) contrast(1.08)' }
+];
+
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
 
@@ -530,19 +548,143 @@ function callElements(role) {
     videos: $(admin ? '#adminCallVideos' : '#callVideos'),
     filters: $(admin ? '#adminCallFilters' : '#callFilters'),
     filterToggle: $(admin ? '#toggleAdminCallFilters' : '#toggleCallFilters'),
+    shortcuts: $(admin ? '#adminCallShortcuts' : '#callShortcuts'),
+    toolSheet: $(admin ? '#adminCallToolSheet' : '#callToolSheet'),
+    waiting: $(admin ? '#adminCallWaiting' : '#callWaiting'),
+    waitingTitle: $(admin ? '#adminCallWaitingTitle' : '#callWaitingTitle'),
+    waitingStatus: $(admin ? '#adminCallWaitingStatus' : '#callWaitingStatus'),
     close: $(admin ? '#closeAdminCall' : '#closeCall'),
     status: $(admin ? '#adminCallStatus' : '#callStatus'),
     start: $(admin ? '#startAdminVideoCall' : '#startVideoCall'),
     join: $(admin ? '#joinAdminVideoCall' : '#joinVideoCall'),
     camera: $(admin ? '#toggleAdminCamera' : '#toggleCamera'),
     microphone: $(admin ? '#toggleAdminMicrophone' : '#toggleMicrophone'),
+    share: $(admin ? '#adminShareCallScreen' : '#shareCallScreen'),
     end: $(admin ? '#endAdminCall' : '#endCall')
   };
+}
+
+function ensureCallExperience(role) {
+  const elements = callElements(role);
+  if (!elements.section || !elements.stage) return elements;
+  const admin = role === 'admin';
+  const prefix = admin ? 'admin' : '';
+  if (!elements.waiting) {
+    const waiting = document.createElement('div');
+    waiting.id = admin ? 'adminCallWaiting' : 'callWaiting';
+    waiting.className = 'call-waiting-hero';
+    waiting.innerHTML = `<div class="call-waiting-avatar"><img src="${AVATAR_IMAGE_URL}" alt="" /></div><h3 id="${admin ? 'adminCallWaitingTitle' : 'callWaitingTitle'}">${admin ? 'Vy' : 'Anh'}</h3><p id="${admin ? 'adminCallWaitingStatus' : 'callWaitingStatus'}">Đang gọi…</p>`;
+    elements.section.insertBefore(waiting, elements.incoming);
+  }
+  if (!elements.shortcuts) {
+    const shortcuts = document.createElement('div');
+    shortcuts.id = admin ? 'adminCallShortcuts' : 'callShortcuts';
+    shortcuts.className = 'call-shortcuts';
+    shortcuts.setAttribute('aria-label', 'Công cụ cuộc gọi');
+    shortcuts.innerHTML = [
+      ['edit', '✣', 'Chỉnh sửa'],
+      ['blur', '◌', 'Làm mờ'],
+      ['effects', '☻', 'Hiệu ứng'],
+      ['background', '▧', 'Phông nền'],
+      ['color', '◉', 'Bộ lọc màu']
+    ].map(([id, icon, label]) => `<button type="button" class="call-shortcut" data-call-tool="${id}"><span>${icon}</span>${label}</button>`).join('');
+    elements.stage.insertBefore(shortcuts, elements.stage.querySelector('.call-controls'));
+  }
+  if (!elements.toolSheet) {
+    const sheet = document.createElement('div');
+    sheet.id = admin ? 'adminCallToolSheet' : 'callToolSheet';
+    sheet.className = 'call-tool-sheet';
+    sheet.hidden = true;
+    sheet.innerHTML = '<div class="call-sheet-grabber" aria-hidden="true"></div><div class="call-sheet-header"><strong data-call-sheet-title>Chọn công cụ</strong><button type="button" class="call-sheet-close" data-call-sheet-close aria-label="Đóng bảng công cụ">×</button></div><div class="call-sheet-items" data-call-sheet-items></div>';
+    elements.stage.appendChild(sheet);
+  }
+  const refreshed = callElements(role);
+  if (!refreshed.shortcuts.dataset.bound) {
+    refreshed.shortcuts.dataset.bound = 'true';
+    refreshed.shortcuts.querySelectorAll('[data-call-tool]').forEach((button) => button.addEventListener('click', () => setCallTool(role, button.dataset.callTool)));
+    refreshed.toolSheet.querySelector('[data-call-sheet-close]')?.addEventListener('click', () => closeCallToolSheet(role));
+  }
+  return refreshed;
+}
+
+function closeCallToolSheet(role) {
+  const elements = ensureCallExperience(role);
+  if (!elements.toolSheet) return;
+  elements.toolSheet.hidden = true;
+  elements.shortcuts?.querySelectorAll('[data-call-tool]').forEach((button) => button.classList.remove('active'));
+}
+
+function renderCallToolSheet(role, type) {
+  const elements = ensureCallExperience(role);
+  if (!elements.toolSheet) return;
+  const presets = type === 'background' ? CALL_BACKGROUND_PRESETS : CALL_COLOR_PRESETS;
+  const title = type === 'background' ? 'Chọn phông nền' : 'Bộ lọc màu';
+  const active = activeFilterPipeline?.role === role
+    ? (type === 'background' ? (activeFilterPipeline.backgroundPreset || 'none') : (activeFilterPipeline.colorFilter || 'none'))
+    : 'none';
+  elements.toolSheet.querySelector('[data-call-sheet-title]').textContent = title;
+  elements.toolSheet.querySelector('[data-call-sheet-items]').innerHTML = presets.map((preset) => `<button type="button" class="call-sheet-item${preset.id === active ? ' active' : ''}" data-call-sheet-type="${type}" data-call-sheet-value="${preset.id}"><span class="call-sheet-preview" style="${type === 'background' ? `background:${preset.background}` : ''}">${preset.emoji}</span><b>${preset.label}</b></button>`).join('');
+  elements.toolSheet.querySelectorAll('[data-call-sheet-value]').forEach((button) => button.addEventListener('click', () => {
+    if (type === 'background') applyCallBackground(role, button.dataset.callSheetValue);
+    else applyCallColor(role, button.dataset.callSheetValue);
+    renderCallToolSheet(role, type);
+  }));
+  elements.toolSheet.hidden = false;
+}
+
+function setCallTool(role, tool) {
+  const elements = ensureCallExperience(role);
+  elements.shortcuts?.querySelectorAll('[data-call-tool]').forEach((button) => button.classList.toggle('active', button.dataset.callTool === tool));
+  if (tool === 'effects') {
+    closeCallToolSheet(role);
+    toggleCallFilters(role, true);
+    return;
+  }
+  if (tool === 'background' || tool === 'color') {
+    elements.filters.hidden = true;
+    elements.filters.style.display = 'none';
+    renderCallToolSheet(role, tool);
+    return;
+  }
+  closeCallToolSheet(role);
+  const pipeline = activeFilterPipeline?.role === role ? activeFilterPipeline : null;
+  if (tool === 'blur') {
+    if (!pipeline) return setCallStatus(role, 'Camera chưa sẵn sàng để làm mờ nha.');
+    pipeline.backgroundMode = pipeline.backgroundMode === 'blur' ? 'none' : 'blur';
+    elements.stage.classList.toggle('is-background-blurred', pipeline.backgroundMode === 'blur');
+    setCallStatus(role, pipeline.backgroundMode === 'blur' ? 'Đã bật làm mờ phông nền.' : 'Đã tắt làm mờ phông nền.');
+  } else if (tool === 'edit') {
+    if (!pipeline) return setCallStatus(role, 'Camera chưa sẵn sàng để chỉnh sửa nha.');
+    pipeline.editEnabled = !pipeline.editEnabled;
+    elements.stage.classList.toggle('is-edited', pipeline.editEnabled);
+    setCallStatus(role, pipeline.editEnabled ? 'Đã bật chỉnh sửa hình ảnh.' : 'Đã tắt chỉnh sửa hình ảnh.');
+  }
+}
+
+function applyCallBackground(role, presetId) {
+  const preset = CALL_BACKGROUND_PRESETS.find((item) => item.id === presetId) || CALL_BACKGROUND_PRESETS[0];
+  const pipeline = activeFilterPipeline?.role === role ? activeFilterPipeline : null;
+  if (!pipeline) return setCallStatus(role, 'Camera chưa sẵn sàng để đổi phông nền nha.');
+  pipeline.backgroundPreset = preset.id;
+  pipeline.backgroundMode = preset.id === 'none' ? 'none' : 'replace';
+  const elements = callElements(role);
+  elements.stage.dataset.background = preset.id;
+  setCallStatus(role, preset.id === 'none' ? 'Đã dùng phông nền gốc.' : `Đã chọn phông nền ${preset.label}.`);
+}
+
+function applyCallColor(role, presetId) {
+  const preset = CALL_COLOR_PRESETS.find((item) => item.id === presetId) || CALL_COLOR_PRESETS[0];
+  const pipeline = activeFilterPipeline?.role === role ? activeFilterPipeline : null;
+  if (!pipeline) return setCallStatus(role, 'Camera chưa sẵn sàng để đổi màu nha.');
+  pipeline.colorFilter = preset.id;
+  callElements(role).stage.dataset.color = preset.id;
+  setCallStatus(role, preset.id === 'none' ? 'Đã dùng màu gốc.' : `Đã chọn bộ lọc màu ${preset.label}.`);
 }
 
 function setCallStatus(role, message) {
   const elements = callElements(role);
   if (elements.status) elements.status.textContent = message;
+  if (elements.waitingStatus) elements.waitingStatus.textContent = message;
 }
 
 function ensureSwitchCameraButton(role) {
@@ -564,11 +706,33 @@ function ensureSwitchCameraButton(role) {
   return button;
 }
 
-function setCallControls(role, connected) {
+function ensureScreenShareButton(role) {
   const elements = callElements(role);
+  const controls = elements.stage?.querySelector('.call-controls');
+  if (!controls || !elements.end) return null;
+  let button = controls.querySelector('[data-call-screen-share]');
+  if (!button) {
+    button = document.createElement('button');
+    button.id = role === 'admin' ? 'adminShareCallScreen' : 'shareCallScreen';
+    button.className = 'button button-light call-control-icon';
+    button.type = 'button';
+    button.dataset.callScreenShare = role;
+    button.title = 'Chia sẻ màn hình';
+    button.setAttribute('aria-label', 'Chia sẻ màn hình');
+    button.textContent = 'Chia sẻ';
+    controls.insertBefore(button, elements.end);
+    button.addEventListener('click', () => toggleCallScreenShare(role));
+  }
+  return button;
+}
+
+function setCallControls(role, connected) {
+  const elements = ensureCallExperience(role);
   if (!elements.stage) return;
   const switchCamera = ensureSwitchCameraButton(role);
+  const screenShare = ensureScreenShareButton(role);
   elements.stage.hidden = !connected;
+  elements.waiting.hidden = connected && activeFilterPipeline?.role === role;
   elements.incoming.hidden = true;
   elements.start.disabled = connected;
   elements.join.disabled = connected;
@@ -576,35 +740,45 @@ function setCallControls(role, connected) {
   elements.microphone.disabled = !connected;
   elements.filterToggle.disabled = !connected || activeCallType === 'voice';
   if (switchCamera) switchCamera.disabled = !connected || activeCallType === 'voice';
+  if (screenShare) screenShare.disabled = !connected || activeCallType === 'voice';
+  if (!connected && screenShare) {
+    screenShare.classList.remove('is-active');
+    screenShare.setAttribute('aria-pressed', 'false');
+  }
   elements.filterToggle.setAttribute('aria-expanded', connected && !elements.filters.hidden ? 'true' : 'false');
   if (connected && activeCallType === 'video') {
-    elements.filters.hidden = false;
-    elements.filters.style.display = 'block';
-    elements.filters.classList.add('is-open');
-    elements.filterToggle.setAttribute('aria-expanded', 'true');
+    elements.filters.hidden = true;
+    elements.filters.style.display = 'none';
+    elements.filters.classList.remove('is-open');
+    elements.toolSheet.hidden = true;
   }
   elements.end.disabled = !connected;
 }
 
 function openCallOverlay(role) {
-  const elements = callElements(role);
+  const elements = ensureCallExperience(role);
   if (!elements.section) return;
   elements.section.hidden = false;
   elements.incoming.hidden = true;
   elements.stage.hidden = true;
+  elements.waiting.hidden = false;
+  elements.waitingStatus.textContent = 'Đang gọi…';
   elements.filters.hidden = true;
+  elements.toolSheet.hidden = true;
   elements.videos.innerHTML = '';
   setCallFilter(role, 'none');
 }
 
 function closeCallOverlay(role) {
-  const elements = callElements(role);
+  const elements = ensureCallExperience(role);
   if (!elements.section) return;
   elements.section.hidden = true;
   elements.section.classList.remove('is-ringing');
   elements.incoming.hidden = true;
   elements.stage.hidden = true;
+  elements.waiting.hidden = true;
   elements.filters.hidden = true;
+  elements.toolSheet.hidden = true;
   elements.videos.innerHTML = '';
   pendingIncomingCall = null;
   stopIncomingCallAlert();
@@ -653,7 +827,7 @@ function startIncomingCallAlert(role) {
 }
 
 function showIncomingCall(role, callType = 'video') {
-  const elements = callElements(role);
+  const elements = ensureCallExperience(role);
   if (!elements.section || !elements.incoming) return;
   pendingIncomingCall = { role, callType };
   openCallOverlay(role);
@@ -665,6 +839,7 @@ function showIncomingCall(role, callType = 'video') {
     : 'Bấm nhận để mở camera và micro, rồi mình gặp nhau nha.';
   elements.accept.textContent = callType === 'voice' ? 'Nhận cuộc gọi' : 'Nhận video';
   elements.incoming.hidden = false;
+  elements.waiting.hidden = true;
   elements.section.classList.add('is-ringing');
   startIncomingCallAlert(role);
   setCallStatus(role, `${caller} đang chờ em nhận máy 💗`);
@@ -680,13 +855,15 @@ function setCallFilter(role, filter) {
   });
 }
 
-function toggleCallFilters(role) {
+function toggleCallFilters(role, forceOpen = null) {
   const elements = callElements(role);
   if (!elements.filters) return;
-  const open = elements.filters.hidden;
+  const open = forceOpen === null ? elements.filters.hidden : forceOpen;
   elements.filters.hidden = !open;
   elements.filters.style.display = open ? 'block' : 'none';
   elements.filters.classList.toggle('is-open', open);
+  const heading = elements.filters.querySelector('.call-filters-heading');
+  if (heading && open) heading.textContent = 'Chọn hiệu ứng';
   elements.filterToggle.setAttribute('aria-expanded', String(open));
   if (open) elements.filters.querySelector('[data-call-filter].active')?.focus({ preventScroll: true });
 }
@@ -807,12 +984,92 @@ function drawFallbackFaceEffect(pipeline) {
   }
 }
 
+function drawCallBackground(context, width, height, presetId) {
+  const palettes = {
+    sunset: ['#ff9a9e', '#fad0c4', '#fbc2eb'],
+    ocean: ['#0f4c75', '#3282b8', '#bbe1fa'],
+    aurora: ['#141e30', '#243b55', '#7f53ac'],
+    hearts: ['#7f1d5a', '#e83e8c', '#ffd0e6'],
+    lavender: ['#654ea3', '#b88bb9', '#eaafc8']
+  };
+  const colors = palettes[presetId] || palettes.sunset;
+  const gradient = context.createLinearGradient(0, 0, width, height);
+  colors.forEach((color, index) => gradient.addColorStop(index / (colors.length - 1), color));
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, width, height);
+  if (presetId === 'hearts') {
+    context.font = `${Math.max(30, width * .08)}px "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
+    context.globalAlpha = .34;
+    ['💗', '✨', '💕', '💞'].forEach((emoji, index) => context.fillText(emoji, width * (.12 + index * .25), height * (.18 + (index % 2) * .45)));
+    context.globalAlpha = 1;
+  }
+}
+
+function drawCallSource(pipeline, faceLandmarks) {
+  const { context, canvas, sourceVideo } = pipeline;
+  const width = canvas.width;
+  const height = canvas.height;
+  const colorFilters = {
+    dreamy: 'saturate(1.15) brightness(1.08) contrast(.94)',
+    warm: 'sepia(.18) saturate(1.22) brightness(1.04)',
+    cool: 'hue-rotate(155deg) saturate(.86) brightness(1.08)',
+    pink: 'hue-rotate(315deg) saturate(1.32) brightness(1.05)',
+    mono: 'grayscale(1) contrast(1.08)'
+  };
+  const visualFilter = `${colorFilters[pipeline.colorFilter] || ''}${pipeline.editEnabled ? ' saturate(1.12) brightness(1.06) contrast(.96)' : ''}`.trim() || 'none';
+  const drawOriginal = (filter = visualFilter) => {
+    context.save();
+    context.filter = filter;
+    context.drawImage(sourceVideo, 0, 0, width, height);
+    context.restore();
+  };
+
+  if (pipeline.backgroundMode === 'replace' && pipeline.backgroundPreset !== 'none') {
+    drawCallBackground(context, width, height, pipeline.backgroundPreset);
+    const leftFace = landmarkPoint(faceLandmarks, 234, width, height);
+    const rightFace = landmarkPoint(faceLandmarks, 454, width, height);
+    const forehead = landmarkPoint(faceLandmarks, 10, width, height);
+    const chin = landmarkPoint(faceLandmarks, 152, width, height);
+    if (leftFace && rightFace && forehead && chin) {
+      const faceWidth = distanceBetween(leftFace, rightFace);
+      const faceHeight = distanceBetween(forehead, chin);
+      context.save();
+      context.beginPath();
+      context.ellipse((leftFace.x + rightFace.x) / 2, forehead.y + faceHeight * .48, faceWidth * .78, faceHeight * 1.28, 0, 0, Math.PI * 2);
+      context.clip();
+      drawOriginal();
+      context.restore();
+    } else drawOriginal();
+    return;
+  }
+
+  if (pipeline.backgroundMode === 'blur') {
+    drawOriginal('blur(13px)');
+    const leftFace = landmarkPoint(faceLandmarks, 234, width, height);
+    const rightFace = landmarkPoint(faceLandmarks, 454, width, height);
+    const forehead = landmarkPoint(faceLandmarks, 10, width, height);
+    const chin = landmarkPoint(faceLandmarks, 152, width, height);
+    if (leftFace && rightFace && forehead && chin) {
+      const faceWidth = distanceBetween(leftFace, rightFace);
+      const faceHeight = distanceBetween(forehead, chin);
+      context.save();
+      context.beginPath();
+      context.ellipse((leftFace.x + rightFace.x) / 2, forehead.y + faceHeight * .48, faceWidth * .84, faceHeight * 1.32, 0, 0, Math.PI * 2);
+      context.clip();
+      drawOriginal();
+      context.restore();
+    }
+    return;
+  }
+  drawOriginal();
+}
+
 function drawCuteFaceEffect(pipeline, faceLandmarks) {
-  const { context, canvas, sourceVideo, filter } = pipeline;
+  const { context, canvas, filter } = pipeline;
   const width = canvas.width;
   const height = canvas.height;
   context.clearRect(0, 0, width, height);
-  context.drawImage(sourceVideo, 0, 0, width, height);
+  drawCallSource(pipeline, faceLandmarks);
   if (filter === 'none') return;
   if (!faceLandmarks) {
     drawFallbackFaceEffect(pipeline);
@@ -968,6 +1225,10 @@ async function startFaceFilterPipeline(role) {
     canvasStream,
     filter: 'none',
     facingMode: 'user',
+    backgroundMode: 'none',
+    backgroundPreset: 'none',
+    colorFilter: 'none',
+    editEnabled: false,
     faceLandmarks: null,
     lastInferenceAt: 0,
     lastVideoTime: -1,
@@ -1113,9 +1374,10 @@ async function joinLiveKitCall(role = 'vy', announce = false, callType = 'video'
     setCallControls(role, true);
     if (callType === 'video') {
       const filterPipeline = await startFaceFilterPipeline(role);
+      // Hiện preview ngay khi camera sẵn sàng, để màn hình "Đang gọi…" có hình nền giống giao diện gọi hiện đại.
+      attachCallTrack(role, filterPipeline.localVideoTrack, room.localParticipant);
       await room.localParticipant.publishTrack(filterPipeline.localAudioTrack, { source: Track.Source.Microphone });
       await room.localParticipant.publishTrack(filterPipeline.localVideoTrack, { source: Track.Source.Camera });
-      attachCallTrack(role, filterPipeline.localVideoTrack, room.localParticipant);
     } else {
       await room.localParticipant.setMicrophoneEnabled(true);
     }
@@ -1189,6 +1451,25 @@ async function switchCallCamera(role) {
   } catch (error) {
     setCallStatus(role, 'Thiết bị này không hỗ trợ đổi camera khi đang gọi.');
     console.warn('Không đổi được camera:', error.message);
+  }
+}
+
+async function toggleCallScreenShare(role) {
+  if (!livekitRoom || activeCallRole !== role || activeCallType === 'voice') return;
+  const elements = callElements(role);
+  const publication = livekitRoom.localParticipant.getTrackPublication(Track.Source.ScreenShare);
+  const sharing = Boolean(publication?.track && !publication.isMuted);
+  try {
+    await livekitRoom.localParticipant.setScreenShareEnabled(!sharing);
+    const button = elements.share;
+    if (button) {
+      button.classList.toggle('is-active', !sharing);
+      button.setAttribute('aria-pressed', String(!sharing));
+    }
+    setCallStatus(role, !sharing ? 'Đã bật chia sẻ màn hình.' : 'Đã tắt chia sẻ màn hình.');
+  } catch (error) {
+    setCallStatus(role, 'Thiết bị chưa cho phép chia sẻ màn hình.');
+    console.warn('Không chia sẻ được màn hình:', error.message);
   }
 }
 
