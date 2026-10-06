@@ -42,6 +42,8 @@ const state = {
 let nativeNotificationsPromise;
 let livekitRoom;
 let activeCallRole;
+let activeCallType = 'video';
+let pendingIncomingCall = null;
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -378,8 +380,16 @@ function callElements(role) {
   const admin = role === 'admin';
   return {
     section: $(admin ? '#adminCallSection' : '#callSection'),
+    incoming: $(admin ? '#adminIncomingCall' : '#incomingCall'),
+    incomingTitle: $(admin ? '#adminIncomingCallTitle' : '#incomingCallTitle'),
+    incomingDescription: $(admin ? '#adminIncomingCallDescription' : '#incomingCallDescription'),
+    accept: $(admin ? '#acceptAdminCall' : '#acceptCall'),
+    decline: $(admin ? '#declineAdminCall' : '#declineCall'),
     stage: $(admin ? '#adminCallStage' : '#callStage'),
     videos: $(admin ? '#adminCallVideos' : '#callVideos'),
+    filters: $(admin ? '#adminCallFilters' : '#callFilters'),
+    filterToggle: $(admin ? '#toggleAdminCallFilters' : '#toggleCallFilters'),
+    close: $(admin ? '#closeAdminCall' : '#closeCall'),
     status: $(admin ? '#adminCallStatus' : '#callStatus'),
     start: $(admin ? '#startAdminVideoCall' : '#startVideoCall'),
     join: $(admin ? '#joinAdminVideoCall' : '#joinVideoCall'),
@@ -398,11 +408,65 @@ function setCallControls(role, connected) {
   const elements = callElements(role);
   if (!elements.stage) return;
   elements.stage.hidden = !connected;
+  elements.incoming.hidden = true;
   elements.start.disabled = connected;
   elements.join.disabled = connected;
-  elements.camera.disabled = !connected;
+  elements.camera.disabled = !connected || activeCallType === 'voice';
   elements.microphone.disabled = !connected;
+  elements.filterToggle.disabled = !connected || activeCallType === 'voice';
   elements.end.disabled = !connected;
+}
+
+function openCallOverlay(role) {
+  const elements = callElements(role);
+  if (!elements.section) return;
+  elements.section.hidden = false;
+  elements.incoming.hidden = true;
+  elements.stage.hidden = true;
+  elements.filters.hidden = true;
+  elements.videos.innerHTML = '';
+  setCallFilter(role, 'none');
+}
+
+function closeCallOverlay(role) {
+  const elements = callElements(role);
+  if (!elements.section) return;
+  elements.section.hidden = true;
+  elements.incoming.hidden = true;
+  elements.stage.hidden = true;
+  elements.filters.hidden = true;
+  elements.videos.innerHTML = '';
+  pendingIncomingCall = null;
+}
+
+function showIncomingCall(role, callType = 'video') {
+  const elements = callElements(role);
+  if (!elements.section || !elements.incoming) return;
+  pendingIncomingCall = { role, callType };
+  openCallOverlay(role);
+  const caller = role === 'admin' ? 'Vy' : 'Anh';
+  const callLabel = callType === 'voice' ? 'gọi thoại' : 'gọi video';
+  elements.incomingTitle.textContent = `${caller} đang ${callLabel} cho ${role === 'admin' ? 'anh' : 'Vy'}`;
+  elements.incomingDescription.textContent = callType === 'voice'
+    ? 'Bấm nhận để mở cuộc gọi thoại riêng của hai đứa.'
+    : 'Bấm nhận để mở camera và micro, rồi mình gặp nhau nha.';
+  elements.accept.textContent = callType === 'voice' ? 'Nhận cuộc gọi' : 'Nhận video';
+  elements.incoming.hidden = false;
+  setCallStatus(role, `${caller} đang chờ em nhận máy 💗`);
+}
+
+function setCallFilter(role, filter) {
+  const elements = callElements(role);
+  if (!elements.stage || !elements.filters) return;
+  elements.stage.dataset.filter = filter;
+  elements.filters.querySelectorAll('[data-call-filter]').forEach((button) => {
+    button.classList.toggle('active', button.dataset.callFilter === filter);
+  });
+}
+
+function toggleCallFilters(role) {
+  const elements = callElements(role);
+  if (elements.filters) elements.filters.hidden = !elements.filters.hidden;
 }
 
 function ensureCallTile(role, identity, name) {
@@ -446,13 +510,15 @@ function updateCallStatus(role) {
   setCallStatus(role, remoteCount ? 'Đã kết nối với người thương 💗' : 'Đang chờ người kia tham gia phòng…');
 }
 
-async function joinLiveKitCall(role = 'vy', announce = false) {
+async function joinLiveKitCall(role = 'vy', announce = false, callType = 'video') {
   const elements = callElements(role);
   if (!elements.status) return;
   if (livekitRoom) await leaveLiveKitCall();
+  activeCallType = callType;
+  openCallOverlay(role);
   elements.start.disabled = true;
   elements.join.disabled = true;
-  setCallStatus(role, 'Đang mở phòng video…');
+  setCallStatus(role, callType === 'voice' ? 'Đang gọi thoại cho người thương…' : 'Đang gọi video cho người thương…');
   try {
     const headers = { 'Content-Type': 'application/json' };
     if (role === 'admin') {
@@ -463,7 +529,7 @@ async function joinLiveKitCall(role = 'vy', announce = false) {
     const tokenResponse = await fetch('/api/livekit/token', {
       method: 'POST',
       headers,
-      body: JSON.stringify({ role, announce })
+      body: JSON.stringify({ role, announce, callType })
     });
     const tokenData = await tokenResponse.json().catch(() => ({}));
     if (tokenResponse.status === 401 && role === 'admin') {
@@ -497,9 +563,13 @@ async function joinLiveKitCall(role = 'vy', announce = false) {
     });
 
     await room.connect(tokenData.serverUrl, tokenData.participantToken);
-    await room.localParticipant.enableCameraAndMicrophone();
-    const localCamera = room.localParticipant.getTrackPublication(Track.Source.Camera)?.track;
-    if (localCamera) attachCallTrack(role, localCamera, room.localParticipant);
+    if (callType === 'video') {
+      await room.localParticipant.enableCameraAndMicrophone();
+      const localCamera = room.localParticipant.getTrackPublication(Track.Source.Camera)?.track;
+      if (localCamera) attachCallTrack(role, localCamera, room.localParticipant);
+    } else {
+      await room.localParticipant.setMicrophoneEnabled(true);
+    }
     room.remoteParticipants.forEach((participant) => {
       participant.trackPublications.forEach((publication) => {
         if (publication.track) attachCallTrack(role, publication.track, participant);
@@ -528,6 +598,7 @@ async function leaveLiveKitCall() {
     elements.videos.innerHTML = '';
     setCallControls(role, false);
     setCallStatus(role, 'Đã rời cuộc gọi.');
+    closeCallOverlay(role);
   }
 }
 
@@ -549,10 +620,19 @@ function handleIncomingCallHint() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('call') !== '1') return;
   const role = params.get('admin') === '1' ? 'admin' : 'vy';
-  const elements = callElements(role);
-  elements.section?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  showToast('Có người thương đang gọi video 💗 Bấm “Tham gia video” nha.');
+  showIncomingCall(role, params.get('kind') === 'voice' ? 'voice' : 'video');
   window.history.replaceState({}, document.title, window.location.pathname);
+}
+
+function acceptIncomingCall(role) {
+  const callType = pendingIncomingCall?.role === role ? pendingIncomingCall.callType : 'video';
+  pendingIncomingCall = null;
+  joinLiveKitCall(role, false, callType);
+}
+
+function declineIncomingCall(role) {
+  setCallStatus(role, 'Đã từ chối cuộc gọi.');
+  closeCallOverlay(role);
 }
 
 function handleIncomingNotificationTarget() {
@@ -595,6 +675,11 @@ function bindNotificationNavigation() {
   if (!('serviceWorker' in navigator)) return;
   navigator.serviceWorker.addEventListener('message', (event) => {
     if (event.data?.type === 'notification-navigation') handleNotificationNavigation(event.data.url);
+    if (event.data?.type === 'incoming-call') {
+      const role = event.data.role === 'admin' ? 'admin' : 'vy';
+      if (role === 'admin' && localStorage.getItem(ADMIN_TOKEN_KEY) && $('#adminScreen').hidden) showAdminScreen();
+      showIncomingCall(role, event.data.callType === 'voice' ? 'voice' : 'video');
+    }
   });
 }
 
@@ -1382,16 +1467,29 @@ function bindEvents() {
   bindChatQuickReplies();
   bindChatImagePicker('vy');
   bindChatImagePicker('admin');
+  $('#startVoiceCall').addEventListener('click', () => joinLiveKitCall('vy', true, 'voice'));
   $('#startVideoCall').addEventListener('click', () => joinLiveKitCall('vy', true));
   $('#joinVideoCall').addEventListener('click', () => joinLiveKitCall('vy', false));
+  $('#acceptCall').addEventListener('click', () => acceptIncomingCall('vy'));
+  $('#declineCall').addEventListener('click', () => declineIncomingCall('vy'));
+  $('#closeCall').addEventListener('click', () => (livekitRoom ? leaveLiveKitCall() : closeCallOverlay('vy')));
   $('#toggleCamera').addEventListener('click', () => toggleCallCamera('vy'));
   $('#toggleMicrophone').addEventListener('click', () => toggleCallMicrophone('vy'));
+  $('#toggleCallFilters').addEventListener('click', () => toggleCallFilters('vy'));
   $('#endCall').addEventListener('click', leaveLiveKitCall);
+  $('#startAdminVoiceCall').addEventListener('click', () => joinLiveKitCall('admin', true, 'voice'));
   $('#startAdminVideoCall').addEventListener('click', () => joinLiveKitCall('admin', true));
   $('#joinAdminVideoCall').addEventListener('click', () => joinLiveKitCall('admin', false));
+  $('#acceptAdminCall').addEventListener('click', () => acceptIncomingCall('admin'));
+  $('#declineAdminCall').addEventListener('click', () => declineIncomingCall('admin'));
+  $('#closeAdminCall').addEventListener('click', () => (livekitRoom ? leaveLiveKitCall() : closeCallOverlay('admin')));
   $('#toggleAdminCamera').addEventListener('click', () => toggleCallCamera('admin'));
   $('#toggleAdminMicrophone').addEventListener('click', () => toggleCallMicrophone('admin'));
+  $('#toggleAdminCallFilters').addEventListener('click', () => toggleCallFilters('admin'));
   $('#endAdminCall').addEventListener('click', leaveLiveKitCall);
+  $$('.call-filters [data-call-filter]').forEach((button) => button.addEventListener('click', () => {
+    setCallFilter(button.closest('.call-overlay').id === 'adminCallSection' ? 'admin' : 'vy', button.dataset.callFilter);
+  }));
   $('#logoutButton').addEventListener('click', handleLogout);
   $('#enableNotification').addEventListener('click', enableNotifications);
   $('#exportCalendar').addEventListener('click', exportCalendarFile);

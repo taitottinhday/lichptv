@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lich-cua-vy-v5';
+const CACHE_NAME = 'lich-cua-vy-v6';
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (event) => {
@@ -8,11 +8,19 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('push', (event) => {
   const payload = event.data ? event.data.json() : {};
+  const incomingCall = payload.incomingCall === true;
   event.waitUntil(self.registration.showNotification(payload.title || 'Lịch của Vy 🌷', {
     body: payload.body || 'Vy ơi, kiểm tra lịch làm việc nha.',
     tag: payload.tag || 'lich-cua-vy',
-    data: { url: payload.url || '/' }
-  }));
+    data: { url: payload.url || '/', incomingCall, callerRole: payload.callerRole, callType: payload.callType }
+  }).then(() => incomingCall
+    ? self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windows) => windows.forEach((client) => client.postMessage({
+      type: 'incoming-call',
+      role: payload.callerRole === 'admin' ? 'vy' : 'admin',
+      callType: payload.callType === 'voice' ? 'voice' : 'video',
+      url: payload.url || '/'
+    })))
+    : undefined));
 });
 
 self.addEventListener('notificationclick', (event) => {

@@ -102,7 +102,7 @@ LIVEKIT_API_KEY=...
 LIVEKIT_API_SECRET=...
 ```
 
-Trong app, Vy bấm **Gọi video cho anh**; anh mở thông báo rồi bấm **Tham gia video**. Góc của anh cũng có nút gọi cho Vy. Lần đầu gọi, mỗi điện thoại cần cho phép camera và micro. LiveKit chỉ dùng để truyền cuộc gọi trực tiếp; app không tự lưu video cuộc gọi.
+Trong phần chat, Vy và anh có icon gọi thoại/gọi video ở góc trên. Khi có cuộc gọi, người nhận sẽ thấy màn hình **Cuộc gọi đến** với nút nhận hoặc từ chối; không cần tự tìm nút tham gia. Màn hình video có điều khiển camera, mic và khay hiệu ứng cute (hoa, tim, thỏ, cầu vồng). Lần đầu gọi, mỗi điện thoại cần cho phép camera và micro. LiveKit chỉ dùng để truyền cuộc gọi trực tiếp; app không tự lưu video cuộc gọi.
 
 ### Đổi ảnh của Vy
 

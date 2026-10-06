@@ -167,7 +167,10 @@
               <p class="section-kicker">GÓC TÂM TÌNH RIÊNG</p>
               <h2 id="chatHeading">Nhắn cho anh yêu 💌</h2>
             </div>
-            <span class="chat-status-pill">Anh sẽ nhận được thông báo</span>
+            <div class="chat-header-actions" aria-label="Tùy chọn liên lạc">
+              <button class="chat-icon-button" id="startVoiceCall" type="button" aria-label="Gọi thoại cho anh" title="Gọi thoại"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.2 4.2 9 3.6c.7-.2 1.4.2 1.7.8l1.1 2.7c.3.7.1 1.4-.5 1.8l-1.4 1a13.2 13.2 0 0 0 4.2 4.2l1-1.4c.4-.6 1.1-.8 1.8-.5l2.7 1.1c.6.3 1 .9.8 1.6l-.6 1.8c-.2.8-1 1.3-1.8 1.3C10.5 18 6 13.5 5.9 6c0-.8.5-1.6 1.3-1.8Z"/></svg></button>
+              <button class="chat-icon-button is-video" id="startVideoCall" type="button" aria-label="Gọi video cho anh" title="Gọi video"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 6.5h9A2.5 2.5 0 0 1 16 9v6a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 2 15V9a2.5 2.5 0 0 1 2.5-2.5Zm14.1 2.6 2.2-1.5c.7-.5 1.2-.1 1.2.7v6.4c0 .8-.5 1.2-1.2.7l-2.2-1.5V9.1Z"/></svg></button>
+            </div>
           </div>
           <p class="chat-intro">Tin nhắn của anh và Vy sẽ được lưu lại để mình không bỏ lỡ những điều ngọt ngào nha.</p>
           <div class="chat-thread" id="chatMessages" role="log" aria-live="polite" aria-label="Tin nhắn giữa Vy và anh"></div>
@@ -192,25 +195,43 @@
           <p class="chat-status" id="chatStatus" role="status" aria-live="polite"></p>
         </section>
 
-        <section class="call-section" id="callSection" aria-labelledby="callHeading">
+        <section class="call-section call-overlay" id="callSection" aria-labelledby="callHeading" hidden>
           <div class="section-heading">
             <div>
               <p class="section-kicker">GÓC HẸN RIÊNG</p>
-              <h2 id="callHeading">Gọi video với anh 📹</h2>
+              <h2 id="callHeading">Cuộc gọi với anh 💗</h2>
             </div>
-            <span class="call-status-pill">Qua Wi‑Fi hoặc 4G</span>
+            <button class="call-close" id="closeCall" type="button" aria-label="Đóng màn hình gọi">×</button>
           </div>
-          <p class="call-intro">Bấm gọi để mở phòng riêng của hai đứa. Khi được hỏi, Vy cho phép camera và micro nha.</p>
-          <div class="call-actions">
-            <button class="button button-primary" id="startVideoCall" type="button">📹 Gọi video cho anh</button>
-            <button class="button button-light" id="joinVideoCall" type="button">Tham gia video</button>
+          <div class="call-incoming" id="incomingCall" hidden>
+            <div class="call-incoming-avatar">💗</div>
+            <p class="call-incoming-kicker">CUỘC GỌI ĐẾN</p>
+            <h3 id="incomingCallTitle">Anh đang gọi video cho Vy</h3>
+            <p id="incomingCallDescription">Mở camera và micro để nhận cuộc gọi nhé.</p>
+            <div class="call-incoming-actions">
+              <button class="button button-danger" id="declineCall" type="button">Từ chối</button>
+              <button class="button button-primary" id="acceptCall" type="button">Nhận cuộc gọi</button>
+            </div>
+          </div>
+          <div class="call-actions" hidden>
+            <button class="button button-primary" type="button">📹 Gọi video cho anh</button>
+            <button class="button button-light" id="joinVideoCall" type="button">Nhận video</button>
           </div>
           <div class="call-stage" id="callStage" hidden>
             <div class="call-grid" id="callVideos"></div>
             <div class="call-controls">
-              <button class="button button-light" id="toggleCamera" type="button" disabled>Tắt camera</button>
-              <button class="button button-light" id="toggleMicrophone" type="button" disabled>Tắt mic</button>
+              <button class="button button-light call-control-icon" id="toggleCamera" type="button" disabled>◉ Camera</button>
+              <button class="button button-light call-control-icon" id="toggleMicrophone" type="button" disabled>◉ Mic</button>
+              <button class="button button-light call-control-icon" id="toggleCallFilters" type="button" disabled>✨ Filter</button>
               <button class="button button-danger" id="endCall" type="button" disabled>Kết thúc</button>
+            </div>
+            <div class="call-filters" id="callFilters" hidden>
+              <span>Hiệu ứng cute</span>
+              <button type="button" data-call-filter="none">✨</button>
+              <button type="button" data-call-filter="soft">🌸</button>
+              <button type="button" data-call-filter="hearts">💗</button>
+              <button type="button" data-call-filter="bunny">🐰</button>
+              <button type="button" data-call-filter="rainbow">🌈</button>
             </div>
           </div>
           <p class="call-status" id="callStatus" role="status" aria-live="polite"></p>
@@ -271,7 +292,10 @@
               <p class="section-kicker">TIN NHẮN RIÊNG</p>
               <h2 id="adminChatHeading">Nhắn cho Vy 💌</h2>
             </div>
-            <span class="chat-status-pill">Tin nhắn sẽ hiện ở máy Vy</span>
+            <div class="chat-header-actions" aria-label="Tùy chọn liên lạc">
+              <button class="chat-icon-button" id="startAdminVoiceCall" type="button" aria-label="Gọi thoại cho Vy" title="Gọi thoại"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.2 4.2 9 3.6c.7-.2 1.4.2 1.7.8l1.1 2.7c.3.7.1 1.4-.5 1.8l-1.4 1a13.2 13.2 0 0 0 4.2 4.2l1-1.4c.4-.6 1.1-.8 1.8-.5l2.7 1.1c.6.3 1 .9.8 1.6l-.6 1.8c-.2.8-1 1.3-1.8 1.3C10.5 18 6 13.5 5.9 6c0-.8.5-1.6 1.3-1.8Z"/></svg></button>
+              <button class="chat-icon-button is-video" id="startAdminVideoCall" type="button" aria-label="Gọi video cho Vy" title="Gọi video"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 6.5h9A2.5 2.5 0 0 1 16 9v6a2.5 2.5 0 0 1-2.5 2.5h-9A2.5 2.5 0 0 1 2 15V9a2.5 2.5 0 0 1 2.5-2.5Zm14.1 2.6 2.2-1.5c.7-.5 1.2-.1 1.2.7v6.4c0 .8-.5 1.2-1.2.7l-2.2-1.5V9.1Z"/></svg></button>
+            </div>
           </div>
           <div class="chat-thread" id="adminChatMessages" role="log" aria-live="polite" aria-label="Tin nhắn giữa anh và Vy"></div>
           <div class="chat-quick-replies" aria-label="Tin nhắn nhanh cho Vy">
@@ -294,25 +318,43 @@
           </form>
           <p class="chat-status" id="adminChatStatus" role="status" aria-live="polite"></p>
         </section>
-        <section class="call-section admin-call-section" id="adminCallSection" aria-labelledby="adminCallHeading">
+        <section class="call-section call-overlay" id="adminCallSection" aria-labelledby="adminCallHeading" hidden>
           <div class="section-heading">
             <div>
               <p class="section-kicker">GÓC HẸN RIÊNG</p>
-              <h2 id="adminCallHeading">Gọi video với Vy 📹</h2>
+              <h2 id="adminCallHeading">Cuộc gọi với Vy 💗</h2>
             </div>
-            <span class="call-status-pill">Phòng riêng của hai đứa</span>
+            <button class="call-close" id="closeAdminCall" type="button" aria-label="Đóng màn hình gọi">×</button>
           </div>
-          <p class="call-intro">Bấm gọi để Vy nhận thông báo, hoặc tham gia khi Vy đã gọi trước.</p>
-          <div class="call-actions">
-            <button class="button button-primary" id="startAdminVideoCall" type="button">📹 Gọi video cho Vy</button>
-            <button class="button button-light" id="joinAdminVideoCall" type="button">Tham gia video</button>
+          <div class="call-incoming" id="adminIncomingCall" hidden>
+            <div class="call-incoming-avatar">💗</div>
+            <p class="call-incoming-kicker">CUỘC GỌI ĐẾN</p>
+            <h3 id="adminIncomingCallTitle">Vy đang gọi video cho anh</h3>
+            <p id="adminIncomingCallDescription">Mở camera và micro để nhận cuộc gọi nhé.</p>
+            <div class="call-incoming-actions">
+              <button class="button button-danger" id="declineAdminCall" type="button">Từ chối</button>
+              <button class="button button-primary" id="acceptAdminCall" type="button">Nhận cuộc gọi</button>
+            </div>
+          </div>
+          <div class="call-actions" hidden>
+            <button class="button button-primary" type="button">📹 Gọi video cho Vy</button>
+            <button class="button button-light" id="joinAdminVideoCall" type="button">Nhận video</button>
           </div>
           <div class="call-stage" id="adminCallStage" hidden>
             <div class="call-grid" id="adminCallVideos"></div>
             <div class="call-controls">
-              <button class="button button-light" id="toggleAdminCamera" type="button" disabled>Tắt camera</button>
-              <button class="button button-light" id="toggleAdminMicrophone" type="button" disabled>Tắt mic</button>
+              <button class="button button-light call-control-icon" id="toggleAdminCamera" type="button" disabled>◉ Camera</button>
+              <button class="button button-light call-control-icon" id="toggleAdminMicrophone" type="button" disabled>◉ Mic</button>
+              <button class="button button-light call-control-icon" id="toggleAdminCallFilters" type="button" disabled>✨ Filter</button>
               <button class="button button-danger" id="endAdminCall" type="button" disabled>Kết thúc</button>
+            </div>
+            <div class="call-filters" id="adminCallFilters" hidden>
+              <span>Hiệu ứng cute</span>
+              <button type="button" data-call-filter="none">✨</button>
+              <button type="button" data-call-filter="soft">🌸</button>
+              <button type="button" data-call-filter="hearts">💗</button>
+              <button type="button" data-call-filter="bunny">🐰</button>
+              <button type="button" data-call-filter="rainbow">🌈</button>
             </div>
           </div>
           <p class="call-status" id="adminCallStatus" role="status" aria-live="polite"></p>

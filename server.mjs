@@ -429,6 +429,7 @@ app.post('/api/admin/login', (request, response) => {
 
 app.post('/api/livekit/token', async (request, response) => {
   const role = request.body?.role === 'admin' ? 'admin' : 'vy';
+  const callType = request.body?.callType === 'voice' ? 'voice' : 'video';
   if (role === 'admin' && !isAdminRequest(request)) {
     return response.status(401).json({ error: 'Cần đăng nhập góc của anh trước khi gọi.' });
   }
@@ -452,10 +453,15 @@ app.post('/api/livekit/token', async (request, response) => {
     if (request.body?.announce !== false) {
       const recipientRole = role === 'admin' ? 'vy' : 'admin';
       await sendToRole(recipientRole, JSON.stringify({
-        title: role === 'admin' ? '📹 Anh đang gọi video cho Vy' : '📹 Vy đang gọi video cho anh',
-        body: 'Mở Lịch của Vy rồi bấm “Tham gia video” nha 💗',
+        title: role === 'admin'
+          ? `📞 Anh đang gọi ${callType === 'voice' ? 'thoại' : 'video'} cho Vy`
+          : `📞 Vy đang gọi ${callType === 'voice' ? 'thoại' : 'video'} cho anh`,
+        body: `Mở cuộc gọi đến để ${callType === 'voice' ? 'nhận cuộc gọi thoại' : 'bật camera và nhận video'} nha 💗`,
         tag: `video-call-${Date.now()}`,
-        url: role === 'admin' ? '/?call=1' : '/?admin=1&call=1'
+        url: role === 'admin' ? `/?call=1&kind=${callType}` : `/?admin=1&call=1&kind=${callType}`,
+        incomingCall: true,
+        callerRole: role,
+        callType
       }));
     }
     return response.json({ serverUrl: livekitUrl, participantToken, roomName: livekitRoomName });
