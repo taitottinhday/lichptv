@@ -1,6 +1,6 @@
 import { defaultSchedule } from './schedule-data.js';
 import { AVATAR_IMAGE_URL } from './avatar-config.js';
-import { Room, RoomEvent, Track, VideoPresets } from 'livekit-client';
+import { LocalAudioTrack, LocalVideoTrack, Room, RoomEvent, Track, VideoPresets } from 'livekit-client';
 
 const STORAGE_KEY = 'lich-cua-vy-schedule-v2';
 const AUTH_KEY = 'lich-cua-vy-authenticated-v1';
@@ -8,6 +8,8 @@ const ADMIN_TOKEN_KEY = 'lich-cua-vy-admin-token-v1';
 const ADMIN_PUSH_ENABLED_KEY = 'lich-cua-vy-admin-push-enabled-v1';
 const CHAT_IMAGE_PREFIX = '__lich_chat_image__:';
 const CHAT_TIME_ZONE = 'Asia/Ho_Chi_Minh';
+const FACE_LANDMARKER_MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
+const FACE_LANDMARKER_WASM_URL = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm';
 const DEMO_USERNAME = 'phanthithaovy';
 const DEMO_PASSWORD = '261004';
 const START_DATE = '2026-09-26';
@@ -44,6 +46,8 @@ let livekitRoom;
 let activeCallRole;
 let activeCallType = 'video';
 let pendingIncomingCall = null;
+let faceLandmarkerPromise;
+let activeFilterPipeline;
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => [...document.querySelectorAll(selector)];
@@ -459,6 +463,7 @@ function setCallFilter(role, filter) {
   const elements = callElements(role);
   if (!elements.stage || !elements.filters) return;
   elements.stage.dataset.filter = filter;
+  if (activeFilterPipeline?.role === role) activeFilterPipeline.filter = filter;
   elements.filters.querySelectorAll('[data-call-filter]').forEach((button) => {
     button.classList.toggle('active', button.dataset.callFilter === filter);
   });
@@ -467,6 +472,185 @@ function setCallFilter(role, filter) {
 function toggleCallFilters(role) {
   const elements = callElements(role);
   if (elements.filters) elements.filters.hidden = !elements.filters.hidden;
+}
+
+async function loadFaceLandmarker() {
+  if (!faceLandmarkerPromise) {
+    faceLandmarkerPromise = (async () => {
+      const vision = await import(/* @vite-ignore */ 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/vision_bundle.mjs');
+      const fileset = await vision.FilesetResolver.forVisionTasks(FACE_LANDMARKER_WASM_URL);
+      return vision.FaceLandmarker.createFromOptions(fileset, {
+        baseOptions: { modelAssetPath: FACE_LANDMARKER_MODEL_URL },
+        runningMode: 'VIDEO',
+        numFaces: 1,
+        minFaceDetectionConfidence: .5,
+        minFacePresenceConfidence: .5,
+        minTrackingConfidence: .5
+      });
+    })().catch((error) => {
+      faceLandmarkerPromise = null;
+      throw error;
+    });
+  }
+  return faceLandmarkerPromise;
+}
+
+function landmarkPoint(landmarks, index, width, height) {
+  const point = landmarks?.[index];
+  return point ? { x: point.x * width, y: point.y * height } : null;
+}
+
+function distanceBetween(first, second) {
+  if (!first || !second) return 0;
+  return Math.hypot(first.x - second.x, first.y - second.y);
+}
+
+function drawHeart(context, x, y, size, color) {
+  context.save();
+  context.translate(x, y);
+  context.scale(size / 32, size / 32);
+  context.beginPath();
+  context.moveTo(0, 11);
+  context.bezierCurveTo(-17, -2, -14, -14, -6, -14);
+  context.bezierCurveTo(-2, -14, 0, -10, 0, -7);
+  context.bezierCurveTo(0, -10, 2, -14, 6, -14);
+  context.bezierCurveTo(14, -14, 17, -2, 0, 11);
+  context.closePath();
+  context.fillStyle = color;
+  context.shadowColor = 'rgba(255, 45, 126, .45)';
+  context.shadowBlur = 6;
+  context.fill();
+  context.restore();
+}
+
+function drawCuteFaceEffect(pipeline, faceLandmarks) {
+  const { context, canvas, sourceVideo, filter } = pipeline;
+  const width = canvas.width;
+  const height = canvas.height;
+  context.clearRect(0, 0, width, height);
+  context.drawImage(sourceVideo, 0, 0, width, height);
+  if (filter === 'none' || !faceLandmarks) return;
+
+  const leftFace = landmarkPoint(faceLandmarks, 234, width, height);
+  const rightFace = landmarkPoint(faceLandmarks, 454, width, height);
+  const forehead = landmarkPoint(faceLandmarks, 10, width, height);
+  const chin = landmarkPoint(faceLandmarks, 152, width, height);
+  const leftCheek = landmarkPoint(faceLandmarks, 205, width, height);
+  const rightCheek = landmarkPoint(faceLandmarks, 425, width, height);
+  const faceWidth = distanceBetween(leftFace, rightFace);
+  const faceHeight = distanceBetween(forehead, chin);
+  if (!forehead || !faceWidth) return;
+
+  if (filter === 'bunny') {
+    const earSize = Math.max(46, faceWidth * .28);
+    context.font = `${earSize}px "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText('🐰', forehead.x, forehead.y - faceHeight * .23);
+    drawHeart(context, leftCheek?.x || forehead.x - faceWidth * .35, leftCheek?.y || forehead.y + faceHeight * .13, faceWidth * .09, '#ff75b3');
+    drawHeart(context, rightCheek?.x || forehead.x + faceWidth * .35, rightCheek?.y || forehead.y + faceHeight * .13, faceWidth * .09, '#ff75b3');
+  } else if (filter === 'hearts') {
+    drawHeart(context, forehead.x - faceWidth * .37, forehead.y - faceHeight * .08, faceWidth * .14, '#ff5c9c');
+    drawHeart(context, forehead.x + faceWidth * .37, forehead.y - faceHeight * .22, faceWidth * .1, '#ff9cc5');
+    drawHeart(context, forehead.x, forehead.y - faceHeight * .38, faceWidth * .08, '#fff');
+  } else if (filter === 'soft') {
+    context.fillStyle = 'rgba(255, 174, 207, .12)';
+    context.fillRect(0, 0, width, height);
+    context.strokeStyle = 'rgba(255, 255, 255, .6)';
+    context.lineWidth = Math.max(2, faceWidth * .015);
+    context.beginPath();
+    context.arc(forehead.x, forehead.y + faceHeight * .08, faceWidth * .52, Math.PI * 1.07, Math.PI * 1.93);
+    context.stroke();
+  } else if (filter === 'rainbow') {
+    const radius = faceWidth * .52;
+    const colors = ['#ff83ad', '#ffc778', '#fff28a', '#9ee6bd', '#9fc9ff'];
+    colors.forEach((color, index) => {
+      context.strokeStyle = color;
+      context.lineWidth = Math.max(3, faceWidth * .025);
+      context.beginPath();
+      context.arc(forehead.x, forehead.y + faceHeight * .15, radius - index * context.lineWidth * 1.3, Math.PI * 1.08, Math.PI * 1.92);
+      context.stroke();
+    });
+    drawHeart(context, forehead.x, forehead.y - faceHeight * .43, faceWidth * .08, '#fff');
+  }
+}
+
+function renderFaceFilterFrame(pipeline, timestamp) {
+  if (activeFilterPipeline !== pipeline) return;
+  const { sourceVideo, faceLandmarker } = pipeline;
+  if (sourceVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA && sourceVideo.videoWidth) {
+    let result = null;
+    if (faceLandmarker && timestamp - pipeline.lastInferenceAt > 55 && sourceVideo.currentTime !== pipeline.lastVideoTime) {
+      result = faceLandmarker.detectForVideo(sourceVideo, timestamp);
+      pipeline.lastInferenceAt = timestamp;
+      pipeline.lastVideoTime = sourceVideo.currentTime;
+      pipeline.faceLandmarks = result.faceLandmarks?.[0] || null;
+    }
+    drawCuteFaceEffect(pipeline, pipeline.faceLandmarks);
+  }
+  pipeline.animationFrame = requestAnimationFrame(renderFaceFilterFrame);
+}
+
+async function startFaceFilterPipeline(role) {
+  const elements = callElements(role);
+  const sourceStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: true });
+  const sourceVideo = document.createElement('video');
+  sourceVideo.muted = true;
+  sourceVideo.playsInline = true;
+  sourceVideo.srcObject = sourceStream;
+  await sourceVideo.play();
+  await new Promise((resolve) => {
+    if (sourceVideo.videoWidth) resolve();
+    else sourceVideo.addEventListener('loadedmetadata', resolve, { once: true });
+  });
+
+  const canvas = document.createElement('canvas');
+  canvas.width = sourceVideo.videoWidth;
+  canvas.height = sourceVideo.videoHeight;
+  const context = canvas.getContext('2d', { alpha: false });
+  const canvasStream = typeof canvas.captureStream === 'function' ? canvas.captureStream(24) : null;
+  const pipeline = {
+    role,
+    sourceStream,
+    sourceVideo,
+    canvas,
+    context,
+    canvasStream,
+    filter: 'none',
+    faceLandmarks: null,
+    lastInferenceAt: 0,
+    lastVideoTime: -1,
+    faceLandmarker: null,
+    animationFrame: null,
+    localVideoTrack: null,
+    localAudioTrack: null
+  };
+  activeFilterPipeline = pipeline;
+  try {
+    if (!canvasStream) throw new Error('Thiết bị chưa hỗ trợ xuất video filter từ canvas.');
+    pipeline.faceLandmarker = await loadFaceLandmarker();
+  } catch (error) {
+    console.warn('Không tải được face filter, dùng camera nguyên bản:', error.message);
+    setCallStatus(role, 'Filter khuôn mặt đang tải chậm, cuộc gọi vẫn tiếp tục nha.');
+  }
+  pipeline.localVideoTrack = pipeline.faceLandmarker && canvasStream
+    ? new LocalVideoTrack(canvasStream.getVideoTracks()[0], { name: 'cute-face-filter' })
+    : new LocalVideoTrack(sourceStream.getVideoTracks()[0], { name: 'camera' });
+  pipeline.localAudioTrack = new LocalAudioTrack(sourceStream.getAudioTracks()[0], { name: 'microphone' });
+  elements.stage.classList.toggle('has-face-filter', Boolean(pipeline.faceLandmarker && canvasStream));
+  pipeline.animationFrame = requestAnimationFrame(renderFaceFilterFrame);
+  return pipeline;
+}
+
+function stopFaceFilterPipeline() {
+  if (!activeFilterPipeline) return;
+  const pipeline = activeFilterPipeline;
+  if (pipeline.animationFrame) cancelAnimationFrame(pipeline.animationFrame);
+  pipeline.sourceStream?.getTracks().forEach((track) => track.stop());
+  pipeline.canvasStream?.getTracks().forEach((track) => track.stop());
+  pipeline.sourceVideo.srcObject = null;
+  callElements(pipeline.role).stage.classList.remove('has-face-filter');
+  activeFilterPipeline = null;
 }
 
 function ensureCallTile(role, identity, name) {
@@ -564,9 +748,10 @@ async function joinLiveKitCall(role = 'vy', announce = false, callType = 'video'
 
     await room.connect(tokenData.serverUrl, tokenData.participantToken);
     if (callType === 'video') {
-      await room.localParticipant.enableCameraAndMicrophone();
-      const localCamera = room.localParticipant.getTrackPublication(Track.Source.Camera)?.track;
-      if (localCamera) attachCallTrack(role, localCamera, room.localParticipant);
+      const filterPipeline = await startFaceFilterPipeline(role);
+      await room.localParticipant.publishTrack(filterPipeline.localAudioTrack, { source: Track.Source.Microphone });
+      await room.localParticipant.publishTrack(filterPipeline.localVideoTrack, { source: Track.Source.Camera });
+      attachCallTrack(role, filterPipeline.localVideoTrack, room.localParticipant);
     } else {
       await room.localParticipant.setMicrophoneEnabled(true);
     }
@@ -578,6 +763,7 @@ async function joinLiveKitCall(role = 'vy', announce = false, callType = 'video'
     setCallControls(role, true);
     updateCallStatus(role);
   } catch (error) {
+    stopFaceFilterPipeline();
     if (livekitRoom) {
       await livekitRoom.disconnect().catch(() => {});
       livekitRoom = null;
@@ -590,6 +776,7 @@ async function joinLiveKitCall(role = 'vy', announce = false, callType = 'video'
 
 async function leaveLiveKitCall() {
   const role = activeCallRole;
+  stopFaceFilterPipeline();
   if (livekitRoom) await livekitRoom.disconnect();
   livekitRoom = null;
   activeCallRole = null;

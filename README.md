@@ -102,7 +102,7 @@ LIVEKIT_API_KEY=...
 LIVEKIT_API_SECRET=...
 ```
 
-Trong phần chat, Vy và anh có icon gọi thoại/gọi video ở góc trên. Khi có cuộc gọi, người nhận sẽ thấy màn hình **Cuộc gọi đến** với nút nhận hoặc từ chối; không cần tự tìm nút tham gia. Màn hình video có điều khiển camera, mic và khay hiệu ứng cute (hoa, tim, thỏ, cầu vồng). Lần đầu gọi, mỗi điện thoại cần cho phép camera và micro. LiveKit chỉ dùng để truyền cuộc gọi trực tiếp; app không tự lưu video cuộc gọi.
+Trong phần chat, Vy và anh có icon gọi thoại/gọi video ở góc trên. Khi có cuộc gọi, người nhận sẽ thấy màn hình **Cuộc gọi đến** với nút nhận hoặc từ chối; không cần tự tìm nút tham gia. Màn hình video có điều khiển camera, mic và khay filter bám theo khuôn mặt (hoa, tim, tai thỏ, cầu vồng). Filter dùng MediaPipe Face Landmarker chạy trên trình duyệt; lần đầu mở filter cần tải thư viện/model từ CDN. Lần đầu gọi, mỗi điện thoại cần cho phép camera và micro. LiveKit chỉ dùng để truyền cuộc gọi trực tiếp; app không tự lưu video cuộc gọi.
 
 ### Đổi ảnh của Vy
 
