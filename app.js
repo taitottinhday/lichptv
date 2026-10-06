@@ -1221,11 +1221,14 @@ function toggleCallFilters(role, forceOpen = null) {
   if (open) elements.filters.querySelector('[data-call-filter].active')?.focus({ preventScroll: true });
 }
 
-function isCanvasCallTrackReliable() {
+function isIosCallDevice() {
   const userAgent = navigator.userAgent || '';
-  const isIosDevice = /iPhone|iPad|iPod/i.test(userAgent)
+  return /iPhone|iPad|iPod/i.test(userAgent)
     || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  return !isIosDevice;
+}
+
+function isCanvasCallTrackReliable() {
+  return !isIosCallDevice();
 }
 
 async function setCallVideoSource(role, useCanvas) {
@@ -1910,38 +1913,58 @@ async function switchCallCamera(role) {
   const pipeline = activeFilterPipeline?.role === role ? activeFilterPipeline : null;
   const track = pipeline?.sourceStream?.getVideoTracks?.()[0];
   if (!track) { setCallStatus(role, 'Cuộc gọi này chưa bật camera để đổi nha.'); return; }
+  if (pipeline.switchingCamera) return;
   const current = pipeline.facingMode || track.getSettings().facingMode || 'user';
   const next = current === 'environment' ? 'user' : 'environment';
+  pipeline.switchingCamera = true;
+  setCallStatus(role, 'Đang chuyển camera…');
   try {
-    let nextTrack = track;
-    let changedInPlace = false;
+    // Safari iOS can resolve applyConstraints() without producing a usable
+    // frame. Always open a fresh track, then replace the LiveKit track only
+    // after the new camera is confirmed live.
+    let replacementStream;
     try {
-      await track.applyConstraints({ facingMode: { exact: next } });
-      const appliedFacingMode = track.getSettings().facingMode;
-      changedInPlace = !appliedFacingMode || appliedFacingMode === next;
-    } catch {
-      changedInPlace = false;
-    }
-    if (!changedInPlace) {
-      const replacementStream = await navigator.mediaDevices.getUserMedia({
+      replacementStream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { exact: next }, width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: false
       });
-      nextTrack = replacementStream.getVideoTracks()[0];
-      const replacementFacingMode = nextTrack?.getSettings().facingMode;
-      if (!nextTrack || (replacementFacingMode && replacementFacingMode !== next)) {
-        replacementStream.getTracks().forEach((replacement) => replacement.stop());
-        throw new Error('Thiết bị không trả đúng camera được yêu cầu.');
-      }
+    } catch (error) {
+      // Some Safari versions reject exact facingMode but expose camera labels
+      // after permission has been granted. Select the matching device then.
+      const devices = await navigator.mediaDevices.enumerateDevices().catch(() => []);
+      const currentDeviceId = track.getSettings?.().deviceId;
+      const labelPattern = next === 'environment'
+        ? /back|rear|environment|world|sau/i
+        : /front|user|facetime|trước/i;
+      const camera = devices.find((device) => device.kind === 'videoinput'
+        && device.deviceId !== currentDeviceId
+        && labelPattern.test(device.label || ''));
+      if (!camera) throw error;
+      replacementStream = await navigator.mediaDevices.getUserMedia({
+        video: { deviceId: { exact: camera.deviceId }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false
+      });
     }
-    if (!changedInPlace) {
-      const audioTracks = pipeline.sourceStream.getAudioTracks();
-      const nextStream = new MediaStream([nextTrack, ...audioTracks]);
-      pipeline.sourceStream.getVideoTracks().forEach((oldTrack) => oldTrack.stop());
-      pipeline.sourceStream = nextStream;
-      pipeline.sourceVideo.srcObject = nextStream;
-      await pipeline.sourceVideo.play().catch(() => {});
-      if (!pipeline.usingCanvas) await pipeline.localVideoTrack?.replaceTrack(nextTrack);
+    const nextTrack = replacementStream?.getVideoTracks?.()[0];
+    const replacementFacingMode = nextTrack?.getSettings?.().facingMode;
+    if (!nextTrack || nextTrack.readyState !== 'live'
+      || (replacementFacingMode && replacementFacingMode !== next)) {
+      replacementStream?.getTracks?.().forEach((replacement) => replacement.stop());
+      throw new Error('Thiết bị không trả đúng camera được yêu cầu.');
+    }
+
+    const oldTrack = pipeline.sourceStream.getVideoTracks()[0];
+    const audioTracks = pipeline.sourceStream.getAudioTracks();
+    const nextStream = new MediaStream([nextTrack, ...audioTracks]);
+    if (!pipeline.usingCanvas) await pipeline.localVideoTrack?.replaceTrack(nextTrack);
+    pipeline.sourceStream = nextStream;
+    pipeline.sourceVideo.srcObject = nextStream;
+    await pipeline.sourceVideo.play().catch(() => {});
+    oldTrack?.stop();
+    if (pipeline.usingCanvas) {
+      // The canvas renderer reads from sourceVideo; keep the canvas track
+      // published while its source camera changes underneath it.
+      pipeline.lastVideoTime = -1;
     }
     if (pipeline.localVideoTrack && !callElements(role).section.hidden) {
       attachCallTrack(role, pipeline.localVideoTrack, {
@@ -1954,8 +1977,10 @@ async function switchCallCamera(role) {
     tile?.classList.toggle('is-selfie-preview', next === 'user');
     setCallStatus(role, next === 'user' ? 'Đã chuyển sang camera trước.' : 'Đã chuyển sang camera sau.');
   } catch (error) {
-    setCallStatus(role, 'Thiết bị này không hỗ trợ đổi camera khi đang gọi.');
+    setCallStatus(role, 'Không chuyển được camera, camera hiện tại vẫn đang hoạt động.');
     console.warn('Không đổi được camera:', error.message);
+  } finally {
+    pipeline.switchingCamera = false;
   }
 }
 
