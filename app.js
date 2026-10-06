@@ -701,13 +701,40 @@ function drawGlasses(context, leftEye, rightEye, faceWidth, faceHeight, color = 
   context.restore();
 }
 
+function drawFallbackFaceEffect(pipeline) {
+  const { context, canvas, filter } = pipeline;
+  const width = canvas.width;
+  const height = canvas.height;
+  const centerX = width / 2;
+  const centerY = height * .38;
+  const size = Math.max(34, Math.min(width, height) * .12);
+  if (filter === 'soft') {
+    context.fillStyle = 'rgba(255, 174, 207, .16)';
+    context.fillRect(0, 0, width, height);
+  } else if (filter === 'rainbow') {
+    const gradient = context.createLinearGradient(0, 0, width, height);
+    gradient.addColorStop(0, 'rgba(255, 126, 180, .24)');
+    gradient.addColorStop(.5, 'rgba(255, 235, 145, .12)');
+    gradient.addColorStop(1, 'rgba(141, 218, 255, .24)');
+    context.fillStyle = gradient;
+    context.fillRect(0, 0, width, height);
+  } else {
+    const fallbackEmoji = { hearts: '💗', bunny: '🐰', flower: '🌸', crown: '👑', blush: '😊', cat: '🐱', puppy: '🐶', glasses: '🕶️', freckles: '🌼', butterfly: '🦋', kiss: '💋', star: '⭐', devil: '😈' }[filter];
+    if (fallbackEmoji) drawEmoji(context, fallbackEmoji, centerX, centerY, size);
+  }
+}
+
 function drawCuteFaceEffect(pipeline, faceLandmarks) {
   const { context, canvas, sourceVideo, filter } = pipeline;
   const width = canvas.width;
   const height = canvas.height;
   context.clearRect(0, 0, width, height);
   context.drawImage(sourceVideo, 0, 0, width, height);
-  if (filter === 'none' || !faceLandmarks) return;
+  if (filter === 'none') return;
+  if (!faceLandmarks) {
+    drawFallbackFaceEffect(pipeline);
+    return;
+  }
 
   const leftFace = landmarkPoint(faceLandmarks, 234, width, height);
   const rightFace = landmarkPoint(faceLandmarks, 454, width, height);
@@ -720,7 +747,10 @@ function drawCuteFaceEffect(pipeline, faceLandmarks) {
   const mouth = landmarkPoint(faceLandmarks, 13, width, height);
   const faceWidth = distanceBetween(leftFace, rightFace);
   const faceHeight = distanceBetween(forehead, chin);
-  if (!forehead || !faceWidth) return;
+  if (!forehead || !faceWidth || !faceHeight) {
+    drawFallbackFaceEffect(pipeline);
+    return;
+  }
 
   if (filter === 'bunny') {
     const earSize = Math.max(46, faceWidth * .28);
@@ -905,6 +935,7 @@ function ensureCallTile(role, identity, name) {
 
 function attachCallTrack(role, track, participant) {
   const tile = ensureCallTile(role, participant.identity, participant.name || participant.identity);
+  tile.classList.toggle('is-local-preview', participant.identity === (role === 'admin' ? 'anh' : 'vy'));
   if (track.kind === Track.Kind.Video) {
     tile.querySelectorAll('video').forEach((element) => element.remove());
     const video = track.attach();
