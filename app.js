@@ -926,12 +926,14 @@ function setCallTool(role, tool) {
     if (!pipeline) return setCallStatus(role, 'Camera chưa sẵn sàng để làm mờ nha.');
     setCallVideoSource(role, true).catch(() => {});
     pipeline.backgroundMode = pipeline.backgroundMode === 'blur' ? 'none' : 'blur';
+    elements.stage.classList.toggle('is-ios-effect-fallback', pipeline.backgroundMode === 'blur' && !isCanvasCallTrackReliable());
     elements.stage.classList.toggle('is-background-blurred', pipeline.backgroundMode === 'blur');
     setCallStatus(role, pipeline.backgroundMode === 'blur' ? 'Đã bật làm mờ phông nền.' : 'Đã tắt làm mờ phông nền.');
   } else if (tool === 'edit') {
     if (!pipeline) return setCallStatus(role, 'Camera chưa sẵn sàng để chỉnh sửa nha.');
     setCallVideoSource(role, true).catch(() => {});
     pipeline.editEnabled = !pipeline.editEnabled;
+    elements.stage.classList.toggle('is-ios-effect-fallback', pipeline.editEnabled && !isCanvasCallTrackReliable());
     elements.stage.classList.toggle('is-edited', pipeline.editEnabled);
     setCallStatus(role, pipeline.editEnabled ? 'Đã bật chỉnh sửa hình ảnh.' : 'Đã tắt chỉnh sửa hình ảnh.');
   }
@@ -946,6 +948,7 @@ function applyCallBackground(role, presetId) {
   pipeline.backgroundMode = preset.id === 'none' ? 'none' : 'replace';
   const elements = callElements(role);
   elements.stage.dataset.background = preset.id;
+  elements.stage.classList.toggle('is-ios-effect-fallback', preset.id !== 'none' && !isCanvasCallTrackReliable());
   setCallStatus(role, preset.id === 'none' ? 'Đã dùng phông nền gốc.' : `Đã chọn phông nền ${preset.label}.`);
 }
 
@@ -955,7 +958,9 @@ function applyCallColor(role, presetId) {
   if (!pipeline) return setCallStatus(role, 'Camera chưa sẵn sàng để đổi màu nha.');
   setCallVideoSource(role, true).catch(() => {});
   pipeline.colorFilter = preset.id;
-  callElements(role).stage.dataset.color = preset.id;
+  const elements = callElements(role);
+  elements.stage.dataset.color = preset.id;
+  elements.stage.classList.toggle('is-ios-effect-fallback', preset.id !== 'none' && !isCanvasCallTrackReliable());
   setCallStatus(role, preset.id === 'none' ? 'Đã dùng màu gốc.' : `Đã chọn bộ lọc màu ${preset.label}.`);
 }
 
@@ -1193,6 +1198,7 @@ function setCallFilter(role, filter) {
   const elements = callElements(role);
   if (!elements.stage || !elements.filters) return;
   elements.stage.dataset.filter = filter;
+  elements.stage.classList.toggle('is-ios-effect-fallback', filter !== 'none' && !isCanvasCallTrackReliable());
   if (activeFilterPipeline?.role === role) {
     activeFilterPipeline.filter = filter;
     setCallVideoSource(role, filter !== 'none').catch(() => {});
@@ -1227,7 +1233,7 @@ async function setCallVideoSource(role, useCanvas) {
   if (!pipeline?.localVideoTrack || !pipeline.canvasStream) return false;
   if (useCanvas && !isCanvasCallTrackReliable()) {
     pipeline.usingCanvas = false;
-    callElements(role).stage.classList.remove('has-face-filter');
+    callElements(role).stage.classList.add('is-ios-effect-fallback');
     setCallStatus(role, 'iPhone đang giữ camera gốc để không mất hình nha.');
     return false;
   }
@@ -1239,6 +1245,7 @@ async function setCallVideoSource(role, useCanvas) {
     await pipeline.localVideoTrack.replaceTrack(targetTrack);
     pipeline.usingCanvas = useCanvas;
     const elements = callElements(role);
+    elements.stage.classList.toggle('is-ios-effect-fallback', false);
     elements.stage.classList.toggle('has-face-filter', useCanvas && Boolean(pipeline.faceLandmarker));
     const localTile = elements.videos?.querySelector('.call-tile.is-local-preview');
     if (localTile && !elements.section.hidden) {

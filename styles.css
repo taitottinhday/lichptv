@@ -581,3 +581,43 @@ h3 { margin-bottom: 4px; font-size: 16px; }
   object-position: center;
   background: transparent;
 }
+
+/* iOS fallback: keep the raw camera track and render a visible, non-black preview. */
+.call-overlay .call-stage.is-ios-effect-fallback .call-tile.is-local-preview::before,
+.call-overlay .call-stage.is-ios-effect-fallback .call-tile.is-local-preview::after {
+  position: absolute;
+  z-index: 2;
+  pointer-events: none;
+}
+.call-overlay .call-stage.is-ios-effect-fallback .call-tile.is-local-preview .call-participant-name { z-index: 3; }
+.call-overlay .call-stage.is-ios-effect-fallback .call-tile.is-local-preview::before {
+  inset: 0;
+  content: '';
+  opacity: .24;
+  mix-blend-mode: screen;
+}
+.call-overlay .call-stage.is-ios-effect-fallback[data-background="sunset"] .call-tile.is-local-preview::before { background: linear-gradient(145deg, #ff9a9e, #fad0c4 52%, #fbc2eb); }
+.call-overlay .call-stage.is-ios-effect-fallback[data-background="ocean"] .call-tile.is-local-preview::before { background: linear-gradient(145deg, #0f4c75, #3282b8 52%, #bbe1fa); }
+.call-overlay .call-stage.is-ios-effect-fallback[data-background="aurora"] .call-tile.is-local-preview::before { background: linear-gradient(145deg, #141e30, #243b55 48%, #7f53ac); }
+.call-overlay .call-stage.is-ios-effect-fallback[data-background="hearts"] .call-tile.is-local-preview::before { background: radial-gradient(circle at 22% 22%, #ffb6d9 0 4%, transparent 5%), radial-gradient(circle at 78% 35%, #ffd0e6 0 5%, transparent 6%), linear-gradient(145deg, #7f1d5a, #e83e8c); }
+.call-overlay .call-stage.is-ios-effect-fallback[data-background="lavender"] .call-tile.is-local-preview::before { background: linear-gradient(145deg, #654ea3, #eaafc8); }
+.call-overlay .call-stage.is-ios-effect-fallback[data-filter="soft"] .call-tile.is-local-preview .call-video { filter: saturate(1.08) brightness(1.08) contrast(.94); }
+.call-overlay .call-stage.is-ios-effect-fallback[data-filter="rainbow"] .call-tile.is-local-preview::before { background: linear-gradient(130deg, rgba(255, 156, 189, .65), rgba(255, 238, 153, .4), rgba(141, 218, 255, .65)); }
+.call-overlay .call-stage.is-ios-effect-fallback[data-filter="hearts"] .call-tile.is-local-preview::after { top: 18%; left: 50%; content: '💗 ✨ 💕'; color: #ffafd1; font-size: 25px; letter-spacing: 5px; transform: translateX(-50%); text-shadow: 0 4px 15px rgba(255, 74, 143, .72); }
+.call-overlay .call-stage.is-ios-effect-fallback[data-filter="bunny"] .call-tile.is-local-preview::after { top: 14%; left: 50%; content: '🐰'; font-size: 54px; transform: translateX(-50%); }
+.call-overlay .call-stage.is-ios-effect-fallback[data-filter="flower"] .call-tile.is-local-preview::after { top: 15%; left: 50%; content: '🌸'; font-size: 46px; transform: translateX(-50%); }
+.call-overlay .call-stage.is-ios-effect-fallback[data-filter="crown"] .call-tile.is-local-preview::after { top: 10%; left: 50%; content: '👑'; font-size: 46px; transform: translateX(-50%); }
+.call-overlay .call-stage.is-ios-effect-fallback[data-filter="blush"] .call-tile.is-local-preview::after { top: 25%; left: 50%; content: '✨'; font-size: 30px; transform: translateX(-50%); }
+.call-overlay .call-stage.is-ios-effect-fallback[data-filter="cat"] .call-tile.is-local-preview::after { top: 13%; left: 50%; content: '🐱'; font-size: 50px; transform: translateX(-50%); }
+.call-overlay .call-stage.is-ios-effect-fallback[data-filter="puppy"] .call-tile.is-local-preview::after { top: 14%; left: 50%; content: '🐶'; font-size: 50px; transform: translateX(-50%); }
+.call-overlay .call-stage.is-ios-effect-fallback[data-filter="glasses"] .call-tile.is-local-preview::after { top: 34%; left: 50%; content: '🕶️'; font-size: 36px; transform: translateX(-50%); }
+.call-overlay .call-stage.is-ios-effect-fallback[data-filter="freckles"] .call-tile.is-local-preview::after { top: 36%; left: 50%; content: '🌼'; font-size: 28px; transform: translateX(-50%); }
+.call-overlay .call-stage.is-ios-effect-fallback[data-filter="butterfly"] .call-tile.is-local-preview::after { top: 18%; left: 50%; content: '🦋'; font-size: 43px; transform: translateX(-50%); }
+.call-overlay .call-stage.is-ios-effect-fallback[data-filter="kiss"] .call-tile.is-local-preview::after { top: 36%; left: 50%; content: '💋'; font-size: 38px; transform: translateX(-50%); }
+.call-overlay .call-stage.is-ios-effect-fallback[data-filter="star"] .call-tile.is-local-preview::after { top: 13%; left: 50%; content: '⭐'; font-size: 44px; transform: translateX(-50%); }
+.call-overlay .call-stage.is-ios-effect-fallback[data-filter="devil"] .call-tile.is-local-preview::after { top: 14%; left: 50%; content: '😈'; font-size: 48px; transform: translateX(-50%); }
+.call-overlay .call-stage.is-ios-effect-fallback[data-color="dreamy"] .call-tile.is-local-preview .call-video { filter: saturate(1.15) brightness(1.08) contrast(.94); }
+.call-overlay .call-stage.is-ios-effect-fallback[data-color="warm"] .call-tile.is-local-preview .call-video { filter: sepia(.18) saturate(1.22) brightness(1.04); }
+.call-overlay .call-stage.is-ios-effect-fallback[data-color="cool"] .call-tile.is-local-preview .call-video { filter: hue-rotate(155deg) saturate(.86) brightness(1.08); }
+.call-overlay .call-stage.is-ios-effect-fallback[data-color="pink"] .call-tile.is-local-preview .call-video { filter: hue-rotate(315deg) saturate(1.32) brightness(1.05); }
+.call-overlay .call-stage.is-ios-effect-fallback[data-color="mono"] .call-tile.is-local-preview .call-video { filter: grayscale(1) contrast(1.08); }
