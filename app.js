@@ -7,6 +7,8 @@ const AUTH_KEY = 'lich-cua-vy-authenticated-v1';
 const ADMIN_TOKEN_KEY = 'lich-cua-vy-admin-token-v1';
 const ADMIN_PUSH_ENABLED_KEY = 'lich-cua-vy-admin-push-enabled-v1';
 const CHAT_IMAGE_PREFIX = '__lich_chat_image__:';
+const CHAT_CALL_PREFIX = '__lich_call__:';
+const CALL_MEDIA_PREFS_KEY = 'lich-cua-vy-call-media-prefs-v1';
 const CHAT_TIME_ZONE = 'Asia/Ho_Chi_Minh';
 const LOVE_START_DATE = new Date(2022, 10, 3, 0, 0, 0);
 const FACE_LANDMARKER_MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
@@ -79,6 +81,21 @@ const $$ = (selector) => [...document.querySelectorAll(selector)];
 
 function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' }[character]));
+}
+
+function getCallMediaPrefs(role) {
+  try {
+    const saved = JSON.parse(localStorage.getItem(`${CALL_MEDIA_PREFS_KEY}:${role}`));
+    return { camera: saved?.camera !== false, microphone: saved?.microphone !== false };
+  } catch {
+    return { camera: true, microphone: true };
+  }
+}
+
+function saveCallMediaPref(role, key, value) {
+  const prefs = getCallMediaPrefs(role);
+  prefs[key] = value;
+  localStorage.setItem(`${CALL_MEDIA_PREFS_KEY}:${role}`, JSON.stringify(prefs));
 }
 
 function loveDuration(now = new Date()) {
@@ -304,6 +321,14 @@ function chatDateLabel(createdAt) {
 
 function parseChatMessage(content) {
   const raw = String(content ?? '');
+  if (raw.startsWith(CHAT_CALL_PREFIX)) {
+    try {
+      const payload = JSON.parse(raw.slice(CHAT_CALL_PREFIX.length));
+      return { type: 'call', ...payload };
+    } catch {
+      return { type: 'text', text: raw };
+    }
+  }
   if (!raw.startsWith(CHAT_IMAGE_PREFIX)) return { type: 'text', text: raw };
   try {
     const payload = JSON.parse(raw.slice(CHAT_IMAGE_PREFIX.length));
@@ -341,7 +366,9 @@ function renderChatMessages(messages, selector, viewerRole) {
       ? `<div class="chat-date-separator" role="separator"><span>${escapeHtml(chatDateLabel(message.created_at))}</span></div>`
       : '';
     previousDateKey = currentDateKey;
-    let content = parsed.type === 'image'
+    let content = parsed.type === 'call'
+      ? `<div class="chat-call-bubble"><span class="chat-call-icon">${parsed.callType === 'voice' ? '☎' : '▣'}</span><strong>${parsed.callType === 'voice' ? 'Cuộc gọi thoại' : 'Cuộc gọi video'}</strong><span>${parsed.status === 'declined' ? 'Cuộc gọi bị từ chối' : parsed.status === 'missed' ? 'Cuộc gọi nhỡ' : `Đã kết thúc · ${formatCallDuration(Number(parsed.duration || 0))}`}</span><button type="button" data-call-retry="${escapeHtml(parsed.callType || 'video')}">Gọi lại</button></div>`
+      : parsed.type === 'image'
       ? `<a class="chat-image-link" href="${escapeHtml(parsed.url)}" target="_blank" rel="noopener"><img class="chat-image" src="${escapeHtml(parsed.url)}" alt="Ảnh ${sender} gửi" loading="lazy" /></a>${parsed.caption ? `<p class="chat-image-caption">${escapeHtml(parsed.caption).replace(/\r?\n/g, '<br />')}</p>` : ''}`
       : `<p>${escapeHtml(parsed.text).replace(/\r?\n/g, '<br />')}</p>`;
     return `${dateSeparator}<article class="chat-message ${own ? 'is-mine' : 'is-theirs'}" data-message-id="${escapeHtml(message.id)}">
@@ -373,6 +400,7 @@ function renderChatMessages(messages, selector, viewerRole) {
       await loadChatMessages(viewerRole, true);
     } catch (error) { showToast(error.message); } finally { button.disabled = false; }
   }));
+  container.querySelectorAll('[data-call-retry]').forEach((button) => button.addEventListener('click', () => openCallLobby(viewerRole, button.dataset.callRetry === 'voice' ? 'voice' : 'video')));
 
   if (shouldStickToBottom) {
     container.scrollTop = container.scrollHeight;
@@ -555,6 +583,11 @@ function callElements(role) {
     waitingTitle: $(admin ? '#adminCallWaitingTitle' : '#callWaitingTitle'),
     waitingStatus: $(admin ? '#adminCallWaitingStatus' : '#callWaitingStatus'),
     timer: $(admin ? '#adminCallTimer' : '#callTimer'),
+    lobby: $(admin ? '#adminCallLobby' : '#callLobby'),
+    miniChat: $(admin ? '#adminCallMiniChat' : '#callMiniChat'),
+    miniChatToggle: $(admin ? '#adminCallMiniChatToggle' : '#callMiniChatToggle'),
+    speaker: $(admin ? '#adminCallSpeaker' : '#callSpeaker'),
+    layout: $(admin ? '#adminCallLayout' : '#callLayout'),
     close: $(admin ? '#closeAdminCall' : '#closeCall'),
     status: $(admin ? '#adminCallStatus' : '#callStatus'),
     start: $(admin ? '#startAdminVideoCall' : '#startVideoCall'),
@@ -586,6 +619,14 @@ function ensureCallExperience(role) {
     timer.textContent = '00:00';
     elements.section.querySelector('.section-heading')?.appendChild(timer);
   }
+  if (!elements.lobby) {
+    const lobby = document.createElement('div');
+    lobby.id = admin ? 'adminCallLobby' : 'callLobby';
+    lobby.className = 'call-lobby';
+    lobby.hidden = true;
+    lobby.innerHTML = `<div class="call-lobby-copy"><span class="call-lobby-kicker">GÓC HẸN RIÊNG</span><h3 data-call-lobby-name>${admin ? 'Vy' : 'Anh'}</h3><p data-call-lobby-type>Chuẩn bị cuộc gọi video</p></div><div class="call-lobby-permissions"><span data-call-permission="camera">Camera đang chờ quyền</span><span data-call-permission="microphone">Micro đang chờ quyền</span></div><div class="call-lobby-actions"><button type="button" class="call-lobby-circle" data-call-lobby-camera aria-label="Bật hoặc tắt camera">▣</button><button type="button" class="call-lobby-circle" data-call-lobby-mic aria-label="Bật hoặc tắt microphone">🎙</button><button type="button" class="call-lobby-circle" data-call-lobby-switch aria-label="Đổi camera">⇄</button></div><div class="call-lobby-buttons"><button type="button" class="button button-light" data-call-lobby-cancel>Hủy</button><button type="button" class="button button-primary" data-call-lobby-voice>Gọi thoại</button><button type="button" class="button button-primary" data-call-lobby-video>Gọi video</button></div>`;
+    elements.section.insertBefore(lobby, elements.incoming);
+  }
   if (!elements.shortcuts) {
     const shortcuts = document.createElement('div');
     shortcuts.id = admin ? 'adminCallShortcuts' : 'callShortcuts';
@@ -608,18 +649,115 @@ function ensureCallExperience(role) {
     sheet.innerHTML = '<div class="call-sheet-grabber" aria-hidden="true"></div><div class="call-sheet-header"><strong data-call-sheet-title>Chọn công cụ</strong><button type="button" class="call-sheet-close" data-call-sheet-close aria-label="Đóng bảng công cụ">×</button></div><div class="call-sheet-items" data-call-sheet-items></div>';
     elements.stage.appendChild(sheet);
   }
+  if (!elements.miniChat) {
+    const miniChat = document.createElement('div');
+    miniChat.id = admin ? 'adminCallMiniChat' : 'callMiniChat';
+    miniChat.className = 'call-mini-chat';
+    miniChat.hidden = true;
+    miniChat.innerHTML = `<div class="call-mini-chat-header"><strong>Nhắn nhanh</strong><button type="button" data-call-mini-close aria-label="Đóng chat">×</button></div><div class="call-mini-chat-messages" data-call-mini-messages></div><form class="call-mini-chat-form"><input type="text" maxlength="300" placeholder="Nhắn một câu…" aria-label="Tin nhắn trong cuộc gọi" /><button type="submit" aria-label="Gửi tin nhắn">➤</button></form>`;
+    elements.stage.appendChild(miniChat);
+  }
   const refreshed = callElements(role);
+  const incomingAvatar = refreshed.incoming?.querySelector('.call-incoming-avatar');
+  if (incomingAvatar && !incomingAvatar.dataset.enhanced) {
+    incomingAvatar.dataset.enhanced = 'true';
+    incomingAvatar.innerHTML = `<img src="${AVATAR_IMAGE_URL}" alt="" />`;
+  }
+  const incomingActions = refreshed.incoming?.querySelector('.call-incoming-actions');
+  if (incomingActions && !incomingActions.querySelector('[data-call-message]')) {
+    const messageButton = document.createElement('button');
+    messageButton.type = 'button';
+    messageButton.className = 'button button-light call-incoming-secondary';
+    messageButton.dataset.callMessage = role;
+    messageButton.textContent = 'Nhắn tin';
+    incomingActions.appendChild(messageButton);
+    messageButton.addEventListener('click', () => focusChatAfterCall(role));
+  }
+  if (incomingActions && !incomingActions.querySelector('[data-call-remind]')) {
+    const remindButton = document.createElement('button');
+    remindButton.type = 'button';
+    remindButton.className = 'button button-light call-incoming-secondary';
+    remindButton.dataset.callRemind = role;
+    remindButton.textContent = 'Nhắc tôi sau';
+    incomingActions.appendChild(remindButton);
+    remindButton.addEventListener('click', () => {
+      stopIncomingCallAlert();
+      sendCallHistoryMessage(role, 'missed').catch(() => {});
+      closeCallOverlay(role);
+    });
+  }
   if (!refreshed.shortcuts.dataset.bound) {
     refreshed.shortcuts.dataset.bound = 'true';
     refreshed.shortcuts.querySelectorAll('[data-call-tool]').forEach((button) => button.addEventListener('click', () => setCallTool(role, button.dataset.callTool)));
     refreshed.toolSheet.querySelector('[data-call-sheet-close]')?.addEventListener('click', () => closeCallToolSheet(role));
+    refreshed.lobby.querySelector('[data-call-lobby-cancel]')?.addEventListener('click', () => closeCallOverlay(role));
+    refreshed.lobby.querySelector('[data-call-lobby-video]')?.addEventListener('click', () => joinLiveKitCall(role, true, 'video'));
+    refreshed.lobby.querySelector('[data-call-lobby-voice]')?.addEventListener('click', () => joinLiveKitCall(role, true, 'voice'));
+    refreshed.lobby.querySelector('[data-call-lobby-camera]')?.addEventListener('click', () => toggleCallCamera(role));
+    refreshed.lobby.querySelector('[data-call-lobby-mic]')?.addEventListener('click', () => toggleCallMicrophone(role));
+    refreshed.lobby.querySelector('[data-call-lobby-switch]')?.addEventListener('click', () => switchCallCamera(role));
+    refreshed.miniChat.querySelector('[data-call-mini-close]')?.addEventListener('click', () => toggleMiniCallChat(role, false));
+    refreshed.miniChat.querySelector('form')?.addEventListener('submit', (event) => { event.preventDefault(); sendMiniCallMessage(role); });
     bindCallSurfaceInteractions(role);
   }
+  ensureExtraCallButtons(role);
+  ensureCallReactionButton(role, '😮');
   return refreshed;
 }
 
+function focusChatAfterCall(role) {
+  stopIncomingCallAlert();
+  closeCallOverlay(role);
+  const input = $(role === 'admin' ? '#adminChatInput' : '#chatInput');
+  input?.focus();
+  input?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function ensureCallReactionButton(role, emoji) {
+  const elements = callElements(role);
+  const tray = elements.stage?.querySelector('.call-reaction-tray');
+  if (!tray || tray.querySelector(`[data-call-reaction="${emoji}"]`)) return;
+  const button = document.createElement('button');
+  button.className = 'call-reaction-button';
+  button.type = 'button';
+  button.dataset.callReaction = emoji;
+  button.textContent = emoji;
+  button.setAttribute('aria-label', `Gửi reaction ${emoji}`);
+  tray.appendChild(button);
+  button.addEventListener('click', () => sendCallReaction(role, emoji));
+}
+
+function ensureExtraCallButtons(role) {
+  const elements = callElements(role);
+  const controls = elements.stage?.querySelector('.call-controls');
+  if (!controls || !elements.end) return;
+  const create = (id, dataName, title, icon, before = elements.end) => {
+    const dataAttribute = dataName.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+    let button = controls.querySelector(`[data-${dataAttribute}]`);
+    if (!button) {
+      button = document.createElement('button');
+      button.id = id;
+      button.type = 'button';
+      button.className = 'button button-light call-control-icon';
+      button.setAttribute(`data-${dataAttribute}`, role);
+      button.title = title;
+      button.setAttribute('aria-label', title);
+      button.textContent = title;
+      button.innerHTML = `<span aria-hidden="true">${icon}</span>`;
+      controls.insertBefore(button, before);
+    }
+    return button;
+  };
+  const speaker = create(role === 'admin' ? 'adminCallSpeaker' : 'callSpeaker', 'callSpeaker', 'Bật hoặc tắt loa', '🔊');
+  const layout = create(role === 'admin' ? 'adminCallLayout' : 'callLayout', 'callLayout', 'Đổi bố cục video', '▦', speaker);
+  const chat = create(role === 'admin' ? 'adminCallMiniChatToggle' : 'callMiniChatToggle', 'callMiniChatToggle', 'Mở chat mini', '💬', layout);
+  if (!speaker.dataset.bound) { speaker.dataset.bound = 'true'; speaker.addEventListener('click', () => toggleCallSpeaker(role)); }
+  if (!layout.dataset.bound) { layout.dataset.bound = 'true'; layout.addEventListener('click', () => toggleCallLayout(role)); }
+  if (!chat.dataset.bound) { chat.dataset.bound = 'true'; chat.addEventListener('click', () => toggleMiniCallChat(role)); }
+}
+
 function getCallUiState(role) {
-  if (!callUiStates.has(role)) callUiStates.set(role, { status: 'idle', startedAt: 0, timer: null, idleTimer: null, controlsHidden: false });
+  if (!callUiStates.has(role)) callUiStates.set(role, { status: 'idle', startedAt: 0, timer: null, idleTimer: null, controlsHidden: false, speakerOn: true, reactionCooldownUntil: 0, historySent: false, callType: 'video' });
   return callUiStates.get(role);
 }
 
@@ -797,10 +935,22 @@ function applyCallColor(role, presetId) {
   setCallStatus(role, preset.id === 'none' ? 'Đã dùng màu gốc.' : `Đã chọn bộ lọc màu ${preset.label}.`);
 }
 
+function updateCallLobbyPermissions(role) {
+  const elements = callElements(role);
+  const pipeline = activeFilterPipeline?.role === role ? activeFilterPipeline : null;
+  const cameraTrack = pipeline?.sourceStream?.getVideoTracks?.()[0];
+  const micTrack = pipeline?.sourceStream?.getAudioTracks?.()[0];
+  const cameraLabel = elements.lobby?.querySelector('[data-call-permission="camera"]');
+  const micLabel = elements.lobby?.querySelector('[data-call-permission="microphone"]');
+  if (cameraLabel) cameraLabel.textContent = cameraTrack ? (cameraTrack.enabled ? 'Camera đã sẵn sàng' : 'Camera đang tắt') : 'Camera chưa được cấp quyền';
+  if (micLabel) micLabel.textContent = micTrack ? (micTrack.enabled ? 'Micro đã sẵn sàng' : 'Micro đang tắt') : 'Micro chưa được cấp quyền';
+}
+
 function setCallStatus(role, message) {
   const elements = callElements(role);
   if (elements.status) elements.status.textContent = message;
   if (elements.waitingStatus) elements.waitingStatus.textContent = message;
+  updateCallLobbyPermissions(role);
 }
 
 function ensureSwitchCameraButton(role) {
@@ -856,7 +1006,7 @@ function setCallControls(role, connected) {
   elements.microphone.disabled = !connected;
   elements.filterToggle.disabled = !connected || activeCallType === 'voice';
   if (switchCamera) switchCamera.disabled = !connected || activeCallType === 'voice';
-  if (screenShare) screenShare.disabled = !connected || activeCallType === 'voice';
+  if (screenShare) screenShare.disabled = !connected || activeCallType === 'voice' || typeof navigator.mediaDevices?.getDisplayMedia !== 'function';
   if (!connected && screenShare) {
     screenShare.classList.remove('is-active');
     screenShare.setAttribute('aria-pressed', 'false');
@@ -877,10 +1027,13 @@ function openCallOverlay(role) {
   setCallUiState(role, 'connecting');
   stopCallUiTimer(role);
   const uiState = getCallUiState(role);
+  uiState.historySent = false;
+  uiState.callType = 'video';
   if (uiState.idleTimer) window.clearTimeout(uiState.idleTimer);
   uiState.controlsHidden = false;
   elements.section.hidden = false;
   elements.section.classList.remove('call-ui-idle');
+  elements.lobby.hidden = true;
   elements.incoming.hidden = true;
   elements.stage.hidden = true;
   elements.waiting.hidden = false;
@@ -891,14 +1044,53 @@ function openCallOverlay(role) {
   setCallFilter(role, 'none');
 }
 
+async function openCallLobby(role, callType = 'video') {
+  const elements = ensureCallExperience(role);
+  openCallOverlay(role);
+  elements.lobby.hidden = false;
+  elements.incoming.hidden = true;
+  elements.waiting.hidden = true;
+  elements.stage.hidden = callType !== 'video';
+  elements.section.classList.add('is-lobby');
+  elements.lobby.querySelector('[data-call-lobby-type]').textContent = callType === 'voice' ? 'Chuẩn bị cuộc gọi thoại' : 'Chuẩn bị cuộc gọi video';
+  elements.lobby.querySelector('[data-call-lobby-video]').hidden = callType === 'voice';
+  elements.lobby.querySelector('[data-call-lobby-camera]').disabled = callType === 'voice';
+  elements.lobby.querySelector('[data-call-lobby-switch]').disabled = callType === 'voice';
+  setCallUiState(role, 'connecting');
+  getCallUiState(role).callType = callType;
+  setCallStatus(role, callType === 'voice' ? 'Sẵn sàng gọi thoại.' : 'Đang xin quyền camera và microphone…');
+  if (callType !== 'video') return;
+  if (activeFilterPipeline?.role !== role) {
+    try {
+      const pipeline = await startFaceFilterPipeline(role, { deferFaceModel: true });
+      if (activeFilterPipeline !== pipeline || elements.section.hidden || !elements.lobby || elements.lobby.hidden) {
+        if (activeFilterPipeline === pipeline) stopFaceFilterPipeline();
+        return;
+      }
+      elements.videos.innerHTML = '';
+      attachCallTrack(role, pipeline.localVideoTrack, { identity: role === 'admin' ? 'anh' : 'vy', name: role === 'admin' ? 'Anh' : 'Vy' });
+      updateCallLobbyPermissions(role);
+      setCallStatus(role, 'Camera sẵn sàng. Chọn hiệu ứng rồi gọi nha.');
+    } catch (error) {
+      setCallStatus(role, 'Chưa mở được camera. Hãy cấp quyền camera và microphone rồi thử lại nha.');
+      console.warn('Không mở được camera preview:', error.message);
+    }
+  } else {
+    updateCallLobbyPermissions(role);
+  }
+}
+
 function closeCallOverlay(role) {
   const elements = ensureCallExperience(role);
   if (!elements.section) return;
+  if (!livekitRoom && activeFilterPipeline?.role === role) stopFaceFilterPipeline();
   const uiState = getCallUiState(role);
   if (uiState.idleTimer) window.clearTimeout(uiState.idleTimer);
   stopCallUiTimer(role);
   setCallUiState(role, 'idle');
   elements.section.hidden = true;
+  elements.section.classList.remove('is-lobby');
+  elements.lobby.hidden = true;
   elements.section.classList.remove('is-ringing');
   elements.incoming.hidden = true;
   elements.stage.hidden = true;
@@ -957,6 +1149,7 @@ function showIncomingCall(role, callType = 'video') {
   if (!elements.section || !elements.incoming) return;
   pendingIncomingCall = { role, callType };
   openCallOverlay(role);
+  getCallUiState(role).callType = callType;
   const caller = role === 'admin' ? 'Vy' : 'Anh';
   const callLabel = callType === 'voice' ? 'gọi thoại' : 'gọi video';
   elements.incomingTitle.textContent = `${caller} đang ${callLabel} cho ${role === 'admin' ? 'anh' : 'Vy'}`;
@@ -1325,9 +1518,12 @@ function renderFaceFilterFrame(pipeline, timestamp) {
   pipeline.animationFrame = requestAnimationFrame(renderFaceFilterFrame);
 }
 
-async function startFaceFilterPipeline(role) {
+async function startFaceFilterPipeline(role, options = {}) {
   const elements = callElements(role);
   const sourceStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: true });
+  const mediaPrefs = getCallMediaPrefs(role);
+  sourceStream.getVideoTracks().forEach((track) => { track.enabled = mediaPrefs.camera; });
+  sourceStream.getAudioTracks().forEach((track) => { track.enabled = mediaPrefs.microphone; });
   const sourceVideo = document.createElement('video');
   sourceVideo.muted = true;
   sourceVideo.playsInline = true;
@@ -1365,14 +1561,21 @@ async function startFaceFilterPipeline(role) {
     localAudioTrack: null
   };
   activeFilterPipeline = pipeline;
-  try {
-    if (!canvasStream) throw new Error('Thiết bị chưa hỗ trợ xuất video filter từ canvas.');
-    pipeline.faceLandmarker = await loadFaceLandmarker();
-  } catch (error) {
-    console.warn('Không tải được face filter, dùng camera nguyên bản:', error.message);
-    setCallStatus(role, 'Filter khuôn mặt đang tải chậm, cuộc gọi vẫn tiếp tục nha.');
-  }
-  pipeline.localVideoTrack = pipeline.faceLandmarker && canvasStream
+  const loadModel = async () => {
+    try {
+      if (!canvasStream) throw new Error('Thiết bị chưa hỗ trợ xuất video filter từ canvas.');
+      pipeline.faceLandmarker = await loadFaceLandmarker();
+      if (activeFilterPipeline === pipeline) elements.stage.classList.add('has-face-filter');
+    } catch (error) {
+      console.warn('Không tải được face filter, dùng camera nguyên bản:', error.message);
+      if (activeFilterPipeline === pipeline && !elements.section.hidden) {
+        setCallStatus(role, 'Filter khuôn mặt đang tải chậm, cuộc gọi vẫn tiếp tục nha.');
+      }
+    }
+  };
+  if (options.deferFaceModel) loadModel();
+  else await loadModel();
+  pipeline.localVideoTrack = canvasStream
     ? new LocalVideoTrack(canvasStream.getVideoTracks()[0], { name: 'cute-face-filter' })
     : new LocalVideoTrack(sourceStream.getVideoTracks()[0], { name: 'camera' });
   pipeline.localAudioTrack = new LocalAudioTrack(sourceStream.getAudioTracks()[0], { name: 'microphone' });
@@ -1422,6 +1625,8 @@ function attachCallTrack(role, track, participant) {
     tile.querySelectorAll('audio').forEach((element) => element.remove());
     const audio = track.attach();
     audio.autoplay = true;
+    audio.muted = getCallUiState(role).speakerOn === false;
+    audio.dataset.callAudio = 'true';
     audio.setAttribute('aria-label', `Âm thanh của ${participant.name || participant.identity}`);
     tile.appendChild(audio);
   }
@@ -1444,12 +1649,24 @@ function updateCallStatus(role) {
   }
 }
 
+function friendlyCallError(error) {
+  const message = String(error?.message || '');
+  if (/permission|denied|notallowed|NotAllowedError/i.test(message)) return 'Bạn hãy cho phép camera và microphone trong cài đặt trình duyệt rồi thử lại nha.';
+  if (/token|401|unauthor/i.test(message)) return 'Phiên gọi đã hết hạn, hãy tải lại trang rồi gọi lại nha.';
+  if (/livekit|serverUrl|participantToken/i.test(message)) return 'Phòng gọi hiện chưa sẵn sàng, bạn thử lại sau một chút nha.';
+  if (/network|fetch|failed to fetch/i.test(message)) return 'Mạng đang không ổn định, kiểm tra kết nối rồi thử lại nha.';
+  return message && message.length < 140 ? message : 'Chưa mở được cuộc gọi. Bạn thử lại nha.';
+}
+
 async function joinLiveKitCall(role = 'vy', announce = false, callType = 'video') {
   const elements = callElements(role);
   if (!elements.status) return;
   if (livekitRoom) await leaveLiveKitCall();
+  const previewPipeline = callType === 'video' && activeFilterPipeline?.role === role ? activeFilterPipeline : null;
   activeCallType = callType;
+  getCallUiState(role).callType = callType;
   openCallOverlay(role);
+  callElements(role).lobby.hidden = true;
   setCallUiState(role, 'connecting');
   elements.start.disabled = true;
   elements.join.disabled = true;
@@ -1490,6 +1707,20 @@ async function joinLiveKitCall(role = 'vy', announce = false, callType = 'video'
       updateCallStatus(role);
     });
     room.on(RoomEvent.ParticipantConnected, () => updateCallStatus(role));
+    room.on(RoomEvent.Reconnecting, () => {
+      elements.section.classList.add('is-reconnecting');
+      showCallControls(role, true);
+      setCallStatus(role, 'Mạng đang chập chờn, đang kết nối lại…');
+    });
+    room.on(RoomEvent.Reconnected, () => {
+      elements.section.classList.remove('is-reconnecting');
+      setCallStatus(role, livekitRoom?.remoteParticipants.size ? 'Đã kết nối lại với người thương 💗' : 'Đã kết nối lại, đang chờ người kia…');
+      updateCallStatus(role);
+    });
+    room.on(RoomEvent.ConnectionQualityChanged, (quality, participant) => {
+      if (participant?.identity !== (role === 'admin' ? 'anh' : 'vy')) return;
+      if (quality === 'poor' || quality === 'lost') setCallStatus(role, 'Mạng yếu, hình ảnh có thể bị trễ một chút nha.');
+    });
     room.on(RoomEvent.DataReceived, (payload) => {
       try {
         const message = JSON.parse(new TextDecoder().decode(payload));
@@ -1498,6 +1729,7 @@ async function joinLiveKitCall(role = 'vy', announce = false, callType = 'video'
     });
     room.on(RoomEvent.Disconnected, () => {
       if (livekitRoom !== room) return;
+      sendCallHistoryMessage(role, 'ended').catch(() => {});
       livekitRoom = null;
       activeCallRole = null;
       stopCallUiTimer(role);
@@ -1510,8 +1742,9 @@ async function joinLiveKitCall(role = 'vy', announce = false, callType = 'video'
     // Mở quyền điều khiển ngay sau khi vào phòng; model face filter có thể tải nền khá lâu.
     setCallControls(role, true);
     if (callType === 'video') {
-      const filterPipeline = await startFaceFilterPipeline(role);
+      const filterPipeline = previewPipeline || await startFaceFilterPipeline(role);
       // Hiện preview ngay khi camera sẵn sàng, để màn hình "Đang gọi…" có hình nền giống giao diện gọi hiện đại.
+      elements.videos.innerHTML = '';
       attachCallTrack(role, filterPipeline.localVideoTrack, room.localParticipant);
       await room.localParticipant.publishTrack(filterPipeline.localAudioTrack, { source: Track.Source.Microphone });
       await room.localParticipant.publishTrack(filterPipeline.localVideoTrack, { source: Track.Source.Camera });
@@ -1533,12 +1766,13 @@ async function joinLiveKitCall(role = 'vy', announce = false, callType = 'video'
       activeCallRole = null;
     }
     setCallControls(role, false);
-    setCallStatus(role, error.message || 'Chưa mở được phòng video.');
+    setCallStatus(role, friendlyCallError(error));
   }
 }
 
 async function leaveLiveKitCall() {
   const role = activeCallRole;
+  if (role) await sendCallHistoryMessage(role, 'ended');
   stopFaceFilterPipeline();
   if (livekitRoom) await livekitRoom.disconnect();
   livekitRoom = null;
@@ -1554,23 +1788,36 @@ async function leaveLiveKitCall() {
 }
 
 async function toggleCallCamera(role) {
-  if (!livekitRoom || activeCallRole !== role) return;
   const pipeline = activeFilterPipeline?.role === role ? activeFilterPipeline : null;
   const sourceTrack = pipeline?.sourceStream?.getVideoTracks?.()[0];
   if (sourceTrack) {
     sourceTrack.enabled = !sourceTrack.enabled;
+    saveCallMediaPref(role, 'camera', sourceTrack.enabled);
     callElements(role).camera.textContent = sourceTrack.enabled ? 'Tắt camera' : 'Bật camera';
+    updateCallLobbyPermissions(role);
     return;
   }
+  if (!livekitRoom || activeCallRole !== role) return;
   const enabled = !livekitRoom.localParticipant.isCameraEnabled;
   await livekitRoom.localParticipant.setCameraEnabled(enabled);
+  saveCallMediaPref(role, 'camera', enabled);
   callElements(role).camera.textContent = enabled ? 'Tắt camera' : 'Bật camera';
 }
 
 async function toggleCallMicrophone(role) {
+  const pipeline = activeFilterPipeline?.role === role ? activeFilterPipeline : null;
+  const sourceTrack = pipeline?.sourceStream?.getAudioTracks?.()[0];
+  if (sourceTrack) {
+    sourceTrack.enabled = !sourceTrack.enabled;
+    saveCallMediaPref(role, 'microphone', sourceTrack.enabled);
+    callElements(role).microphone.textContent = sourceTrack.enabled ? 'Tắt mic' : 'Bật mic';
+    updateCallLobbyPermissions(role);
+    return;
+  }
   if (!livekitRoom || activeCallRole !== role) return;
   const enabled = !livekitRoom.localParticipant.isMicrophoneEnabled;
   await livekitRoom.localParticipant.setMicrophoneEnabled(enabled);
+  saveCallMediaPref(role, 'microphone', enabled);
   callElements(role).microphone.textContent = enabled ? 'Tắt mic' : 'Bật mic';
 }
 
@@ -1611,6 +1858,94 @@ async function toggleCallScreenShare(role) {
   }
 }
 
+function toggleCallLayout(role) {
+  const elements = callElements(role);
+  const split = elements.videos.classList.toggle('is-split-layout');
+  if (elements.layout) {
+    elements.layout.classList.toggle('is-active', split);
+    elements.layout.setAttribute('aria-pressed', String(split));
+  }
+  setCallStatus(role, split ? 'Đã bật bố cục chia đôi.' : 'Đã chuyển về video người kia toàn màn hình.');
+}
+
+function toggleCallSpeaker(role) {
+  const state = getCallUiState(role);
+  state.speakerOn = state.speakerOn !== false ? false : true;
+  const elements = callElements(role);
+  elements.stage?.querySelectorAll('audio').forEach((audio) => { audio.muted = !state.speakerOn; });
+  if (elements.speaker) {
+    elements.speaker.classList.toggle('is-active', state.speakerOn);
+    elements.speaker.querySelector('span')?.replaceChildren(document.createTextNode(state.speakerOn ? '🔊' : '🔇'));
+    elements.speaker.setAttribute('aria-pressed', String(state.speakerOn));
+  }
+  setCallStatus(role, state.speakerOn ? 'Đã bật loa.' : 'Đã tắt loa.');
+}
+
+async function loadMiniCallMessages(role) {
+  const elements = callElements(role);
+  const container = elements.miniChat?.querySelector('[data-call-mini-messages]');
+  if (!container) return;
+  try {
+    const token = role === 'admin' ? localStorage.getItem(ADMIN_TOKEN_KEY) : '';
+    const response = await fetch(`/api/chat/messages?role=${role}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'Chưa tải được tin nhắn.');
+    const messages = (data.messages || []).slice(-5);
+    container.innerHTML = messages.length ? messages.map((message) => `<p class="${message.sender_role === role ? 'is-mine' : ''}">${escapeHtml(parseChatMessage(message.content).text || '📎')}</p>`).join('') : '<p class="is-empty">Chưa có tin nhắn gần đây.</p>';
+    container.scrollTop = container.scrollHeight;
+  } catch (error) {
+    container.innerHTML = `<p class="is-empty">${escapeHtml(error.message)}</p>`;
+  }
+}
+
+async function sendMiniCallMessage(role) {
+  const elements = callElements(role);
+  const input = elements.miniChat?.querySelector('input');
+  const content = input?.value.trim();
+  if (!content) return;
+  const token = role === 'admin' ? localStorage.getItem(ADMIN_TOKEN_KEY) : '';
+  try {
+    const response = await fetch('/api/chat/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      body: JSON.stringify({ senderRole: role, content, imageDataUrl: '' })
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.error || 'Chưa gửi được tin nhắn.');
+    input.value = '';
+    await loadMiniCallMessages(role);
+  } catch (error) {
+    setCallStatus(role, error.message);
+  }
+}
+
+async function toggleMiniCallChat(role, forceOpen = null) {
+  const elements = callElements(role);
+  if (!elements.miniChat) return;
+  const open = forceOpen === null ? elements.miniChat.hidden : forceOpen;
+  elements.miniChat.hidden = !open;
+  elements.stage.classList.toggle('is-chat-open', open);
+  if (open) await loadMiniCallMessages(role);
+}
+
+async function sendCallHistoryMessage(role, status = 'ended') {
+  const state = getCallUiState(role);
+  if (state.historySent) return;
+  state.historySent = true;
+  const duration = state.startedAt ? Math.floor((Date.now() - state.startedAt) / 1000) : 0;
+  const token = role === 'admin' ? localStorage.getItem(ADMIN_TOKEN_KEY) : '';
+  try {
+    await fetch('/api/chat/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      body: JSON.stringify({ senderRole: role, content: `${CHAT_CALL_PREFIX}${JSON.stringify({ callType: state.callType || activeCallType, duration, status })}`, imageDataUrl: '' })
+    });
+    loadChatMessages(role, true).catch(() => {});
+  } catch (error) {
+    console.warn('Không lưu được lịch sử cuộc gọi:', error.message);
+  }
+}
+
 function showCallReaction(role, emoji) {
   const stage = callElements(role).stage;
   if (!stage) return;
@@ -1623,6 +1958,9 @@ function showCallReaction(role, emoji) {
 
 async function sendCallReaction(role, emoji) {
   if (!livekitRoom || activeCallRole !== role) return;
+  const state = getCallUiState(role);
+  if (Date.now() < state.reactionCooldownUntil) return;
+  state.reactionCooldownUntil = Date.now() + 700;
   showCallReaction(role, emoji);
   try { await livekitRoom.localParticipant.publishData(new TextEncoder().encode(JSON.stringify({ type: 'call-reaction', emoji })), { reliable: true }); } catch (error) { console.warn('Không gửi được reaction cuộc gọi:', error.message); }
 }
@@ -1660,6 +1998,7 @@ function acceptIncomingCall(role) {
 
 function declineIncomingCall(role) {
   stopIncomingCallAlert();
+  sendCallHistoryMessage(role, 'declined').catch(() => {});
   setCallUiState(role, 'declined');
   setCallStatus(role, 'Đã từ chối cuộc gọi.');
   closeCallOverlay(role);
@@ -2504,8 +2843,8 @@ function bindEvents() {
   bindChatQuickReplies();
   bindChatImagePicker('vy');
   bindChatImagePicker('admin');
-  $('#startVoiceCall').addEventListener('click', () => joinLiveKitCall('vy', true, 'voice'));
-  $('#startVideoCall').addEventListener('click', () => joinLiveKitCall('vy', true));
+  $('#startVoiceCall').addEventListener('click', () => openCallLobby('vy', 'voice'));
+  $('#startVideoCall').addEventListener('click', () => openCallLobby('vy', 'video'));
   $('#joinVideoCall').addEventListener('click', () => joinLiveKitCall('vy', false));
   $('#acceptCall').addEventListener('click', () => acceptIncomingCall('vy'));
   $('#declineCall').addEventListener('click', () => declineIncomingCall('vy'));
@@ -2519,8 +2858,8 @@ function bindEvents() {
     const role = button.closest('.call-overlay')?.id === 'adminCallSection' ? 'admin' : 'vy';
     sendCallReaction(role, button.dataset.callReaction);
   }));
-  $('#startAdminVoiceCall').addEventListener('click', () => joinLiveKitCall('admin', true, 'voice'));
-  $('#startAdminVideoCall').addEventListener('click', () => joinLiveKitCall('admin', true));
+  $('#startAdminVoiceCall').addEventListener('click', () => openCallLobby('admin', 'voice'));
+  $('#startAdminVideoCall').addEventListener('click', () => openCallLobby('admin', 'video'));
   $('#joinAdminVideoCall').addEventListener('click', () => joinLiveKitCall('admin', false));
   $('#acceptAdminCall').addEventListener('click', () => acceptIncomingCall('admin'));
   $('#declineAdminCall').addEventListener('click', () => declineIncomingCall('admin'));
