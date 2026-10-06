@@ -1906,7 +1906,32 @@ async function switchCallCamera(role) {
   const current = track.getSettings().facingMode || pipeline.facingMode || 'user';
   const next = current === 'environment' ? 'user' : 'environment';
   try {
-    await track.applyConstraints({ facingMode: { ideal: next } });
+    let nextTrack = null;
+    try {
+      const replacementStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { exact: next }, width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false
+      });
+      nextTrack = replacementStream.getVideoTracks()[0];
+    } catch {
+      await track.applyConstraints({ facingMode: { exact: next } });
+      nextTrack = track;
+    }
+    if (nextTrack !== track) {
+      const audioTracks = pipeline.sourceStream.getAudioTracks();
+      const nextStream = new MediaStream([nextTrack, ...audioTracks]);
+      pipeline.sourceStream.getVideoTracks().forEach((oldTrack) => oldTrack.stop());
+      pipeline.sourceStream = nextStream;
+      pipeline.sourceVideo.srcObject = nextStream;
+      await pipeline.sourceVideo.play().catch(() => {});
+      if (!pipeline.usingCanvas) await pipeline.localVideoTrack?.replaceTrack(nextTrack);
+      if (pipeline.localVideoTrack && !callElements(role).section.hidden) {
+        attachCallTrack(role, pipeline.localVideoTrack, {
+          identity: role === 'admin' ? 'anh' : 'vy',
+          name: role === 'admin' ? 'Anh' : 'Vy'
+        });
+      }
+    }
     pipeline.facingMode = next;
     const tile = callElements(role).videos.querySelector('.call-tile.is-local-preview');
     tile?.classList.toggle('is-selfie-preview', next === 'user');
