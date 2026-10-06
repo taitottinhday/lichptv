@@ -572,6 +572,33 @@ function drawCuteFaceEffect(pipeline, faceLandmarks) {
       context.stroke();
     });
     drawHeart(context, forehead.x, forehead.y - faceHeight * .43, faceWidth * .08, '#fff');
+  } else if (filter === 'flower') {
+    const flowerSize = Math.max(25, faceWidth * .15);
+    context.font = `${flowerSize}px "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText('🌼', forehead.x - faceWidth * .38, forehead.y - faceHeight * .12);
+    context.fillText('🌸', forehead.x, forehead.y - faceHeight * .34);
+    context.fillText('🌼', forehead.x + faceWidth * .38, forehead.y - faceHeight * .12);
+  } else if (filter === 'crown') {
+    const crownSize = Math.max(38, faceWidth * .28);
+    context.font = `${crownSize}px "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText('👑', forehead.x, forehead.y - faceHeight * .28);
+    drawHeart(context, forehead.x - faceWidth * .39, forehead.y - faceHeight * .03, faceWidth * .07, '#ffe48b');
+    drawHeart(context, forehead.x + faceWidth * .39, forehead.y - faceHeight * .03, faceWidth * .07, '#ffe48b');
+  } else if (filter === 'blush') {
+    context.fillStyle = 'rgba(255, 94, 145, .34)';
+    [leftCheek, rightCheek].forEach((cheek) => {
+      if (!cheek) return;
+      context.beginPath();
+      context.ellipse(cheek.x, cheek.y, faceWidth * .12, faceHeight * .045, 0, 0, Math.PI * 2);
+      context.fill();
+    });
+    context.font = `${Math.max(22, faceWidth * .11)}px "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
+    context.textAlign = 'center';
+    context.fillText('✨', forehead.x, forehead.y - faceHeight * .28);
   }
 }
 

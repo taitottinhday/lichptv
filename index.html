@@ -226,12 +226,17 @@
               <button class="button button-danger" id="endCall" type="button" disabled>Kết thúc</button>
             </div>
             <div class="call-filters" id="callFilters" hidden>
-              <span>Filter bám theo khuôn mặt</span>
-              <button type="button" data-call-filter="none" aria-label="Tắt filter" title="Tắt filter">✨</button>
-              <button type="button" data-call-filter="soft" aria-label="Filter hoa mềm" title="Hoa mềm">🌸</button>
-              <button type="button" data-call-filter="hearts" aria-label="Filter tim" title="Tim">💗</button>
-              <button type="button" data-call-filter="bunny" aria-label="Filter tai thỏ" title="Tai thỏ">🐰</button>
-              <button type="button" data-call-filter="rainbow" aria-label="Filter cầu vồng" title="Cầu vồng">🌈</button>
+              <span class="call-filters-heading">Filter bám theo khuôn mặt</span>
+              <div class="filter-strip" role="listbox" aria-label="Các filter khuôn mặt">
+                <button class="filter-card active" type="button" data-call-filter="none" aria-label="Tắt filter" title="Tắt filter"><span class="filter-preview filter-preview-none">✨</span><b>Tắt</b></button>
+                <button class="filter-card" type="button" data-call-filter="soft" aria-label="Filter hoa mềm" title="Hoa mềm"><span class="filter-preview filter-preview-soft">🌸</span><b>Soft</b></button>
+                <button class="filter-card" type="button" data-call-filter="hearts" aria-label="Filter tim" title="Tim"><span class="filter-preview filter-preview-hearts">💗</span><b>Tim</b></button>
+                <button class="filter-card" type="button" data-call-filter="bunny" aria-label="Filter tai thỏ" title="Tai thỏ"><span class="filter-preview filter-preview-bunny">🐰</span><b>Thỏ</b></button>
+                <button class="filter-card" type="button" data-call-filter="rainbow" aria-label="Filter cầu vồng" title="Cầu vồng"><span class="filter-preview filter-preview-rainbow">🌈</span><b>Rainbow</b></button>
+                <button class="filter-card" type="button" data-call-filter="flower" aria-label="Filter vòng hoa" title="Vòng hoa"><span class="filter-preview filter-preview-flower">🌼</span><b>Hoa</b></button>
+                <button class="filter-card" type="button" data-call-filter="crown" aria-label="Filter vương miện" title="Vương miện"><span class="filter-preview filter-preview-crown">👑</span><b>Queen</b></button>
+                <button class="filter-card" type="button" data-call-filter="blush" aria-label="Filter má hồng" title="Má hồng"><span class="filter-preview filter-preview-blush">😊</span><b>Blush</b></button>
+              </div>
             </div>
           </div>
           <p class="call-status" id="callStatus" role="status" aria-live="polite"></p>
@@ -349,12 +354,17 @@
               <button class="button button-danger" id="endAdminCall" type="button" disabled>Kết thúc</button>
             </div>
             <div class="call-filters" id="adminCallFilters" hidden>
-              <span>Filter bám theo khuôn mặt</span>
-              <button type="button" data-call-filter="none" aria-label="Tắt filter" title="Tắt filter">✨</button>
-              <button type="button" data-call-filter="soft" aria-label="Filter hoa mềm" title="Hoa mềm">🌸</button>
-              <button type="button" data-call-filter="hearts" aria-label="Filter tim" title="Tim">💗</button>
-              <button type="button" data-call-filter="bunny" aria-label="Filter tai thỏ" title="Tai thỏ">🐰</button>
-              <button type="button" data-call-filter="rainbow" aria-label="Filter cầu vồng" title="Cầu vồng">🌈</button>
+              <span class="call-filters-heading">Filter bám theo khuôn mặt</span>
+              <div class="filter-strip" role="listbox" aria-label="Các filter khuôn mặt">
+                <button class="filter-card active" type="button" data-call-filter="none" aria-label="Tắt filter" title="Tắt filter"><span class="filter-preview filter-preview-none">✨</span><b>Tắt</b></button>
+                <button class="filter-card" type="button" data-call-filter="soft" aria-label="Filter hoa mềm" title="Hoa mềm"><span class="filter-preview filter-preview-soft">🌸</span><b>Soft</b></button>
+                <button class="filter-card" type="button" data-call-filter="hearts" aria-label="Filter tim" title="Tim"><span class="filter-preview filter-preview-hearts">💗</span><b>Tim</b></button>
+                <button class="filter-card" type="button" data-call-filter="bunny" aria-label="Filter tai thỏ" title="Tai thỏ"><span class="filter-preview filter-preview-bunny">🐰</span><b>Thỏ</b></button>
+                <button class="filter-card" type="button" data-call-filter="rainbow" aria-label="Filter cầu vồng" title="Cầu vồng"><span class="filter-preview filter-preview-rainbow">🌈</span><b>Rainbow</b></button>
+                <button class="filter-card" type="button" data-call-filter="flower" aria-label="Filter vòng hoa" title="Vòng hoa"><span class="filter-preview filter-preview-flower">🌼</span><b>Hoa</b></button>
+                <button class="filter-card" type="button" data-call-filter="crown" aria-label="Filter vương miện" title="Vương miện"><span class="filter-preview filter-preview-crown">👑</span><b>Queen</b></button>
+                <button class="filter-card" type="button" data-call-filter="blush" aria-label="Filter má hồng" title="Má hồng"><span class="filter-preview filter-preview-blush">😊</span><b>Blush</b></button>
+              </div>
             </div>
           </div>
           <p class="call-status" id="adminCallStatus" role="status" aria-live="polite"></p>
