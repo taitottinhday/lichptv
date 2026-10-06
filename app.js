@@ -552,6 +552,7 @@ function setCallControls(role, connected) {
   elements.camera.disabled = !connected || activeCallType === 'voice';
   elements.microphone.disabled = !connected;
   elements.filterToggle.disabled = !connected || activeCallType === 'voice';
+  elements.filterToggle.setAttribute('aria-expanded', connected && !elements.filters.hidden ? 'true' : 'false');
   elements.end.disabled = !connected;
 }
 
@@ -605,7 +606,12 @@ function setCallFilter(role, filter) {
 
 function toggleCallFilters(role) {
   const elements = callElements(role);
-  if (elements.filters) elements.filters.hidden = !elements.filters.hidden;
+  if (!elements.filters || elements.filterToggle?.disabled) return;
+  const open = elements.filters.hidden;
+  elements.filters.hidden = !open;
+  elements.filters.classList.toggle('is-open', open);
+  elements.filterToggle.setAttribute('aria-expanded', String(open));
+  if (open) elements.filters.querySelector('[data-call-filter].active')?.focus({ preventScroll: true });
 }
 
 async function loadFaceLandmarker() {
@@ -1021,6 +1027,8 @@ async function joinLiveKitCall(role = 'vy', announce = false, callType = 'video'
     });
 
     await room.connect(tokenData.serverUrl, tokenData.participantToken);
+    // Mở quyền điều khiển ngay sau khi vào phòng; model face filter có thể tải nền khá lâu.
+    setCallControls(role, true);
     if (callType === 'video') {
       const filterPipeline = await startFaceFilterPipeline(role);
       await room.localParticipant.publishTrack(filterPipeline.localAudioTrack, { source: Track.Source.Microphone });
