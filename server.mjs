@@ -127,7 +127,21 @@ const databaseReady = pool
     ALTER TABLE lyrics_entries ADD COLUMN IF NOT EXISTS synced_lyrics_text TEXT NOT NULL DEFAULT '';
     ALTER TABLE lyrics_entries ADD COLUMN IF NOT EXISTS album_name TEXT NOT NULL DEFAULT '';
     ALTER TABLE lyrics_entries ADD COLUMN IF NOT EXISTS duration_seconds NUMERIC;
-    ALTER TABLE lyrics_entries ADD COLUMN IF NOT EXISTS has_word_sync BOOLEAN NOT NULL DEFAULT FALSE;`)
+    ALTER TABLE lyrics_entries ADD COLUMN IF NOT EXISTS has_word_sync BOOLEAN NOT NULL DEFAULT FALSE;
+    CREATE TABLE IF NOT EXISTS song_lyrics (
+      song_id TEXT PRIMARY KEY,
+      lyrics TEXT NOT NULL,
+      synced_lyrics TEXT NOT NULL DEFAULT '',
+      source TEXT NOT NULL,
+      source_track_id TEXT,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    );
+    INSERT INTO song_lyrics (song_id, lyrics, synced_lyrics, source, source_track_id, created_at, updated_at)
+    SELECT song_id, lyrics_text, synced_lyrics_text, source, provider_track_id, updated_at, updated_at
+    FROM lyrics_entries
+    WHERE cache_allowed = TRUE
+    ON CONFLICT (song_id) DO NOTHING;`)
   : Promise.resolve();
 
 async function supabaseRequest(path, options = {}) {
@@ -192,10 +206,14 @@ async function readStoredLyrics(songId) {
   if (pool) {
     await databaseReady;
     const result = await pool.query(
-      `SELECT song_id, title, artist, lyrics_text, synced_lyrics_text, source, provider_track_id,
-              album_name, duration_seconds, has_word_sync, match_score,
-              verification_status, cache_allowed, attribution, updated_at
-       FROM lyrics_entries WHERE song_id = $1`,
+      `SELECT song_id,
+              lyrics AS lyrics_text,
+              synced_lyrics AS synced_lyrics_text,
+              source,
+              source_track_id AS provider_track_id,
+              TRUE AS cache_allowed,
+              updated_at
+       FROM song_lyrics WHERE song_id = $1`,
       [songId]
     );
     return result.rows[0] || null;
@@ -208,33 +226,22 @@ async function writeStoredLyrics(entry) {
   if (pool) {
     await databaseReady;
     const result = await pool.query(
-      `INSERT INTO lyrics_entries
-         (song_id, title, artist, lyrics_text, synced_lyrics_text, source, provider_track_id,
-          album_name, duration_seconds, has_word_sync, match_score, verification_status,
-          cache_allowed, attribution, updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,NOW())
+      `INSERT INTO song_lyrics
+         (song_id, lyrics, synced_lyrics, source, source_track_id, updated_at)
+       VALUES ($1,$2,$3,$4,$5,NOW())
        ON CONFLICT (song_id) DO UPDATE SET
-         title = EXCLUDED.title,
-         artist = EXCLUDED.artist,
-         lyrics_text = EXCLUDED.lyrics_text,
-         synced_lyrics_text = EXCLUDED.synced_lyrics_text,
+         lyrics = EXCLUDED.lyrics,
+         synced_lyrics = EXCLUDED.synced_lyrics,
          source = EXCLUDED.source,
-         provider_track_id = EXCLUDED.provider_track_id,
-         album_name = EXCLUDED.album_name,
-         duration_seconds = EXCLUDED.duration_seconds,
-         has_word_sync = EXCLUDED.has_word_sync,
-         match_score = EXCLUDED.match_score,
-         verification_status = EXCLUDED.verification_status,
-         cache_allowed = EXCLUDED.cache_allowed,
-         attribution = EXCLUDED.attribution,
          updated_at = NOW()
-       RETURNING song_id, title, artist, lyrics_text, synced_lyrics_text, source, provider_track_id,
-                 album_name, duration_seconds, has_word_sync, match_score, verification_status,
-                 cache_allowed, attribution, updated_at`,
-      [entry.songId, entry.title, entry.artist || '', entry.lyrics, entry.syncedLyrics || '', entry.source,
-        entry.providerTrackId || null, entry.albumName || '', entry.durationSeconds || null,
-        entry.hasWordSync === true, entry.matchScore || 0, entry.verificationStatus || 'verified',
-        entry.cacheAllowed === true, entry.attribution || '']
+       RETURNING song_id,
+                 lyrics AS lyrics_text,
+                 synced_lyrics AS synced_lyrics_text,
+                 source,
+                 source_track_id AS provider_track_id,
+                 TRUE AS cache_allowed,
+                 updated_at`,
+      [entry.songId, entry.lyrics, entry.syncedLyrics || '', entry.source, entry.providerTrackId || null]
     );
     return result.rows[0] || null;
   }
@@ -833,6 +840,7 @@ app.get('/api/health', (_request, response) => response.json({
   lyricsProviderConfigured,
   lyricsPersistenceAllowed,
   lyricsCacheAllowed,
+  lyricsStorage: pool ? 'postgres.song_lyrics' : 'memory-only',
   lyricsPublicLookupEnabled,
   lyricsLinkFallback: true
 }));
@@ -852,8 +860,8 @@ app.get('/api/lyrics/:songId', async (request, response) => {
     return response.json({
       ok: true,
       songId: song.songId,
-      title: entry.title,
-      artist: entry.artist,
+      title: entry.title || song.title,
+      artist: entry.artist || song.artist || song.composer || '',
       lyrics: entry.lyrics_text,
       syncedLyrics: entry.synced_lyrics_text || '',
       source: entry.source,

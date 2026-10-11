@@ -47,11 +47,13 @@ MUSIXMATCH_API_KEY=<API key Musixmatch>
 LYRICS_PERSISTENCE_ALLOWED=false
 ```
 
-Chỉ đổi `LYRICS_PERSISTENCE_ALLOWED=true` sau khi gói Musixmatch của bạn cho phép lưu lyrics offline. Khi bật, server sẽ lưu vào bảng `lyrics_entries` nếu có `DATABASE_URL`; nếu không có database, app sẽ lưu bản được phép vào `localStorage`.
+Chỉ đổi `LYRICS_PERSISTENCE_ALLOWED=true` sau khi nguồn lyrics của bạn cho phép lưu lâu dài. Khi bật, server có `DATABASE_URL` sẽ lưu dùng chung vào bảng PostgreSQL `song_lyrics` (`song_id`, `lyrics`, `synced_lyrics`, `source`, `source_track_id`, `created_at`, `updated_at`). Bảng `lyrics_entries` cũ được migrate một chiều sang bảng mới khi server khởi động. Không có database thì không thể đáp ứng đồng bộ giữa thiết bị; app chỉ giữ bản được phép trong bộ nhớ/localStorage.
 
 `MUSIXMATCH_API_KEY` là key riêng của Musixmatch, không phải OpenAI key. Hệ thống chỉ tự lưu kết quả có tên bài khớp chính xác; bài trùng tên hoặc nguồn trả đoạn trích sẽ được đánh dấu **cần xác minh**, không tạo lời giả.
 
 LRCLIB là nguồn mở và cho phép truy cập API không cần key theo tài liệu API, nhưng tài liệu API không phải là giấy phép bản quyền chung cho toàn bộ lời bài hát. Vì vậy mặc định LRCLIB chỉ hiển thị trực tiếp, không lưu offline. Chỉ bật `LYRICS_PERSISTENCE_ALLOWED=true` và `LRCLIB_CACHE_ALLOWED=true` khi bạn đã xác minh quyền lưu/phân phối nội dung cho mục đích của ứng dụng.
+
+Khi đã có nguồn được cấp phép lưu trữ, luồng hoạt động là: Lyrics Modal đọc `song_lyrics` trước; chỉ bài chưa có bản lưu mới gọi provider. Nút **Nạp lời trực tuyến** có thể xử lý cả thư viện, bỏ qua các bài đã có trong database. Railway health sẽ báo `lyricsStorage: postgres.song_lyrics` khi `DATABASE_URL` đang hoạt động.
 
 ## Chế độ không có API key
 
