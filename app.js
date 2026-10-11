@@ -11,6 +11,7 @@ const CHAT_IMAGE_PREFIX = '__lich_chat_image__:';
 const CHAT_CALL_PREFIX = '__lich_call__:';
 const CALL_MEDIA_PREFS_KEY = 'lich-cua-vy-call-media-prefs-v1';
 const KARAOKE_STORAGE_KEY = 'lich-cua-vy-karaoke-selection-v1';
+const KARAOKE_LYRICS_DIR = '/lyrics/';
 const CHAT_TIME_ZONE = 'Asia/Ho_Chi_Minh';
 const LOVE_START_DATE = new Date(2022, 10, 3, 0, 0, 0);
 const FACE_LANDMARKER_MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
@@ -279,6 +280,57 @@ function saveKaraokeSelection() {
   localStorage.setItem(KARAOKE_STORAGE_KEY, JSON.stringify([...state.karaokeSelected]));
 }
 
+function karaokeLyricsSlug(title) {
+  return String(title)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/gi, 'd')
+    .toLocaleLowerCase('vi-VN')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+function closeKaraokeLyrics() {
+  const modal = $('#karaokeLyricsModal');
+  if (!modal) return;
+  modal.hidden = true;
+  document.body.classList.remove('karaoke-modal-open');
+}
+
+async function openKaraokeLyrics(title) {
+  const modal = $('#karaokeLyricsModal');
+  const song = UNIQUE_KARAOKE_SONGS.find((item) => item.title === title);
+  if (!modal || !song) return;
+  const status = $('#karaokeLyricsStatus');
+  const lyrics = $('#karaokeLyricsText');
+  const help = $('#karaokeLyricsHelp');
+  const requestId = `${title}:${Date.now()}`;
+  modal.dataset.requestId = requestId;
+  $('#karaokeLyricsTitle').textContent = song.title;
+  $('#karaokeLyricsCategory').textContent = `${karaokeCategoryLabel(song.category)} · file: ${karaokeLyricsSlug(song.title)}.txt`;
+  status.textContent = 'Đang tìm lời bài hát…';
+  lyrics.textContent = '';
+  help.innerHTML = 'Lời bài hát được đọc từ file bạn có quyền sử dụng trong thư mục <code>public/lyrics</code>.';
+  modal.hidden = false;
+  document.body.classList.add('karaoke-modal-open');
+  $('#closeKaraokeLyrics')?.focus();
+  try {
+    const response = await fetch(`${KARAOKE_LYRICS_DIR}${encodeURIComponent(karaokeLyricsSlug(song.title))}.txt`, { cache: 'no-store' });
+    if (!response.ok) throw new Error('lyrics-not-found');
+    const text = await response.text();
+    if (!text.trim()) throw new Error('lyrics-empty');
+    if (modal.dataset.requestId !== requestId) return;
+    lyrics.textContent = text;
+    status.textContent = 'Đã tải lời bài hát';
+    help.innerHTML = 'Bạn có thể cuộn trong khung lời để vừa xem vừa hát. File này chỉ nên chứa nội dung bạn có quyền sử dụng.';
+  } catch {
+    if (modal.dataset.requestId !== requestId) return;
+    status.textContent = 'Chưa có file lời cho bài này';
+    lyrics.textContent = 'Chưa có lời bài hát được thêm vào app.\n\nHãy đặt file .txt vào thư mục public/lyrics hoặc dùng lệnh import có giấy phép trong README.';
+    help.innerHTML = `Tên file cần dùng: <code>${escapeHtml(karaokeLyricsSlug(song.title))}.txt</code>`;
+  }
+}
+
 function karaokeCategoryLabel(categoryId) {
   return KARAOKE_CATEGORIES.find((category) => category.id === categoryId)?.label || 'Karaoke';
 }
@@ -336,11 +388,13 @@ function renderKaraoke() {
   list.innerHTML = songs.map((song, index) => {
     const selected = state.karaokeSelected.has(song.title);
     return `
-      <button class="karaoke-song-card${selected ? ' is-selected' : ''}" type="button" data-karaoke-title="${escapeHtml(song.title)}" aria-pressed="${selected}" style="--karaoke-index:${index}">
-        <span class="karaoke-song-check" aria-hidden="true">${selected ? '✓' : ''}</span>
+      <article class="karaoke-song-card${selected ? ' is-selected' : ''}" role="button" tabindex="0" data-karaoke-title="${escapeHtml(song.title)}" aria-label="Xem lời bài ${escapeHtml(song.title)}" style="--karaoke-index:${index}">
+        <button class="karaoke-song-check-button" type="button" data-select-karaoke="${escapeHtml(song.title)}" aria-label="${selected ? 'Bỏ chọn' : 'Chọn'} ${escapeHtml(song.title)}" aria-pressed="${selected}">
+          <span class="karaoke-song-check" aria-hidden="true">${selected ? '✓' : ''}</span>
+        </button>
         <span class="karaoke-song-copy"><strong>${escapeHtml(song.title)}</strong><small>${escapeHtml(state.karaokeShowSelected ? karaokeCategoryLabel(song.category) : categoryLabel)}</small></span>
-        <span class="karaoke-song-action">${selected ? 'Đã chọn' : 'Chọn bài'}</span>
-      </button>
+        <span class="karaoke-song-action">Xem lời ↗</span>
+      </article>
     `;
   }).join('');
   $('#karaokeEmpty').hidden = Boolean(songs.length);
@@ -349,8 +403,18 @@ function renderKaraoke() {
   $('#showKaraokeSelected').setAttribute('aria-pressed', String(state.karaokeShowSelected));
   $('#showKaraokeSelected').textContent = state.karaokeShowSelected ? '☷ Xem tất cả' : '♡ Đã chọn';
   renderKaraokeSelectedPanel();
-  list.querySelectorAll('[data-karaoke-title]').forEach((button) => button.addEventListener('click', () => {
-    const title = button.dataset.karaokeTitle;
+  list.querySelectorAll('[data-karaoke-title]').forEach((card) => {
+    const openLyrics = () => openKaraokeLyrics(card.dataset.karaokeTitle);
+    card.addEventListener('click', openLyrics);
+    card.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      openLyrics();
+    });
+  });
+  list.querySelectorAll('[data-select-karaoke]').forEach((button) => button.addEventListener('click', (event) => {
+    event.stopPropagation();
+    const title = button.dataset.selectKaraoke;
     if (state.karaokeSelected.has(title)) state.karaokeSelected.delete(title);
     else state.karaokeSelected.add(title);
     saveKaraokeSelection();
@@ -363,6 +427,13 @@ function bindKaraoke() {
   const selectedToggle = $('#showKaraokeSelected');
   const clearButton = $('#clearKaraokeSelected');
   if (!search || !selectedToggle || !clearButton) return;
+  $('#closeKaraokeLyrics')?.addEventListener('click', closeKaraokeLyrics);
+  $('#karaokeLyricsModal')?.addEventListener('click', (event) => {
+    if (event.target.id === 'karaokeLyricsModal') closeKaraokeLyrics();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !$('#karaokeLyricsModal')?.hidden) closeKaraokeLyrics();
+  });
   search.addEventListener('input', () => {
     state.karaokeQuery = search.value;
     renderKaraoke();

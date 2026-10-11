@@ -136,10 +136,13 @@ h3 { margin-bottom: 4px; font-size: 16px; }
 .karaoke-selected-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .karaoke-selected-chip b { display: grid; place-items: center; width: 17px; height: 17px; border-radius: 50%; background: #ffe2eb; color: #c04f70; font-size: 14px; line-height: 1; }
 .karaoke-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin-top: 15px; }
-.karaoke-song-card { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 12px 13px; border: 1px solid #ece4f2; border-radius: 15px; background: rgba(255, 255, 255, .85); color: var(--ink); text-align: left; box-shadow: 0 5px 15px rgba(81, 58, 90, .04); transition: transform .2s, border-color .2s, background .2s, box-shadow .2s; animation: karaoke-card-in .24s ease both; animation-delay: calc(var(--karaoke-index) * 12ms); }
+.karaoke-song-card { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 12px 13px; border: 1px solid #ece4f2; border-radius: 15px; background: rgba(255, 255, 255, .85); color: var(--ink); text-align: left; cursor: pointer; box-shadow: 0 5px 15px rgba(81, 58, 90, .04); transition: transform .2s, border-color .2s, background .2s, box-shadow .2s; animation: karaoke-card-in .24s ease both; animation-delay: calc(var(--karaoke-index) * 12ms); }
 .karaoke-song-card:hover { transform: translateY(-2px); border-color: #cbb9e4; box-shadow: 0 9px 20px rgba(81, 58, 90, .1); }
+.karaoke-song-card:focus-visible { outline: 3px solid rgba(117, 95, 169, .25); outline-offset: 2px; }
 .karaoke-song-card.is-selected { border-color: #f29ab7; background: linear-gradient(135deg, #fff1f6, #fff); box-shadow: 0 7px 18px rgba(255, 110, 145, .12); }
-.karaoke-song-check { display: grid; place-items: center; width: 25px; height: 25px; flex: 0 0 25px; border: 1px solid #d9cce7; border-radius: 9px; background: #fff; color: #fff; font-size: 15px; font-weight: 800; }
+.karaoke-song-check-button { display: grid; place-items: center; width: 25px; height: 25px; flex: 0 0 25px; padding: 0; border: 0; border-radius: 9px; background: transparent; cursor: pointer; }
+.karaoke-song-check { display: grid; place-items: center; width: 25px; height: 25px; border: 1px solid #d9cce7; border-radius: 9px; background: #fff; color: #fff; font-size: 15px; font-weight: 800; transition: background .2s, border-color .2s, transform .2s; }
+.karaoke-song-check-button:hover .karaoke-song-check { transform: scale(1.08); border-color: var(--pink); }
 .karaoke-song-card.is-selected .karaoke-song-check { border-color: var(--pink); background: var(--pink); }
 .karaoke-song-copy { display: grid; min-width: 0; gap: 3px; }
 .karaoke-song-copy strong { overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
@@ -148,6 +151,19 @@ h3 { margin-bottom: 4px; font-size: 16px; }
 .karaoke-song-card.is-selected .karaoke-song-action { color: #c04f70; }
 .karaoke-empty { margin: 22px 0 0; color: #a49cac; font-size: 12px; text-align: center; }
 .karaoke-note { margin: 14px 0 0; color: #aaa0b0; font-size: 10px; text-align: center; }
+.karaoke-lyrics-modal { position: fixed; z-index: 120; inset: 0; display: grid; place-items: center; padding: 18px; background: rgba(39, 25, 48, .56); backdrop-filter: blur(7px); }
+.karaoke-lyrics-card { display: flex; width: min(560px, 100%); max-height: min(720px, calc(100svh - 36px)); flex-direction: column; overflow: hidden; border: 1px solid rgba(255, 255, 255, .72); border-radius: 28px; background: linear-gradient(150deg, #fff, #fbf5ff); box-shadow: 0 24px 80px rgba(39, 25, 48, .3); animation: karaoke-modal-in .22s ease both; }
+.karaoke-lyrics-topbar { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 24px 25px 17px; background: radial-gradient(circle at 100% 0, #ffe5f0, transparent 43%); }
+.karaoke-lyrics-topbar h3 { margin: 4px 0 5px; color: var(--ink); font-size: clamp(22px, 4vw, 30px); line-height: 1.1; }
+.karaoke-lyrics-topbar span { color: #927d9f; font-size: 11px; font-weight: 700; }
+.karaoke-lyrics-close { display: grid; place-items: center; width: 38px; height: 38px; flex: 0 0 38px; border: 0; border-radius: 50%; background: #f0eafa; color: #765fa9; font-size: 25px; line-height: 1; cursor: pointer; transition: transform .2s, background .2s; }
+.karaoke-lyrics-close:hover { transform: rotate(8deg) scale(1.05); background: #e6dafa; }
+.karaoke-lyrics-status { margin: 0 25px; padding: 9px 12px; border-radius: 12px; background: #f7f1fb; color: #806d8f; font-size: 11px; font-weight: 700; }
+.karaoke-lyrics-text { min-height: 260px; margin: 15px 25px 0; padding: 18px; overflow: auto; border: 1px solid #eee5f4; border-radius: 18px; background: rgba(255, 255, 255, .8); color: #473a4e; font: 500 14px/1.8 inherit; white-space: pre-wrap; word-break: break-word; }
+.karaoke-lyrics-help { margin: 13px 25px 21px; color: #9d91a4; font-size: 10px; line-height: 1.55; }
+.karaoke-lyrics-help code { padding: 2px 4px; border-radius: 4px; background: #f0eafa; color: #765fa9; }
+body.karaoke-modal-open { overflow: hidden; }
+@keyframes karaoke-modal-in { from { opacity: 0; transform: translateY(10px) scale(.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
 @keyframes karaoke-card-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 .chat-section { margin-top: 28px; padding: 24px; border: 1px solid #eadff1; border-radius: 25px; background: linear-gradient(145deg, #fff, #fbf8ff); box-shadow: var(--shadow); }
 .chat-section .section-heading { align-items: center; }
