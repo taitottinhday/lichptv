@@ -37,4 +37,12 @@ Chỉ đổi `LYRICS_PERSISTENCE_ALLOWED=true` sau khi gói Musixmatch của b�
 
 `MUSIXMATCH_API_KEY` là key riêng của Musixmatch, không phải OpenAI key. Hệ thống chỉ tự lưu kết quả có tên bài khớp chính xác; bài trùng tên hoặc nguồn trả đoạn trích sẽ được đánh dấu **cần xác minh**, không tạo lời giả.
 
+## Chế độ không có API key
+
+Nếu chưa có API key, Lyrics Modal không tự sao chép lời từ website. Thay vào đó, nó tạo nút **Mở nguồn lời bài hát** với truy vấn đúng tên bài và ca sĩ để người dùng mở nguồn bên ngoài. Đây là fallback an toàn, không scraping và không lưu nội dung không được cấp phép.
+
+Kiến trúc provider nằm ở `server.mjs`: provider hiện tại là Musixmatch, còn fallback link là lớp độc lập. Có thể bổ sung LyricFind hoặc một nhà cung cấp khác bằng cách thêm adapter vào `resolveLyrics()` mà không phải sửa Lyrics Modal.
+
+LyricFind hiện công bố các sản phẩm Lyric Display và Lyric Search cho đối tác, nhưng trang chính thức yêu cầu đăng ký để được tư vấn tích hợp; chưa có endpoint công khai đủ thông tin để tự động tích hợp trong project này. Vì vậy app không giả định URL/API của LyricFind.
+
 Sau khi thêm file, chạy lại app hoặc build lại để lời xuất hiện. Không dùng script này để crawl hàng loạt lời bài hát từ trang không cấp phép.

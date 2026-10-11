@@ -185,6 +185,7 @@ h3 { margin-bottom: 4px; font-size: 16px; }
 .karaoke-lyrics-empty-icon { display: grid; place-items: center; width: 58px; height: 58px; margin-bottom: 12px; border-radius: 20px; background: #ffe4ee; color: #db5077; font-size: 28px; }
 .karaoke-lyrics-empty strong { color: var(--ink); font-size: 17px; }
 .karaoke-lyrics-empty p { max-width: 350px; margin: 8px 0 15px; color: #9d91a4; font-size: 12px; line-height: 1.55; }
+.karaoke-lyrics-source-link { display: inline-flex; margin-bottom: 9px; text-decoration: none; }
 .karaoke-study-tools { display: flex; align-items: center; gap: 7px; margin-top: 10px; color: #9d91a4; font-size: 10px; }
 .karaoke-lyrics-editor { margin-top: 15px; padding: 15px; border: 1px solid #f0dce3; border-radius: 16px; background: #fff9fb; }
 .karaoke-lyrics-editor label { display: block; margin-bottom: 8px; color: #8e3c58; font-size: 12px; font-weight: 700; }

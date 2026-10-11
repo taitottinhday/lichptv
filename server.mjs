@@ -37,7 +37,8 @@ const geminiModel = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 const lyricsProvider = (process.env.LYRICS_PROVIDER || 'musixmatch').trim().toLowerCase();
 const musixmatchApiKey = process.env.MUSIXMATCH_API_KEY?.trim();
 const lyricsPersistenceAllowed = process.env.LYRICS_PERSISTENCE_ALLOWED === 'true';
-const lyricsProviderConfigured = lyricsProvider === 'musixmatch' && Boolean(musixmatchApiKey);
+const lyricsProviderConfigured = lyricsProvider === 'link'
+  || (lyricsProvider === 'musixmatch' && Boolean(musixmatchApiKey));
 const adminUsername = process.env.ADMIN_USERNAME || 'anh';
 const adminPassword = process.env.ADMIN_PASSWORD || '261004';
 const adminSessionSecret = process.env.ADMIN_SESSION_SECRET || adminPassword;
@@ -157,6 +158,19 @@ function karaokeSongById(songId) {
 function lyricsAttribution(source) {
   if (source === 'musixmatch') return 'Lyrics data provided under the Musixmatch API terms.';
   return '';
+}
+
+function lyricsSourceForSong(song) {
+  const artist = song.artist || song.composer || '';
+  const query = [song.title, artist, 'lời bài hát'].filter(Boolean).join(' ');
+  const url = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+  return {
+    provider: 'link',
+    sourceName: 'Tìm nguồn lời bài hát hợp pháp',
+    url,
+    sourceUrl: url,
+    query
+  };
 }
 
 async function readStoredLyrics(songId) {
@@ -288,6 +302,13 @@ async function resolveMusixmatchLyrics(song) {
 }
 
 async function resolveLyrics(song) {
+  if (lyricsProvider === 'link') {
+    return {
+      status: 'link_only',
+      ...lyricsSourceForSong(song),
+      reason: 'Chưa cấu hình API lời bài hát; mở nguồn bên ngoài để xem trực tiếp.'
+    };
+  }
   if (lyricsProvider !== 'musixmatch') throw new Error(`LYRICS_PROVIDER chưa hỗ trợ: ${lyricsProvider}`);
   return resolveMusixmatchLyrics(song);
 }
@@ -295,8 +316,15 @@ async function resolveLyrics(song) {
 async function syncOneLyrics(song, { force = false } = {}) {
   const existing = await readStoredLyrics(song.songId);
   if (existing && !force) return { status: 'skipped', reason: 'Bài đã có lời được lưu.', entry: existing };
-  if (!lyricsProviderConfigured) throw new Error('Chưa cấu hình MUSIXMATCH_API_KEY trên server. Không dùng OpenAI key cho lyrics.');
+  if (!lyricsProviderConfigured) {
+    return {
+      status: 'link_only',
+      ...lyricsSourceForSong(song),
+      reason: 'Chưa cấu hình API lời bài hát; mở nguồn bên ngoài để xem trực tiếp.'
+    };
+  }
   const resolved = await resolveLyrics(song);
+  if (resolved.status === 'link_only') return resolved;
   if (resolved.status !== 'matched') return resolved;
   const entry = {
     songId: song.songId,
@@ -626,8 +654,15 @@ app.get('/api/health', (_request, response) => response.json({
   geminiConfigured: Boolean(geminiApiKey),
   lyricsProvider,
   lyricsProviderConfigured,
-  lyricsPersistenceAllowed
+  lyricsPersistenceAllowed,
+  lyricsLinkFallback: true
 }));
+
+app.get('/api/lyrics/source/:songId', (request, response) => {
+  const song = karaokeSongById(request.params.songId);
+  if (!song) return response.status(404).json({ error: 'Không tìm thấy bài hát.' });
+  return response.json({ ok: true, songId: song.songId, title: song.title, artist: song.artist || song.composer || '', ...lyricsSourceForSong(song) });
+});
 
 app.get('/api/lyrics/:songId', async (request, response) => {
   const song = karaokeSongById(request.params.songId);
@@ -668,6 +703,8 @@ app.post('/api/lyrics/sync-one', async (request, response) => {
       lyrics: entry?.lyrics_text || entry?.lyrics || result.lyrics || '',
       artist: entry?.artist || result.track?.artist_name || '',
       source: entry?.source || result.provider || '',
+      sourceUrl: result.sourceUrl || '',
+      sourceName: result.sourceName || '',
       attribution: entry?.attribution || result.attribution || '',
       cacheable: (result.status === 'saved' || result.status === 'skipped')
         && (entry?.cache_allowed === true || lyricsPersistenceAllowed),

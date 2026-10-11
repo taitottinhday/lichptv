@@ -354,6 +354,8 @@ function createKaraokeLyricsModalState() {
     fontSize: prefs.fontSize,
     align: prefs.align,
     fullscreen: false,
+    sourceUrl: '',
+    sourceName: '',
     requestId: ''
   };
 }
@@ -392,6 +394,16 @@ async function fetchStoredKaraokeLyrics(song) {
     if (!data?.lyrics?.trim()) return null;
     cacheKaraokeLyrics(song, data);
     return data;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchKaraokeLyricsSource(song) {
+  try {
+    const response = await fetch(`/api/lyrics/source/${encodeURIComponent(song.songId)}`, { cache: 'no-store' });
+    if (!response.ok) return null;
+    return await response.json();
   } catch {
     return null;
   }
@@ -436,7 +448,7 @@ async function syncKaraokeLibrary() {
   progress.max = songs.length;
   progress.value = 0;
   resultBox.hidden = true;
-  const counts = { saved: 0, skipped: 0, displayOnly: 0, verify: 0, failed: 0 };
+  const counts = { saved: 0, skipped: 0, displayOnly: 0, linkOnly: 0, verify: 0, failed: 0 };
   const failures = [];
   for (let index = 0; index < songs.length; index += 1) {
     const song = songs[index];
@@ -459,6 +471,8 @@ async function syncKaraokeLibrary() {
       counts[data.status] += 1;
     } else if (data.status === 'display_only') {
       counts.displayOnly += 1;
+    } else if (data.status === 'link_only') {
+      counts.linkOnly += 1;
     } else if (data.status === 'needs_verification') {
       counts.verify += 1;
     } else {
@@ -474,6 +488,7 @@ async function syncKaraokeLibrary() {
     `Lưu offline: <strong>${counts.saved}</strong>`,
     `Đã bỏ qua: <strong>${counts.skipped}</strong>`,
     `Chỉ hiển thị online: <strong>${counts.displayOnly}</strong>`,
+    `Có liên kết nguồn: <strong>${counts.linkOnly}</strong>`,
     `Cần xác minh: <strong>${counts.verify}</strong>`,
     `Thất bại: <strong>${counts.failed}</strong>`,
     failures.length ? `<details><summary>Xem lỗi</summary><ul>${failures.slice(0, 12).map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul></details>` : ''
@@ -487,7 +502,7 @@ async function loadKaraokeSyncStatus() {
     const response = await fetch('/api/health', { cache: 'no-store' });
     const data = await response.json();
     if (!data.lyricsProviderConfigured) {
-      status.textContent = 'Chưa cấu hình API lyrics';
+      status.textContent = data.lyricsLinkFallback ? 'Chưa có API · có fallback nguồn link' : 'Chưa cấu hình API lyrics';
       status.classList.add('is-warning');
       return;
     }
@@ -540,11 +555,15 @@ function renderKaraokeLyricsModal() {
   const fullscreenToggle = $('#toggleLyricsFullscreen');
   const alignToggle = $('#toggleLyricsAlign');
   const fontSizeValue = $('#lyricsFontSizeValue');
+  const sourceLink = $('#openKaraokeLyricsSource');
   const hiddenCount = [...session.hiddenLines].filter((line) => Number.isInteger(line)).length;
 
   $('#karaokeLyricsTitle').textContent = song.title;
   $('#karaokeLyricsArtist').textContent = song.artist || song.composer || 'Chưa có thông tin ca sĩ / nhạc sĩ';
   $('#karaokeLyricsCategory').textContent = karaokeCategoryLabel(song.category);
+  sourceLink.hidden = !session.sourceUrl || hasLyrics || session.loading || session.editing;
+  sourceLink.href = session.sourceUrl || '#';
+  sourceLink.textContent = session.sourceName ? `${session.sourceName} ↗` : 'Mở nguồn lời bài hát ↗';
   modal.classList.toggle('is-fullscreen', session.fullscreen);
   modal.style.setProperty('--lyrics-font-size', `${session.fontSize}px`);
   view.classList.toggle('is-left', session.align === 'left');
@@ -592,6 +611,8 @@ async function openKaraokeLyrics(songId) {
   session.text = stored?.text || '';
   session.loading = !session.text;
   session.error = false;
+  session.sourceUrl = '';
+  session.sourceName = '';
   session.editing = false;
   session.studyMode = savedUi.studyMode;
   session.hiddenLines = savedUi.hiddenLines;
@@ -641,9 +662,19 @@ async function openKaraokeLyrics(songId) {
         renderKaraokeLyricsModal();
         return;
       }
+      if (synced?.sourceUrl) {
+        session.sourceUrl = synced.sourceUrl;
+        session.sourceName = synced.sourceName || 'Mở nguồn lời bài hát';
+      }
     } catch {
       // Keep the editor available when the provider is unavailable or needs configuration.
     }
+  }
+  if (!session.sourceUrl) {
+    const source = await fetchKaraokeLyricsSource(song);
+    if (session.requestId !== requestId) return;
+    session.sourceUrl = source?.url || '';
+    session.sourceName = source?.sourceName || '';
   }
   if (session.requestId !== requestId) return;
   session.loading = false;

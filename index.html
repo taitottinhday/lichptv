@@ -229,7 +229,8 @@
               <div class="karaoke-lyrics-empty" id="karaokeLyricsEmpty" hidden>
                 <div class="karaoke-lyrics-empty-icon" aria-hidden="true">♪</div>
                 <strong>Bài hát này chưa có lời</strong>
-                <p>Em có thể dán lời bài hát mà mình có quyền sử dụng để lưu và xem offline.</p>
+                <p id="karaokeLyricsEmptyMessage">Em có thể mở nguồn lời hợp pháp hoặc thêm nội dung mà mình có quyền sử dụng để lưu và xem offline.</p>
+                <a class="button button-light karaoke-lyrics-source-link" id="openKaraokeLyricsSource" href="#" target="_blank" rel="noopener noreferrer" hidden>Mở nguồn lời bài hát ↗</a>
                 <button class="button button-primary" id="addKaraokeLyrics" type="button">＋ Thêm lời bài hát</button>
               </div>
               <div class="karaoke-lyrics-text" id="karaokeLyricsText" tabindex="0" aria-live="polite"></div>
@@ -389,7 +390,7 @@
             </div>
             <span class="chat-status-pill" id="karaokeSyncProviderStatus">Đang kiểm tra nguồn…</span>
           </div>
-          <p class="admin-lyrics-sync-intro">Tự tìm theo songId, bỏ qua bài đã lưu và chỉ lưu offline khi gói API cho phép. OpenAI key không dùng cho dữ liệu lyrics.</p>
+          <p class="admin-lyrics-sync-intro">Tự tìm theo songId, bỏ qua bài đã lưu và chỉ lưu offline khi gói API cho phép. Nếu chưa có API key, Lyrics Modal sẽ mở nguồn tìm kiếm hợp pháp thay vì sao chép lời. OpenAI key không dùng cho dữ liệu lyrics.</p>
           <div class="admin-lyrics-sync-actions">
             <button class="button button-primary" id="syncKaraokeLyrics" type="button">Đồng bộ lời mới</button>
             <span id="karaokeSyncProgressText" role="status" aria-live="polite">Chưa chạy đồng bộ.</span>
