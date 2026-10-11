@@ -343,6 +343,17 @@ body.karaoke-modal-open { overflow: hidden; }
 .admin-heading h1 { margin: 8px 0; font-family: 'Playfair Display', Georgia, serif; font-size: 30px; }
 .admin-subtitle { margin: 0; color: var(--muted); font-size: 13px; }
 .admin-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; padding-top: 18px; border-top: 1px dashed #eedce3; }
+.admin-lyrics-sync { margin-top: 25px; padding: 22px; border: 1px solid #e8def1; border-radius: 22px; background: radial-gradient(circle at 100% 0, #fff2f8 0 20%, transparent 45%), linear-gradient(145deg, #fff, #fbf8ff); }
+.admin-lyrics-sync h2 { margin-bottom: 0; font-size: clamp(22px, 3vw, 30px); }
+.admin-lyrics-sync-intro { margin: 8px 0 16px; color: var(--muted); font-size: 12px; line-height: 1.55; }
+.admin-lyrics-sync-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.admin-lyrics-sync-actions .button { margin-top: 0; }
+.admin-lyrics-sync-actions span { color: #8f7ba1; font-size: 11px; font-weight: 700; }
+.karaoke-sync-provider-status.is-warning { color: #b27323; }
+.karaoke-sync-progress { display: block; width: 100%; height: 9px; margin-top: 15px; overflow: hidden; accent-color: var(--pink); }
+.karaoke-sync-result { margin-top: 12px; padding: 11px 13px; border-radius: 13px; background: #fff4f8; color: #765563; font-size: 11px; line-height: 1.7; }
+.karaoke-sync-result details { margin-top: 8px; }
+.karaoke-sync-result ul { margin: 5px 0 0 18px; padding: 0; }
 .admin-schedule-section { margin-top: 25px; padding: 22px; border: 1px solid #eee2e8; border-radius: 22px; background: linear-gradient(145deg, #fff, #fffafd); }
 .admin-schedule-section h2 { margin-bottom: 0; font-size: clamp(24px, 3vw, 31px); }
 .admin-month-controls { justify-content: space-between; margin: 16px 0 10px; }

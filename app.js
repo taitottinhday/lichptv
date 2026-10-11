@@ -371,6 +371,134 @@ function currentKaraokeLyricsSong() {
   return UNIQUE_KARAOKE_SONGS.find((song) => song.songId === state.karaokeLyricsModal.songId);
 }
 
+function cacheKaraokeLyrics(song, data) {
+  if (!song || !data?.lyrics || !data.cacheable) return false;
+  state.karaokeLyrics[song.songId] = {
+    text: data.lyrics,
+    source: data.source || 'licensed-api',
+    artist: data.artist || '',
+    attribution: data.attribution || '',
+    updatedAt: new Date().toISOString()
+  };
+  saveKaraokeLyrics();
+  return true;
+}
+
+async function fetchStoredKaraokeLyrics(song) {
+  try {
+    const response = await fetch(`/api/lyrics/${encodeURIComponent(song.songId)}`, { cache: 'no-store' });
+    if (!response.ok) return null;
+    const data = await response.json();
+    if (!data?.lyrics?.trim()) return null;
+    cacheKaraokeLyrics(song, data);
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+async function syncKaraokeSongFromProvider(song, token, force = false) {
+  const response = await fetch('/api/lyrics/sync-one', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ songId: song.songId, force })
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || `HTTP ${response.status}`);
+  cacheKaraokeLyrics(song, data);
+  return data;
+}
+
+function waitBeforeLyricsRetry(attempt) {
+  return new Promise((resolve) => window.setTimeout(resolve, 700 * (attempt + 1)));
+}
+
+async function syncKaraokeLibrary() {
+  const button = $('#syncKaraokeLyrics');
+  const progress = $('#karaokeSyncProgress');
+  const progressText = $('#karaokeSyncProgressText');
+  const resultBox = $('#karaokeSyncResult');
+  const token = localStorage.getItem(ADMIN_TOKEN_KEY);
+  if (!button || !progress || !progressText || !resultBox) return;
+  if (!token) {
+    progressText.textContent = 'Phiên quản trị đã hết hạn, hãy đăng nhập lại.';
+    return;
+  }
+  const songs = UNIQUE_KARAOKE_SONGS.filter((song) => !state.karaokeLyrics[song.songId]);
+  if (!songs.length) {
+    progressText.textContent = 'Toàn bộ bài hiện có đã có lời lưu trên thiết bị này.';
+    resultBox.hidden = false;
+    resultBox.textContent = 'Không có bài mới cần đồng bộ.';
+    return;
+  }
+  button.disabled = true;
+  progress.hidden = false;
+  progress.max = songs.length;
+  progress.value = 0;
+  resultBox.hidden = true;
+  const counts = { saved: 0, skipped: 0, displayOnly: 0, verify: 0, failed: 0 };
+  const failures = [];
+  for (let index = 0; index < songs.length; index += 1) {
+    const song = songs[index];
+    progressText.textContent = `Đang tìm ${index + 1}/${songs.length}: ${song.title}`;
+    let data;
+    let lastError;
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        data = await syncKaraokeSongFromProvider(song, token);
+        break;
+      } catch (error) {
+        lastError = error;
+        if (attempt < 2) await waitBeforeLyricsRetry(attempt);
+      }
+    }
+    if (!data) {
+      counts.failed += 1;
+      failures.push(`${song.title}: ${lastError?.message || 'không rõ lỗi'}`);
+    } else if (data.status === 'saved' || data.status === 'skipped') {
+      counts[data.status] += 1;
+    } else if (data.status === 'display_only') {
+      counts.displayOnly += 1;
+    } else if (data.status === 'needs_verification') {
+      counts.verify += 1;
+    } else {
+      counts.failed += 1;
+      failures.push(`${song.title}: ${data.reason || data.status || 'không tìm thấy'}`);
+    }
+    progress.value = index + 1;
+  }
+  button.disabled = false;
+  progressText.textContent = `Đã xử lý ${songs.length}/${songs.length} bài.`;
+  resultBox.hidden = false;
+  resultBox.innerHTML = [
+    `Lưu offline: <strong>${counts.saved}</strong>`,
+    `Đã bỏ qua: <strong>${counts.skipped}</strong>`,
+    `Chỉ hiển thị online: <strong>${counts.displayOnly}</strong>`,
+    `Cần xác minh: <strong>${counts.verify}</strong>`,
+    `Thất bại: <strong>${counts.failed}</strong>`,
+    failures.length ? `<details><summary>Xem lỗi</summary><ul>${failures.slice(0, 12).map((item) => `<li>${escapeHtml(item)}</li>`).join('')}</ul></details>` : ''
+  ].filter(Boolean).join(' · ');
+}
+
+async function loadKaraokeSyncStatus() {
+  const status = $('#karaokeSyncProviderStatus');
+  if (!status) return;
+  try {
+    const response = await fetch('/api/health', { cache: 'no-store' });
+    const data = await response.json();
+    if (!data.lyricsProviderConfigured) {
+      status.textContent = 'Chưa cấu hình API lyrics';
+      status.classList.add('is-warning');
+      return;
+    }
+    status.textContent = data.lyricsPersistenceAllowed ? 'API + lưu offline' : 'API · chỉ online';
+    status.classList.toggle('is-warning', !data.lyricsPersistenceAllowed);
+  } catch {
+    status.textContent = 'Không kết nối được server';
+    status.classList.add('is-warning');
+  }
+}
+
 function renderKaraokeLyricsLines() {
   const session = state.karaokeLyricsModal;
   const view = $('#karaokeLyricsText');
@@ -474,6 +602,15 @@ async function openKaraokeLyrics(songId) {
   $('#closeKaraokeLyrics')?.focus();
   renderKaraokeLyricsModal();
   if (stored?.text) return;
+  const serverLyrics = await fetchStoredKaraokeLyrics(song);
+  if (session.requestId !== requestId) return;
+  if (serverLyrics?.lyrics) {
+    session.text = serverLyrics.lyrics;
+    session.loading = false;
+    session.error = false;
+    renderKaraokeLyricsModal();
+    return;
+  }
   try {
     const response = await fetch(`${KARAOKE_LYRICS_DIR}${encodeURIComponent(song.songId)}.txt`, { cache: 'no-store' });
     const contentType = response.headers.get('content-type') || '';
@@ -486,13 +623,32 @@ async function openKaraokeLyrics(songId) {
     state.karaokeLyrics[song.songId] = { text, source: 'public-file', updatedAt: new Date().toISOString() };
     saveKaraokeLyrics();
     renderKaraokeLyricsModal();
+    return;
   } catch {
     if (session.requestId !== requestId) return;
     session.loading = false;
     session.error = false;
-    session.editing = true;
-    renderKaraokeLyricsModal();
   }
+  const adminToken = localStorage.getItem(ADMIN_TOKEN_KEY);
+  if (adminToken) {
+    try {
+      const synced = await syncKaraokeSongFromProvider(song, adminToken);
+      if (session.requestId !== requestId) return;
+      if (synced?.lyrics) {
+        session.text = synced.lyrics;
+        session.loading = false;
+        session.editing = false;
+        renderKaraokeLyricsModal();
+        return;
+      }
+    } catch {
+      // Keep the editor available when the provider is unavailable or needs configuration.
+    }
+  }
+  if (session.requestId !== requestId) return;
+  session.loading = false;
+  session.editing = true;
+  renderKaraokeLyricsModal();
 }
 
 function karaokeCategoryLabel(categoryId) {
@@ -695,6 +851,7 @@ function bindKaraoke() {
     state.karaokeLyricsModal.fullscreen = !state.karaokeLyricsModal.fullscreen;
     renderKaraokeLyricsModal();
   });
+  $('#syncKaraokeLyrics')?.addEventListener('click', syncKaraokeLibrary);
   search.addEventListener('input', () => {
     state.karaokeQuery = search.value;
     renderKaraoke();
@@ -717,6 +874,7 @@ function bindKaraoke() {
     showToast('Đã bỏ toàn bộ bài karaoke đã chọn.');
   });
   renderKaraoke();
+  loadKaraokeSyncStatus();
 }
 
 async function submitFoodRequest() {
