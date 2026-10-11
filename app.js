@@ -345,6 +345,8 @@ function createKaraokeLyricsModalState() {
   return {
     songId: null,
     text: '',
+    syncedLyrics: '',
+    providerTrackId: '',
     loading: false,
     error: false,
     editing: false,
@@ -377,13 +379,30 @@ function cacheKaraokeLyrics(song, data) {
   if (!song || !data?.lyrics || !data.cacheable) return false;
   state.karaokeLyrics[song.songId] = {
     text: data.lyrics,
+    syncedLyrics: data.syncedLyrics || '',
     source: data.source || 'licensed-api',
     artist: data.artist || '',
+    providerTrackId: data.providerTrackId || '',
+    albumName: data.albumName || '',
+    durationSeconds: data.durationSeconds || null,
+    hasWordSync: data.hasWordSync === true,
     attribution: data.attribution || '',
     updatedAt: new Date().toISOString()
   };
   saveKaraokeLyrics();
   return true;
+}
+
+async function fetchLiveKaraokeLyrics(song) {
+  try {
+    const response = await fetch(`/api/lyrics/resolve/${encodeURIComponent(song.songId)}`, { cache: 'no-store' });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || !data?.lyrics?.trim()) return null;
+    if (data.cacheable) cacheKaraokeLyrics(song, data);
+    return data;
+  } catch {
+    return null;
+  }
 }
 
 async function fetchStoredKaraokeLyrics(song) {
@@ -580,7 +599,7 @@ function renderKaraokeLyricsModal() {
   else if (session.error) status.textContent = 'Không đọc được file lời bài hát';
   else if (!hasLyrics) status.textContent = 'Bài hát này chưa có lời';
   else if (session.studyMode) status.textContent = `Chế độ học thuộc · ${hiddenCount} dòng đang ẩn`;
-  else status.textContent = 'Lời bài hát đã sẵn sàng để hát';
+  else status.textContent = session.sourceName ? `Lời bài hát · ${session.sourceName}` : 'Lời bài hát đã sẵn sàng để hát';
 
   view.hidden = session.loading || !hasLyrics || session.editing;
   empty.hidden = session.loading || hasLyrics || session.editing;
@@ -609,10 +628,12 @@ async function openKaraokeLyrics(songId) {
   const requestId = `${song.songId}:${Date.now()}`;
   session.songId = song.songId;
   session.text = stored?.text || '';
+  session.syncedLyrics = stored?.syncedLyrics || '';
+  session.providerTrackId = stored?.providerTrackId || '';
   session.loading = !session.text;
   session.error = false;
   session.sourceUrl = '';
-  session.sourceName = '';
+  session.sourceName = stored?.source || '';
   session.editing = false;
   session.studyMode = savedUi.studyMode;
   session.hiddenLines = savedUi.hiddenLines;
@@ -627,6 +648,9 @@ async function openKaraokeLyrics(songId) {
   if (session.requestId !== requestId) return;
   if (serverLyrics?.lyrics) {
     session.text = serverLyrics.lyrics;
+    session.syncedLyrics = serverLyrics.syncedLyrics || '';
+    session.providerTrackId = serverLyrics.providerTrackId || '';
+    session.sourceName = serverLyrics.source || '';
     session.loading = false;
     session.error = false;
     renderKaraokeLyricsModal();
@@ -649,6 +673,19 @@ async function openKaraokeLyrics(songId) {
     if (session.requestId !== requestId) return;
     session.loading = false;
     session.error = false;
+  }
+  const liveLyrics = await fetchLiveKaraokeLyrics(song);
+  if (session.requestId !== requestId) return;
+  if (liveLyrics?.lyrics) {
+    session.text = liveLyrics.lyrics;
+    session.syncedLyrics = liveLyrics.syncedLyrics || '';
+    session.providerTrackId = liveLyrics.providerTrackId || '';
+    session.sourceName = liveLyrics.sourceName || liveLyrics.source || '';
+    session.sourceUrl = '';
+    session.loading = false;
+    session.error = false;
+    renderKaraokeLyricsModal();
+    return;
   }
   const adminToken = localStorage.getItem(ADMIN_TOKEN_KEY);
   if (adminToken) {

@@ -34,10 +34,16 @@ const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
 const vapidEmail = process.env.VAPID_EMAIL || 'mailto:admin@example.com';
 const geminiApiKey = process.env.GEMINI_API_KEY?.trim();
 const geminiModel = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
-const lyricsProvider = (process.env.LYRICS_PROVIDER || 'musixmatch').trim().toLowerCase();
+const lyricsProvider = (process.env.LYRICS_PROVIDER || 'lrclib').trim().toLowerCase();
 const musixmatchApiKey = process.env.MUSIXMATCH_API_KEY?.trim();
+const lrclibBaseUrl = (process.env.LRCLIB_BASE_URL || 'https://lrclib.net').trim().replace(/\/$/, '');
+const lrclibUserAgent = process.env.LRCLIB_USER_AGENT?.trim()
+  || 'LichCuaVy-Karaoke/1.0 (https://github.com/taitottinhday/lichptv)';
 const lyricsPersistenceAllowed = process.env.LYRICS_PERSISTENCE_ALLOWED === 'true';
-const lyricsProviderConfigured = lyricsProvider === 'link'
+const lrclibCacheAllowed = process.env.LRCLIB_CACHE_ALLOWED === 'true';
+const lyricsCacheAllowed = lyricsPersistenceAllowed && (lyricsProvider !== 'lrclib' || lrclibCacheAllowed);
+const lyricsPublicLookupEnabled = process.env.LYRICS_PUBLIC_LOOKUP_ENABLED !== 'false';
+const lyricsProviderConfigured = lyricsProvider === 'link' || lyricsProvider === 'lrclib'
   || (lyricsProvider === 'musixmatch' && Boolean(musixmatchApiKey));
 const adminUsername = process.env.ADMIN_USERNAME || 'anh';
 const adminPassword = process.env.ADMIN_PASSWORD || '261004';
@@ -106,14 +112,22 @@ const databaseReady = pool
       title TEXT NOT NULL,
       artist TEXT NOT NULL DEFAULT '',
       lyrics_text TEXT NOT NULL,
+      synced_lyrics_text TEXT NOT NULL DEFAULT '',
       source TEXT NOT NULL,
       provider_track_id TEXT,
+      album_name TEXT NOT NULL DEFAULT '',
+      duration_seconds NUMERIC,
+      has_word_sync BOOLEAN NOT NULL DEFAULT FALSE,
       match_score NUMERIC NOT NULL DEFAULT 0,
       verification_status TEXT NOT NULL DEFAULT 'verified',
       cache_allowed BOOLEAN NOT NULL DEFAULT FALSE,
       attribution TEXT NOT NULL DEFAULT '',
       updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-    );`)
+    );
+    ALTER TABLE lyrics_entries ADD COLUMN IF NOT EXISTS synced_lyrics_text TEXT NOT NULL DEFAULT '';
+    ALTER TABLE lyrics_entries ADD COLUMN IF NOT EXISTS album_name TEXT NOT NULL DEFAULT '';
+    ALTER TABLE lyrics_entries ADD COLUMN IF NOT EXISTS duration_seconds NUMERIC;
+    ALTER TABLE lyrics_entries ADD COLUMN IF NOT EXISTS has_word_sync BOOLEAN NOT NULL DEFAULT FALSE;`)
   : Promise.resolve();
 
 async function supabaseRequest(path, options = {}) {
@@ -157,6 +171,7 @@ function karaokeSongById(songId) {
 
 function lyricsAttribution(source) {
   if (source === 'musixmatch') return 'Lyrics data provided under the Musixmatch API terms.';
+  if (source === 'lrclib') return 'Lyrics retrieved from LRCLIB; verify rights before redistribution.';
   return '';
 }
 
@@ -177,7 +192,8 @@ async function readStoredLyrics(songId) {
   if (pool) {
     await databaseReady;
     const result = await pool.query(
-      `SELECT song_id, title, artist, lyrics_text, source, provider_track_id, match_score,
+      `SELECT song_id, title, artist, lyrics_text, synced_lyrics_text, source, provider_track_id,
+              album_name, duration_seconds, has_word_sync, match_score,
               verification_status, cache_allowed, attribution, updated_at
        FROM lyrics_entries WHERE song_id = $1`,
       [songId]
@@ -188,29 +204,37 @@ async function readStoredLyrics(songId) {
 }
 
 async function writeStoredLyrics(entry) {
-  if (!lyricsPersistenceAllowed) return null;
+  if (!lyricsCacheAllowed || entry.cacheAllowed !== true) return null;
   if (pool) {
     await databaseReady;
     const result = await pool.query(
       `INSERT INTO lyrics_entries
-         (song_id, title, artist, lyrics_text, source, provider_track_id, match_score,
-          verification_status, cache_allowed, attribution, updated_at)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,NOW())
+         (song_id, title, artist, lyrics_text, synced_lyrics_text, source, provider_track_id,
+          album_name, duration_seconds, has_word_sync, match_score, verification_status,
+          cache_allowed, attribution, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,NOW())
        ON CONFLICT (song_id) DO UPDATE SET
          title = EXCLUDED.title,
          artist = EXCLUDED.artist,
          lyrics_text = EXCLUDED.lyrics_text,
+         synced_lyrics_text = EXCLUDED.synced_lyrics_text,
          source = EXCLUDED.source,
          provider_track_id = EXCLUDED.provider_track_id,
+         album_name = EXCLUDED.album_name,
+         duration_seconds = EXCLUDED.duration_seconds,
+         has_word_sync = EXCLUDED.has_word_sync,
          match_score = EXCLUDED.match_score,
          verification_status = EXCLUDED.verification_status,
          cache_allowed = EXCLUDED.cache_allowed,
          attribution = EXCLUDED.attribution,
          updated_at = NOW()
-       RETURNING song_id, title, artist, lyrics_text, source, provider_track_id, match_score,
-                 verification_status, cache_allowed, attribution, updated_at`,
-      [entry.songId, entry.title, entry.artist || '', entry.lyrics, entry.source, entry.providerTrackId || null,
-        entry.matchScore || 0, entry.verificationStatus || 'verified', true, entry.attribution || '']
+       RETURNING song_id, title, artist, lyrics_text, synced_lyrics_text, source, provider_track_id,
+                 album_name, duration_seconds, has_word_sync, match_score, verification_status,
+                 cache_allowed, attribution, updated_at`,
+      [entry.songId, entry.title, entry.artist || '', entry.lyrics, entry.syncedLyrics || '', entry.source,
+        entry.providerTrackId || null, entry.albumName || '', entry.durationSeconds || null,
+        entry.hasWordSync === true, entry.matchScore || 0, entry.verificationStatus || 'verified',
+        entry.cacheAllowed === true, entry.attribution || '']
     );
     return result.rows[0] || null;
   }
@@ -219,11 +243,15 @@ async function writeStoredLyrics(entry) {
     title: entry.title,
     artist: entry.artist || '',
     lyrics_text: entry.lyrics,
+    synced_lyrics_text: entry.syncedLyrics || '',
     source: entry.source,
     provider_track_id: entry.providerTrackId || null,
+    album_name: entry.albumName || '',
+    duration_seconds: entry.durationSeconds || null,
+    has_word_sync: entry.hasWordSync === true,
     match_score: entry.matchScore || 0,
     verification_status: entry.verificationStatus || 'verified',
-    cache_allowed: true,
+    cache_allowed: entry.cacheAllowed === true,
     attribution: entry.attribution || '',
     updated_at: new Date().toISOString()
   };
@@ -274,6 +302,124 @@ function cleanMusixmatchLyrics(value) {
     .trim();
 }
 
+function stripLrcTimestamps(value) {
+  return String(value || '')
+    .replace(/^\s*\[\d{1,3}:\d{2}(?:[.:]\d{1,3})?\]\s?/gm, '')
+    .trim();
+}
+
+function parseRetryAfterMs(value) {
+  const seconds = Number(value);
+  if (Number.isFinite(seconds) && seconds >= 0) return Math.min(seconds * 1000, 10000);
+  const date = Date.parse(value || '');
+  return Number.isFinite(date) ? Math.max(0, Math.min(date - Date.now(), 10000)) : 1000;
+}
+
+function waitForLyricsRetry(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function lrclibRequest(path, params = {}) {
+  const url = new URL(`${lrclibBaseUrl}${path}`);
+  url.search = new URLSearchParams(params);
+  let lastError;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      const response = await fetch(url, {
+        headers: {
+          Accept: 'application/json',
+          'User-Agent': lrclibUserAgent,
+          'X-User-Agent': lrclibUserAgent
+        },
+        signal: AbortSignal.timeout(15000)
+      });
+      if (response.ok) {
+        const text = await response.text();
+        try { return text ? JSON.parse(text) : null; } catch { throw new Error('LRCLIB trả về JSON không hợp lệ.'); }
+      }
+      if (response.status !== 503 && response.status !== 429) {
+        if (response.status === 404) return null;
+        throw new Error(`LRCLIB HTTP ${response.status}`);
+      }
+      const retryAfter = parseRetryAfterMs(response.headers.get('retry-after'));
+      lastError = new Error(`LRCLIB HTTP ${response.status}`);
+      if (attempt < 2) await waitForLyricsRetry(Math.max(retryAfter, 500 * (2 ** attempt)));
+    } catch (error) {
+      lastError = error;
+      if (attempt < 2 && /fetch failed|timeout|503|429/i.test(error.message)) {
+        await waitForLyricsRetry(500 * (2 ** attempt));
+      } else if (attempt >= 2) {
+        throw error;
+      }
+    }
+  }
+  throw lastError || new Error('LRCLIB không phản hồi.');
+}
+
+function chooseLrclibTrack(song, records) {
+  const titleKey = normalizeMusicText(song.title);
+  const artistKey = normalizeMusicText(song.artist || song.composer);
+  const exactTitle = records.filter((record) => normalizeMusicText(record.trackName || record.name) === titleKey);
+  if (!exactTitle.length) return { status: 'not_found', reason: 'LRCLIB không có kết quả trùng chính xác tên bài.' };
+  const artistMatches = artistKey
+    ? exactTitle.filter((record) => normalizeMusicText(record.artistName) === artistKey)
+    : exactTitle;
+  if (artistKey && artistMatches.length === 0) {
+    return { status: 'needs_verification', reason: 'Tên bài khớp nhưng ca sĩ không khớp.' };
+  }
+  const exactArtistSpelling = artistKey
+    ? artistMatches.filter((record) => String(record.artistName || '').trim().toLocaleLowerCase('vi-VN')
+      === String(song.artist || song.composer || '').trim().toLocaleLowerCase('vi-VN'))
+    : exactTitle;
+  const candidates = artistKey ? (exactArtistSpelling.length ? exactArtistSpelling : artistMatches) : exactTitle;
+  if (!artistKey && candidates.length > 1) {
+    return { status: 'needs_verification', reason: 'Có nhiều bài trùng tên; cần bổ sung ca sĩ.' };
+  }
+  const expectedDuration = Number(song.duration);
+  const ranked = [...candidates].sort((left, right) => {
+    const leftDistance = Number.isFinite(expectedDuration) && Number.isFinite(Number(left.duration))
+      ? Math.abs(Number(left.duration) - expectedDuration) : 0;
+    const rightDistance = Number.isFinite(expectedDuration) && Number.isFinite(Number(right.duration))
+      ? Math.abs(Number(right.duration) - expectedDuration) : 0;
+    return leftDistance - rightDistance;
+  });
+  const selected = ranked[0];
+  if (!selected?.id) return { status: 'not_found', reason: 'Kết quả LRCLIB không có id.' };
+  return { status: 'matched', track: selected, score: artistKey ? 1 : 0.9 };
+}
+
+async function resolveLrclibLyrics(song) {
+  const searchParams = {
+    track_name: song.title,
+    ...(song.artist || song.composer ? { artist_name: song.artist || song.composer } : {})
+  };
+  let records = await lrclibRequest('/api/search', searchParams);
+  if (!Array.isArray(records) || !records.length) {
+    const asciiTitle = normalizeMusicText(song.title);
+    if (asciiTitle && asciiTitle !== song.title.toLocaleLowerCase('vi-VN')) {
+      records = await lrclibRequest('/api/search', { ...searchParams, track_name: asciiTitle });
+    }
+  }
+  const match = chooseLrclibTrack(song, Array.isArray(records) ? records : []);
+  if (match.status !== 'matched') return { ...match, provider: 'lrclib' };
+  const track = match.track;
+  const plainLyrics = String(track.plainLyrics || '').trim();
+  const syncedLyrics = String(track.syncedLyrics || '').trim();
+  const lyrics = plainLyrics || stripLrcTimestamps(syncedLyrics);
+  if (!lyrics || track.instrumental) {
+    return { status: 'not_found', reason: 'LRCLIB không có lời văn bản cho bản ghi này.', provider: 'lrclib' };
+  }
+  return {
+    status: 'matched',
+    provider: 'lrclib',
+    lyrics,
+    syncedLyrics,
+    track,
+    score: match.score,
+    attribution: lyricsAttribution('lrclib')
+  };
+}
+
 async function resolveMusixmatchLyrics(song) {
   const search = await musixmatchRequest('track.search', {
     q_track: song.title,
@@ -302,6 +448,7 @@ async function resolveMusixmatchLyrics(song) {
 }
 
 async function resolveLyrics(song) {
+  if (lyricsProvider === 'lrclib') return resolveLrclibLyrics(song);
   if (lyricsProvider === 'link') {
     return {
       status: 'link_only',
@@ -331,15 +478,45 @@ async function syncOneLyrics(song, { force = false } = {}) {
     title: song.title,
     artist: resolved.track?.artist_name || song.artist || song.composer || '',
     lyrics: resolved.lyrics,
+    syncedLyrics: resolved.syncedLyrics || '',
     source: resolved.provider,
-    providerTrackId: String(resolved.track.track_id),
+    providerTrackId: String(resolved.track.track_id || resolved.track.id),
+    albumName: resolved.track?.album_name || resolved.track?.albumName || '',
+    durationSeconds: Number.isFinite(Number(resolved.track?.duration)) ? Number(resolved.track.duration) : null,
+    hasWordSync: resolved.track?.hasWordSync === true,
     matchScore: resolved.score,
     verificationStatus: 'verified',
-    attribution: resolved.attribution
+    attribution: resolved.attribution,
+    cacheAllowed: lyricsCacheAllowed
   };
-  if (!lyricsPersistenceAllowed) return { ...resolved, status: 'display_only', entry };
+  if (!lyricsCacheAllowed) return { ...resolved, status: 'display_only', entry };
   const stored = await writeStoredLyrics(entry);
   return { ...resolved, status: 'saved', entry: stored || entry };
+}
+
+function lyricsResultPayload(song, result) {
+  const entry = result.entry;
+  return {
+    ok: true,
+    songId: song.songId,
+    title: song.title,
+    status: result.status,
+    reason: result.reason || '',
+    lyrics: entry?.lyrics_text || entry?.lyrics || result.lyrics || '',
+    syncedLyrics: entry?.synced_lyrics_text || entry?.syncedLyrics || result.syncedLyrics || '',
+    artist: entry?.artist || result.track?.artistName || result.track?.artist_name || '',
+    source: entry?.source || result.provider || '',
+    sourceUrl: result.sourceUrl || '',
+    sourceName: result.sourceName || (result.provider === 'lrclib' ? 'LRCLIB' : ''),
+    attribution: entry?.attribution || result.attribution || '',
+    providerTrackId: entry?.provider_track_id || result.track?.id || result.track?.track_id || '',
+    albumName: entry?.album_name || result.track?.albumName || result.track?.album_name || '',
+    durationSeconds: entry?.duration_seconds || result.track?.duration || null,
+    hasWordSync: entry?.has_word_sync === true || result.track?.hasWordSync === true,
+    cacheable: (result.status === 'saved' || result.status === 'skipped')
+      && (entry?.cache_allowed === true || lyricsCacheAllowed),
+    matchScore: result.score || entry?.match_score || 0
+  };
 }
 
 async function ensureChatStorageBucket() {
@@ -655,6 +832,8 @@ app.get('/api/health', (_request, response) => response.json({
   lyricsProvider,
   lyricsProviderConfigured,
   lyricsPersistenceAllowed,
+  lyricsCacheAllowed,
+  lyricsPublicLookupEnabled,
   lyricsLinkFallback: true
 }));
 
@@ -676,7 +855,12 @@ app.get('/api/lyrics/:songId', async (request, response) => {
       title: entry.title,
       artist: entry.artist,
       lyrics: entry.lyrics_text,
+      syncedLyrics: entry.synced_lyrics_text || '',
       source: entry.source,
+      providerTrackId: entry.provider_track_id,
+      albumName: entry.album_name || '',
+      durationSeconds: entry.duration_seconds,
+      hasWordSync: entry.has_word_sync === true,
       attribution: entry.attribution,
       cacheable: true,
       updatedAt: entry.updated_at
@@ -687,29 +871,26 @@ app.get('/api/lyrics/:songId', async (request, response) => {
   }
 });
 
+app.get('/api/lyrics/resolve/:songId', async (request, response) => {
+  if (!lyricsPublicLookupEnabled) return response.status(403).json({ error: 'Tra cứu lyrics trực tiếp đang tắt.' });
+  const song = karaokeSongById(request.params.songId);
+  if (!song) return response.status(404).json({ error: 'Không tìm thấy bài hát.' });
+  try {
+    const result = await syncOneLyrics(song);
+    return response.json(lyricsResultPayload(song, result));
+  } catch (error) {
+    console.error(`Tra cứu LRCLIB thất bại cho ${song.songId}:`, error.message);
+    return response.status(502).json({ error: error.message || 'Nguồn lyrics đang không phản hồi.' });
+  }
+});
+
 app.post('/api/lyrics/sync-one', async (request, response) => {
   if (!isAdminRequest(request)) return response.status(401).json({ error: 'Cần đăng nhập góc quản trị để đồng bộ lời.' });
   const song = karaokeSongById(request.body?.songId);
   if (!song) return response.status(400).json({ error: 'songId không hợp lệ.' });
   try {
     const result = await syncOneLyrics(song, { force: request.body?.force === true });
-    const entry = result.entry;
-    return response.json({
-      ok: true,
-      songId: song.songId,
-      title: song.title,
-      status: result.status,
-      reason: result.reason || '',
-      lyrics: entry?.lyrics_text || entry?.lyrics || result.lyrics || '',
-      artist: entry?.artist || result.track?.artist_name || '',
-      source: entry?.source || result.provider || '',
-      sourceUrl: result.sourceUrl || '',
-      sourceName: result.sourceName || '',
-      attribution: entry?.attribution || result.attribution || '',
-      cacheable: (result.status === 'saved' || result.status === 'skipped')
-        && (entry?.cache_allowed === true || lyricsPersistenceAllowed),
-      matchScore: result.score || entry?.match_score || 0
-    });
+    return response.json(lyricsResultPayload(song, result));
   } catch (error) {
     console.error(`Đồng bộ lyrics thất bại cho ${song.songId}:`, error.message);
     const status = /API_KEY|chưa hỗ trợ|chưa được cấu hình/i.test(error.message) ? 503 : 502;
