@@ -206,16 +206,48 @@
         <div class="karaoke-lyrics-modal" id="karaokeLyricsModal" hidden>
           <div class="karaoke-lyrics-card" role="dialog" aria-modal="true" aria-labelledby="karaokeLyricsTitle">
             <div class="karaoke-lyrics-topbar">
-              <div>
+              <div class="karaoke-lyrics-heading">
                 <p class="section-kicker">GÓC HÁT CỦA ANH & VY</p>
                 <h3 id="karaokeLyricsTitle">Lời bài hát</h3>
-                <span id="karaokeLyricsCategory">Karaoke</span>
+                <span id="karaokeLyricsArtist">Chưa có thông tin ca sĩ / nhạc sĩ</span>
+                <small id="karaokeLyricsCategory">Karaoke</small>
               </div>
               <button class="karaoke-lyrics-close" id="closeKaraokeLyrics" type="button" aria-label="Đóng lời bài hát">×</button>
             </div>
+            <div class="karaoke-lyrics-toolbar" aria-label="Công cụ lời bài hát">
+              <button class="lyrics-tool-button" id="decreaseLyricsFont" type="button" aria-label="Giảm cỡ chữ">A−</button>
+              <span class="lyrics-font-size" id="lyricsFontSizeValue">20px</span>
+              <button class="lyrics-tool-button" id="increaseLyricsFont" type="button" aria-label="Tăng cỡ chữ">A+</button>
+              <span class="lyrics-toolbar-divider" aria-hidden="true"></span>
+              <button class="lyrics-tool-button" id="toggleLyricsAlign" type="button">Căn trái</button>
+              <button class="lyrics-tool-button" id="editKaraokeLyrics" type="button">✎ Sửa lời</button>
+              <button class="lyrics-tool-button" id="toggleLyricsStudy" type="button" aria-pressed="false">🧠 Học thuộc</button>
+              <button class="lyrics-tool-button" id="toggleLyricsFullscreen" type="button" aria-pressed="false">⛶ Toàn màn hình</button>
+            </div>
             <div class="karaoke-lyrics-status" id="karaokeLyricsStatus" role="status" aria-live="polite">Đang tìm lời bài hát…</div>
-            <pre class="karaoke-lyrics-text" id="karaokeLyricsText" tabindex="0"></pre>
-            <p class="karaoke-lyrics-help" id="karaokeLyricsHelp">Lời bài hát được đọc từ file bạn có quyền sử dụng trong thư mục <code>public/lyrics</code>.</p>
+            <div class="karaoke-lyrics-body">
+              <div class="karaoke-lyrics-empty" id="karaokeLyricsEmpty" hidden>
+                <div class="karaoke-lyrics-empty-icon" aria-hidden="true">♪</div>
+                <strong>Bài hát này chưa có lời</strong>
+                <p>Em có thể dán lời bài hát mà mình có quyền sử dụng để lưu và xem offline.</p>
+                <button class="button button-primary" id="addKaraokeLyrics" type="button">＋ Thêm lời bài hát</button>
+              </div>
+              <div class="karaoke-lyrics-text" id="karaokeLyricsText" tabindex="0" aria-live="polite"></div>
+              <div class="karaoke-study-tools" id="karaokeStudyTools">
+                <span>Học thuộc từng dòng:</span>
+                <button class="lyrics-mini-button" id="hideAllLyrics" type="button">Ẩn tất cả</button>
+                <button class="lyrics-mini-button" id="showAllLyrics" type="button">Hiện tất cả</button>
+              </div>
+              <form class="karaoke-lyrics-editor" id="karaokeLyricsEditor" hidden>
+                <label for="karaokeLyricsInput">Dán hoặc chỉnh sửa lời bài hát</label>
+                <textarea id="karaokeLyricsInput" rows="12" spellcheck="false" placeholder="Dán lời bài hát vào đây…\n\nBạn có thể dùng [Verse 1], [Chorus], [Bridge] để phân đoạn."></textarea>
+                <div class="karaoke-editor-actions">
+                  <button class="button button-primary" id="saveKaraokeLyrics" type="button">Lưu lời</button>
+                  <button class="button button-light" id="cancelKaraokeLyricsEdit" type="button">Hủy</button>
+                </div>
+              </form>
+            </div>
+            <p class="karaoke-lyrics-help">Lời được lưu theo <code>songId</code> trên thiết bị này, nên đóng Popup không làm mất nội dung.</p>
           </div>
         </div>
 

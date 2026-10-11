@@ -182,7 +182,25 @@ export const KARAOKE_SONGS = [
   { title: 'Ex hate me', category: 'international' }
 ];
 
+function songIdFromTitle(title) {
+  return String(title)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/gi, 'd')
+    .toLocaleLowerCase('vi-VN')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+// Mỗi bài có songId ổn định để lời bài hát không phụ thuộc hoàn toàn vào tên hiển thị.
+export const KARAOKE_SONGS_WITH_IDS = KARAOKE_SONGS.map((song) => ({
+  ...song,
+  songId: songIdFromTitle(song.title),
+  lyrics: null,
+  lyricsSource: null
+}));
+
 // Giữ dữ liệu sạch ngay cả khi sau này bổ sung thêm một bài bị trùng tên.
-export const UNIQUE_KARAOKE_SONGS = KARAOKE_SONGS.filter((song, index, songs) => (
+export const UNIQUE_KARAOKE_SONGS = KARAOKE_SONGS_WITH_IDS.filter((song, index, songs) => (
   songs.findIndex((item) => item.title.trim().toLocaleLowerCase() === song.title.trim().toLocaleLowerCase()) === index
 ));
