@@ -116,6 +116,10 @@ h3 { margin-bottom: 4px; font-size: 16px; }
 .karaoke-count { padding: 7px 11px; border-radius: 999px; background: #f2eafa; color: #7565a1; font-size: 11px; font-weight: 700; white-space: nowrap; }
 .karaoke-intro { margin: 9px 0 17px; color: var(--muted); font-size: 13px; }
 .karaoke-toolbar { display: flex; align-items: center; gap: 9px; }
+.karaoke-preload-button { min-height: 45px; padding: 0 13px; border: 1px solid #e8deef; border-radius: 14px; background: #fff; color: #9b3f70; font: inherit; font-size: 11px; font-weight: 700; white-space: nowrap; cursor: pointer; transition: background .2s, border-color .2s, transform .2s; }
+.karaoke-preload-button:hover { transform: translateY(-1px); border-color: #c9b7e8; background: #f7efff; }
+.karaoke-preload-button:disabled { opacity: .6; cursor: wait; }
+.karaoke-library-lyrics-status { min-height: 1.35rem; margin: 10px 0 0; color: #9b6681; font-size: 12px; }
 .karaoke-search-wrap { display: flex; flex: 1 1 250px; align-items: center; gap: 8px; min-height: 45px; padding: 0 13px; border: 1px solid #e8deef; border-radius: 14px; background: #fff; color: #9c8baa; }
 .karaoke-search-wrap span { font-size: 22px; line-height: 1; transform: rotate(-20deg); }
 .karaoke-search-wrap input { width: 100%; border: 0; outline: 0; background: transparent; color: var(--ink); font: inherit; font-size: 13px; }
@@ -529,6 +533,7 @@ body.karaoke-modal-open { overflow: hidden; }
   .chat-compose .button { width: 100%; }
   .karaoke-section { padding: 17px; }
   .karaoke-selected-toggle, .karaoke-clear-button { flex: 1 1 0; }
+  .karaoke-preload-button { flex: 1 1 100%; }
   .karaoke-selected-header { align-items: flex-start; flex-direction: column; gap: 4px; }
   .karaoke-song-card { padding: 11px; }
   .karaoke-song-action { font-size: 9px; }

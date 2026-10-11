@@ -46,6 +46,8 @@ const state = {
   karaokeShowSelected: false,
   karaokeSelected: loadKaraokeSelection(),
   karaokeLyrics: loadKaraokeLyrics(),
+  // Live lyrics are kept in memory only when the provider does not grant offline caching rights.
+  karaokeLyricsSession: {},
   karaokeLyricsModal: createKaraokeLyricsModalState(),
   toastTimer: null,
   countdownTimer: null,
@@ -301,6 +303,26 @@ function saveKaraokeLyrics() {
   localStorage.setItem(KARAOKE_LYRICS_STORAGE_KEY, JSON.stringify(state.karaokeLyrics));
 }
 
+function rememberKaraokeLyricsSession(song, data) {
+  if (!song || !data?.lyrics?.trim()) return;
+  state.karaokeLyricsSession[song.songId] = {
+    text: data.lyrics,
+    syncedLyrics: data.syncedLyrics || '',
+    source: data.source || 'lrclib',
+    artist: data.artist || '',
+    providerTrackId: data.providerTrackId || '',
+    albumName: data.albumName || '',
+    durationSeconds: data.durationSeconds || null,
+    hasWordSync: data.hasWordSync === true,
+    attribution: data.attribution || '',
+    updatedAt: new Date().toISOString()
+  };
+}
+
+function karaokeLyricsForSong(song) {
+  return state.karaokeLyrics[song.songId] || state.karaokeLyricsSession[song.songId] || null;
+}
+
 function loadKaraokeLyricsUi() {
   try {
     const saved = JSON.parse(localStorage.getItem(KARAOKE_LYRICS_UI_STORAGE_KEY) || '{}');
@@ -399,10 +421,52 @@ async function fetchLiveKaraokeLyrics(song) {
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !data?.lyrics?.trim()) return null;
     if (data.cacheable) cacheKaraokeLyrics(song, data);
+    else rememberKaraokeLyricsSession(song, data);
     return data;
   } catch {
     return null;
   }
+}
+
+function waitBetweenKaraokeLibraryLookups() {
+  return new Promise((resolve) => window.setTimeout(resolve, 550));
+}
+
+async function preloadKaraokeLyricsLibrary() {
+  const button = $('#preloadKaraokeLyrics');
+  const status = $('#karaokeLibraryLyricsStatus');
+  if (!button || !status) return;
+  const songs = UNIQUE_KARAOKE_SONGS.filter((song) => !karaokeLyricsForSong(song));
+  if (!songs.length) {
+    status.textContent = 'Lời của các bài đã nạp trong phiên này.';
+    return;
+  }
+  button.disabled = true;
+  const counts = { loaded: 0, verify: 0, missing: 0, failed: 0 };
+  for (let index = 0; index < songs.length; index += 1) {
+    const song = songs[index];
+    status.textContent = `Đang nạp lời ${index + 1}/${songs.length}: ${song.title}`;
+    try {
+      const response = await fetch(`/api/lyrics/resolve/${encodeURIComponent(song.songId)}`, { cache: 'no-store' });
+      const data = await response.json().catch(() => ({}));
+      if (data?.lyrics?.trim()) {
+        if (data.cacheable) cacheKaraokeLyrics(song, data);
+        else rememberKaraokeLyricsSession(song, data);
+        counts.loaded += 1;
+      } else if (data?.status === 'needs_verification') {
+        counts.verify += 1;
+      } else if (response.ok) {
+        counts.missing += 1;
+      } else {
+        counts.failed += 1;
+      }
+    } catch {
+      counts.failed += 1;
+    }
+    if (index < songs.length - 1) await waitBetweenKaraokeLibraryLookups();
+  }
+  button.disabled = false;
+  status.textContent = `Đã nạp ${counts.loaded} bài trong phiên · cần xác minh ${counts.verify} · chưa có ${counts.missing} · lỗi ${counts.failed}.`;
 }
 
 async function fetchStoredKaraokeLyrics(song) {
@@ -623,7 +687,7 @@ async function openKaraokeLyrics(songId) {
   const song = UNIQUE_KARAOKE_SONGS.find((item) => item.songId === songId);
   if (!modal || !song) return;
   const session = state.karaokeLyricsModal;
-  const stored = state.karaokeLyrics[song.songId];
+  const stored = karaokeLyricsForSong(song);
   const savedUi = lyricsUiForSong(song.songId);
   const requestId = `${song.songId}:${Date.now()}`;
   session.songId = song.songId;
@@ -920,6 +984,7 @@ function bindKaraoke() {
     renderKaraokeLyricsModal();
   });
   $('#syncKaraokeLyrics')?.addEventListener('click', syncKaraokeLibrary);
+  $('#preloadKaraokeLyrics')?.addEventListener('click', preloadKaraokeLyricsLibrary);
   search.addEventListener('input', () => {
     state.karaokeQuery = search.value;
     renderKaraoke();
