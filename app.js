@@ -1,5 +1,6 @@
 import { defaultSchedule } from './schedule-data.js';
 import { AVATAR_IMAGE_URL } from './avatar-config.js';
+import { KARAOKE_CATEGORIES, UNIQUE_KARAOKE_SONGS } from './karaoke-data.js';
 import { LocalAudioTrack, LocalVideoTrack, Room, RoomEvent, Track, VideoPresets } from 'livekit-client';
 
 const STORAGE_KEY = 'lich-cua-vy-schedule-v2';
@@ -9,6 +10,7 @@ const ADMIN_PUSH_ENABLED_KEY = 'lich-cua-vy-admin-push-enabled-v1';
 const CHAT_IMAGE_PREFIX = '__lich_chat_image__:';
 const CHAT_CALL_PREFIX = '__lich_call__:';
 const CALL_MEDIA_PREFS_KEY = 'lich-cua-vy-call-media-prefs-v1';
+const KARAOKE_STORAGE_KEY = 'lich-cua-vy-karaoke-selection-v1';
 const CHAT_TIME_ZONE = 'Asia/Ho_Chi_Minh';
 const LOVE_START_DATE = new Date(2022, 10, 3, 0, 0, 0);
 const FACE_LANDMARKER_MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
@@ -36,6 +38,10 @@ const state = {
   selectedDate: null,
   selectedCode: null,
   selectedFoods: [],
+  karaokeCategory: 'all',
+  karaokeQuery: '',
+  karaokeShowSelected: false,
+  karaokeSelected: loadKaraokeSelection(),
   toastTimer: null,
   countdownTimer: null,
   chatTimer: null,
@@ -256,6 +262,129 @@ function renderFoodMenu() {
       ? `Em đang chọn: ${selectedItems.join(', ')} 💗`
       : 'Em chưa chọn món nào, chọn món em thích nha 💕';
   }));
+}
+
+function loadKaraokeSelection() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(KARAOKE_STORAGE_KEY) || '[]');
+    if (!Array.isArray(saved)) return new Set();
+    const knownTitles = new Set(UNIQUE_KARAOKE_SONGS.map((song) => song.title));
+    return new Set(saved.filter((title) => knownTitles.has(title)));
+  } catch {
+    return new Set();
+  }
+}
+
+function saveKaraokeSelection() {
+  localStorage.setItem(KARAOKE_STORAGE_KEY, JSON.stringify([...state.karaokeSelected]));
+}
+
+function karaokeCategoryLabel(categoryId) {
+  return KARAOKE_CATEGORIES.find((category) => category.id === categoryId)?.label || 'Karaoke';
+}
+
+function renderKaraokeCategories() {
+  const container = $('#karaokeCategories');
+  if (!container) return;
+  container.innerHTML = KARAOKE_CATEGORIES.map((category) => `
+    <button class="karaoke-category-tab${state.karaokeCategory === category.id ? ' active' : ''}" type="button" role="tab" aria-selected="${state.karaokeCategory === category.id}" data-karaoke-category="${category.id}">
+      <span>${category.emoji}</span>${category.label}
+    </button>
+  `).join('');
+  container.querySelectorAll('[data-karaoke-category]').forEach((button) => button.addEventListener('click', () => {
+    state.karaokeCategory = button.dataset.karaokeCategory;
+    renderKaraoke();
+  }));
+}
+
+function karaokeSongsForView() {
+  const query = state.karaokeQuery.trim().toLocaleLowerCase();
+  return UNIQUE_KARAOKE_SONGS.filter((song) => {
+    const matchesCategory = state.karaokeCategory === 'all' || song.category === state.karaokeCategory;
+    const matchesQuery = !query || song.title.toLocaleLowerCase().includes(query);
+    const matchesSelected = !state.karaokeShowSelected || state.karaokeSelected.has(song.title);
+    return matchesCategory && matchesQuery && matchesSelected;
+  });
+}
+
+function renderKaraokeSelectedPanel() {
+  const panel = $('#karaokeSelectedPanel');
+  const list = $('#karaokeSelectedList');
+  const hint = $('#karaokeSelectedHint');
+  if (!panel || !list || !hint) return;
+  const selectedSongs = UNIQUE_KARAOKE_SONGS.filter((song) => state.karaokeSelected.has(song.title));
+  panel.hidden = !selectedSongs.length;
+  hint.textContent = selectedSongs.length ? `${selectedSongs.length} bài · bấm × để bỏ` : 'Chưa chọn bài nào';
+  list.innerHTML = selectedSongs.map((song) => `
+    <button class="karaoke-selected-chip" type="button" data-remove-karaoke="${escapeHtml(song.title)}" title="Bỏ ${escapeHtml(song.title)}">
+      <span>${escapeHtml(song.title)}</span><b aria-hidden="true">×</b>
+    </button>
+  `).join('');
+  list.querySelectorAll('[data-remove-karaoke]').forEach((button) => button.addEventListener('click', () => {
+    state.karaokeSelected.delete(button.dataset.removeKaraoke);
+    saveKaraokeSelection();
+    renderKaraoke();
+  }));
+}
+
+function renderKaraoke() {
+  const list = $('#karaokeList');
+  if (!list) return;
+  renderKaraokeCategories();
+  const songs = karaokeSongsForView();
+  const categoryLabel = state.karaokeShowSelected ? 'Đã chọn' : karaokeCategoryLabel(state.karaokeCategory);
+  list.innerHTML = songs.map((song, index) => {
+    const selected = state.karaokeSelected.has(song.title);
+    return `
+      <button class="karaoke-song-card${selected ? ' is-selected' : ''}" type="button" data-karaoke-title="${escapeHtml(song.title)}" aria-pressed="${selected}" style="--karaoke-index:${index}">
+        <span class="karaoke-song-check" aria-hidden="true">${selected ? '✓' : ''}</span>
+        <span class="karaoke-song-copy"><strong>${escapeHtml(song.title)}</strong><small>${escapeHtml(state.karaokeShowSelected ? karaokeCategoryLabel(song.category) : categoryLabel)}</small></span>
+        <span class="karaoke-song-action">${selected ? 'Đã chọn' : 'Chọn bài'}</span>
+      </button>
+    `;
+  }).join('');
+  $('#karaokeEmpty').hidden = Boolean(songs.length);
+  $('#karaokeCount').textContent = `${state.karaokeSelected.size} bài đã chọn`;
+  $('#showKaraokeSelected').classList.toggle('is-active', state.karaokeShowSelected);
+  $('#showKaraokeSelected').setAttribute('aria-pressed', String(state.karaokeShowSelected));
+  $('#showKaraokeSelected').textContent = state.karaokeShowSelected ? '☷ Xem tất cả' : '♡ Đã chọn';
+  renderKaraokeSelectedPanel();
+  list.querySelectorAll('[data-karaoke-title]').forEach((button) => button.addEventListener('click', () => {
+    const title = button.dataset.karaokeTitle;
+    if (state.karaokeSelected.has(title)) state.karaokeSelected.delete(title);
+    else state.karaokeSelected.add(title);
+    saveKaraokeSelection();
+    renderKaraoke();
+  }));
+}
+
+function bindKaraoke() {
+  const search = $('#karaokeSearch');
+  const selectedToggle = $('#showKaraokeSelected');
+  const clearButton = $('#clearKaraokeSelected');
+  if (!search || !selectedToggle || !clearButton) return;
+  search.addEventListener('input', () => {
+    state.karaokeQuery = search.value;
+    renderKaraoke();
+  });
+  selectedToggle.addEventListener('click', () => {
+    state.karaokeShowSelected = !state.karaokeShowSelected;
+    if (state.karaokeShowSelected) {
+      state.karaokeCategory = 'all';
+      state.karaokeQuery = '';
+      search.value = '';
+    }
+    renderKaraoke();
+  });
+  clearButton.addEventListener('click', () => {
+    if (!state.karaokeSelected.size) return;
+    state.karaokeSelected.clear();
+    saveKaraokeSelection();
+    state.karaokeShowSelected = false;
+    renderKaraoke();
+    showToast('Đã bỏ toàn bộ bài karaoke đã chọn.');
+  });
+  renderKaraoke();
 }
 
 async function submitFoodRequest() {
@@ -3059,6 +3188,7 @@ function bindEvents() {
 function init() {
   applyAvatarImage();
   renderFoodMenu();
+  bindKaraoke();
   bindEvents();
   bindNotificationNavigation();
   setAuthenticated(localStorage.getItem(AUTH_KEY) === 'true');

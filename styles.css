@@ -110,6 +110,45 @@ h3 { margin-bottom: 4px; font-size: 16px; }
 .food-note:focus { border-color: var(--pink); box-shadow: 0 0 0 4px rgba(255, 110, 145, .12); }
 .food-section .button { margin-top: 14px; }
 .food-request-status { min-height: 18px; margin: 12px 0 0; color: #a85c70; font-size: 12px; font-weight: 600; }
+.karaoke-section { margin-top: 28px; padding: 24px; border: 1px solid #e8def1; border-radius: 25px; background: radial-gradient(circle at 100% 0%, #fff2f8 0 22%, transparent 46%), linear-gradient(145deg, #fff, #fbf8ff); box-shadow: var(--shadow); }
+.karaoke-heading { align-items: center; }
+.karaoke-section h2 { margin-bottom: 0; font-size: clamp(24px, 3vw, 32px); }
+.karaoke-count { padding: 7px 11px; border-radius: 999px; background: #f2eafa; color: #7565a1; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.karaoke-intro { margin: 9px 0 17px; color: var(--muted); font-size: 13px; }
+.karaoke-toolbar { display: flex; align-items: center; gap: 9px; }
+.karaoke-search-wrap { display: flex; flex: 1 1 250px; align-items: center; gap: 8px; min-height: 45px; padding: 0 13px; border: 1px solid #e8deef; border-radius: 14px; background: #fff; color: #9c8baa; }
+.karaoke-search-wrap span { font-size: 22px; line-height: 1; transform: rotate(-20deg); }
+.karaoke-search-wrap input { width: 100%; border: 0; outline: 0; background: transparent; color: var(--ink); font: inherit; font-size: 13px; }
+.karaoke-search-wrap:focus-within { border-color: #bca8e1; box-shadow: 0 0 0 4px rgba(188, 168, 225, .15); }
+.karaoke-selected-toggle, .karaoke-clear-button { min-height: 45px; padding: 0 13px; border: 1px solid #e8deef; border-radius: 14px; background: #fff; color: #7565a1; font-size: 11px; font-weight: 700; white-space: nowrap; transition: background .2s, border-color .2s, transform .2s; }
+.karaoke-selected-toggle:hover, .karaoke-clear-button:hover { transform: translateY(-1px); border-color: #c9b7e8; background: #f7efff; }
+.karaoke-selected-toggle.is-active { border-color: #a78bd6; background: #765fa9; color: #fff; }
+.karaoke-clear-button { color: #a85c70; }
+.karaoke-category-tabs { display: flex; gap: 8px; margin-top: 15px; padding: 2px 1px 5px; overflow-x: auto; scrollbar-width: thin; }
+.karaoke-category-tab { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 6px; padding: 8px 12px; border: 1px solid #e8deef; border-radius: 999px; background: #fff; color: #806d8f; font-size: 11px; font-weight: 700; transition: background .2s, color .2s, border-color .2s; }
+.karaoke-category-tab:hover { border-color: #c9b7e8; background: #f7efff; }
+.karaoke-category-tab.active { border-color: #765fa9; background: #765fa9; color: #fff; box-shadow: 0 5px 13px rgba(117, 95, 169, .2); }
+.karaoke-selected-panel { margin-top: 14px; padding: 14px; border: 1px solid #f1d6e5; border-radius: 17px; background: linear-gradient(145deg, #fff6fa, #fff); }
+.karaoke-selected-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #8e3c58; font-size: 12px; }
+.karaoke-selected-header span { color: #a98b98; font-size: 11px; }
+.karaoke-selected-list { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+.karaoke-selected-chip { display: inline-flex; align-items: center; gap: 7px; max-width: 100%; padding: 7px 9px 7px 11px; border: 1px solid #f0cfde; border-radius: 999px; background: #fff; color: #765563; font-size: 11px; text-align: left; }
+.karaoke-selected-chip span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.karaoke-selected-chip b { display: grid; place-items: center; width: 17px; height: 17px; border-radius: 50%; background: #ffe2eb; color: #c04f70; font-size: 14px; line-height: 1; }
+.karaoke-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; margin-top: 15px; }
+.karaoke-song-card { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 12px 13px; border: 1px solid #ece4f2; border-radius: 15px; background: rgba(255, 255, 255, .85); color: var(--ink); text-align: left; box-shadow: 0 5px 15px rgba(81, 58, 90, .04); transition: transform .2s, border-color .2s, background .2s, box-shadow .2s; animation: karaoke-card-in .24s ease both; animation-delay: calc(var(--karaoke-index) * 12ms); }
+.karaoke-song-card:hover { transform: translateY(-2px); border-color: #cbb9e4; box-shadow: 0 9px 20px rgba(81, 58, 90, .1); }
+.karaoke-song-card.is-selected { border-color: #f29ab7; background: linear-gradient(135deg, #fff1f6, #fff); box-shadow: 0 7px 18px rgba(255, 110, 145, .12); }
+.karaoke-song-check { display: grid; place-items: center; width: 25px; height: 25px; flex: 0 0 25px; border: 1px solid #d9cce7; border-radius: 9px; background: #fff; color: #fff; font-size: 15px; font-weight: 800; }
+.karaoke-song-card.is-selected .karaoke-song-check { border-color: var(--pink); background: var(--pink); }
+.karaoke-song-copy { display: grid; min-width: 0; gap: 3px; }
+.karaoke-song-copy strong { overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.karaoke-song-copy small { color: #a99eae; font-size: 10px; }
+.karaoke-song-action { margin-left: auto; color: #aa98b7; font-size: 10px; font-weight: 700; white-space: nowrap; }
+.karaoke-song-card.is-selected .karaoke-song-action { color: #c04f70; }
+.karaoke-empty { margin: 22px 0 0; color: #a49cac; font-size: 12px; text-align: center; }
+.karaoke-note { margin: 14px 0 0; color: #aaa0b0; font-size: 10px; text-align: center; }
+@keyframes karaoke-card-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 .chat-section { margin-top: 28px; padding: 24px; border: 1px solid #eadff1; border-radius: 25px; background: linear-gradient(145deg, #fff, #fbf8ff); box-shadow: var(--shadow); }
 .chat-section .section-heading { align-items: center; }
 .chat-section h2 { margin-bottom: 0; font-size: clamp(24px, 3vw, 32px); }
@@ -411,6 +450,10 @@ h3 { margin-bottom: 4px; font-size: 16px; }
   .day-number { width: 23px; height: 23px; font-size: 11px; }
   .shift-chip { margin-top: 7px; padding: 4px 2px; font-size: 9px; }
   .tips-card { align-items: start; padding: 18px; }
+  .karaoke-section { padding: 19px; }
+  .karaoke-toolbar { align-items: stretch; flex-wrap: wrap; }
+  .karaoke-search-wrap { flex-basis: 100%; }
+  .karaoke-list { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 430px) {
@@ -424,6 +467,11 @@ h3 { margin-bottom: 4px; font-size: 16px; }
   .chat-compose-row { align-items: stretch; flex-direction: column; }
   .chat-attach { width: 100%; }
   .chat-compose .button { width: 100%; }
+  .karaoke-section { padding: 17px; }
+  .karaoke-selected-toggle, .karaoke-clear-button { flex: 1 1 0; }
+  .karaoke-selected-header { align-items: flex-start; flex-direction: column; gap: 4px; }
+  .karaoke-song-card { padding: 11px; }
+  .karaoke-song-action { font-size: 9px; }
   .call-section { padding: 18px; }
   .call-section .section-heading { align-items: flex-start; flex-direction: column; gap: 7px; }
   .call-overlay .section-heading { align-items: center; flex-direction: row; }

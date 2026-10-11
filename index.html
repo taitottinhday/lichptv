@@ -173,6 +173,36 @@
           <p class="food-request-status" id="foodRequestStatus" role="status" aria-live="polite"></p>
         </section>
 
+        <section class="karaoke-section" id="karaokeSection" aria-labelledby="karaokeHeading">
+          <div class="section-heading karaoke-heading">
+            <div>
+              <p class="section-kicker">CHECKLIST HẸN HÒ</p>
+              <h2 id="karaokeHeading">Danh sách karaoke của Anh & Vy 🎤</h2>
+            </div>
+            <span class="karaoke-count" id="karaokeCount">0 bài đã chọn</span>
+          </div>
+          <p class="karaoke-intro">Tìm bài thật nhanh, tích vào những bài muốn hát rồi mở danh sách đã chọn khi mình vào phòng nha.</p>
+          <div class="karaoke-toolbar">
+            <label class="karaoke-search-wrap" for="karaokeSearch">
+              <span aria-hidden="true">⌕</span>
+              <input id="karaokeSearch" type="search" autocomplete="off" placeholder="Tìm tên bài hát…" aria-label="Tìm bài hát karaoke" />
+            </label>
+            <button class="karaoke-selected-toggle" id="showKaraokeSelected" type="button" aria-pressed="false">♡ Đã chọn</button>
+            <button class="karaoke-clear-button" id="clearKaraokeSelected" type="button">Bỏ chọn hết</button>
+          </div>
+          <div class="karaoke-category-tabs" id="karaokeCategories" role="tablist" aria-label="Nhóm bài hát karaoke"></div>
+          <div class="karaoke-selected-panel" id="karaokeSelectedPanel" hidden>
+            <div class="karaoke-selected-header">
+              <strong>Danh sách mình sẽ hát</strong>
+              <span id="karaokeSelectedHint">Chưa chọn bài nào</span>
+            </div>
+            <div class="karaoke-selected-list" id="karaokeSelectedList"></div>
+          </div>
+          <div class="karaoke-list" id="karaokeList" aria-live="polite"></div>
+          <p class="karaoke-empty" id="karaokeEmpty" hidden>Không tìm thấy bài nào, thử từ khóa khác nhé.</p>
+          <p class="karaoke-note">Danh sách được gộp từ các ảnh Vy gửi · bài trùng chỉ giữ một lần · lựa chọn được lưu trên thiết bị này.</p>
+        </section>
+
         <section class="mood-section" id="moodSection" aria-labelledby="moodHeading">
           <div class="section-heading"><div><p class="section-kicker">MỖI NGÀY MỘT CHÚT YÊU THƯƠNG</p><h2 id="moodHeading">Hôm nay em thấy thế nào? 🌷</h2></div><span class="chat-status-pill">Mood của Vy</span></div>
           <div class="mood-picker" role="group" aria-label="Chọn tâm trạng hôm nay">
