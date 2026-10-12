@@ -787,6 +787,14 @@ function karaokeCategoryLabel(categoryId) {
   return KARAOKE_CATEGORIES.find((category) => category.id === categoryId)?.label || 'Karaoke';
 }
 
+function karaokeSongFilterLabel(song) {
+  if (state.karaokeCategory !== 'all') {
+    const selectedFilter = KARAOKE_CATEGORIES.find((category) => category.id === state.karaokeCategory);
+    if (selectedFilter?.id === song.show) return selectedFilter.label;
+  }
+  return karaokeCategoryLabel(song.category);
+}
+
 function renderKaraokeCategories() {
   const container = $('#karaokeCategories');
   if (!container) return;
@@ -804,7 +812,9 @@ function renderKaraokeCategories() {
 function karaokeSongsForView() {
   const query = state.karaokeQuery.trim().toLocaleLowerCase();
   return UNIQUE_KARAOKE_SONGS.filter((song) => {
-    const matchesCategory = state.karaokeCategory === 'all' || song.category === state.karaokeCategory;
+    const matchesCategory = state.karaokeCategory === 'all'
+      || song.category === state.karaokeCategory
+      || song.show === state.karaokeCategory;
     const matchesQuery = !query || song.title.toLocaleLowerCase().includes(query);
     const matchesSelected = !state.karaokeShowSelected || state.karaokeSelected.has(song.title);
     return matchesCategory && matchesQuery && matchesSelected;
@@ -844,7 +854,7 @@ function renderKaraoke() {
         <button class="karaoke-song-check-button" type="button" data-select-karaoke="${escapeHtml(song.title)}" aria-label="${selected ? 'Bỏ chọn' : 'Chọn'} ${escapeHtml(song.title)}" aria-pressed="${selected}">
           <span class="karaoke-song-check" aria-hidden="true">${selected ? '✓' : ''}</span>
         </button>
-        <span class="karaoke-song-copy"><strong>${escapeHtml(song.title)}</strong><small>${escapeHtml(state.karaokeShowSelected ? karaokeCategoryLabel(song.category) : categoryLabel)}</small></span>
+        <span class="karaoke-song-copy"><strong>${escapeHtml(song.title)}</strong><small>${escapeHtml(state.karaokeShowSelected ? karaokeSongFilterLabel(song) : categoryLabel)}</small></span>
         <span class="karaoke-song-action">Xem lời ↗</span>
       </article>
     `;

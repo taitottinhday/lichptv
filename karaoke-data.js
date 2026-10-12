@@ -5,7 +5,11 @@ export const KARAOKE_CATEGORIES = [
   { id: 'fun', label: 'Vui & trẻ trung', emoji: '✨' },
   { id: 'country', label: 'Đất nước & quê hương', emoji: '🇻🇳' },
   { id: 'bolero', label: 'Bolero & trữ tình', emoji: '🌹' },
-  { id: 'international', label: 'English & quốc tế', emoji: '🌍' }
+  { id: 'international', label: 'English & quốc tế', emoji: '🌍' },
+  { id: 'atsh-2024', label: 'ATSH 2024', emoji: '🎤' },
+  { id: 'atsh-2025', label: 'ATSH 2025', emoji: '🎤' },
+  { id: 'thsh', label: 'THSH', emoji: '🌌' },
+  { id: 'exsh', label: 'EXSH', emoji: '💎' }
 ];
 
 // Danh sách được tổng hợp từ các ảnh người dùng gửi, đã bỏ các bài trùng nhau.
@@ -184,7 +188,7 @@ export const KARAOKE_SONGS = [
 
 // Bổ sung các ca khúc trong vũ trụ Say Hi.
 // Chỉ lưu tên bài hát để dùng cho checklist; không lưu lời bài hát trong source.
-const SAY_HI_SONGS = [
+const ATSH_2024_SONGS = [
   // Anh Trai Say Hi mùa 1 (2024)
   { title: 'I.C.O.N', category: 'fun' },
   { title: 'Bảnh', category: 'fun' },
@@ -242,6 +246,9 @@ const SAY_HI_SONGS = [
   { title: 'Laviu', category: 'fun' },
   { title: 'The Stars', category: 'fun' },
 
+];
+
+const ATSH_2025_SONGS = [
   // Anh Trai Say Hi mùa 2 (2025)
   { title: 'Chill Guys Ngon Zai', category: 'fun' },
   { title: 'Độc Nhất Vô Nhị', category: 'fun' },
@@ -297,6 +304,9 @@ const SAY_HI_SONGS = [
   { title: 'Forever Say Hi', category: 'fun' },
   { title: 'Sớm Muộn Thì', category: 'mood' },
 
+];
+
+const EXSH_SONGS = [
   // Em Xinh Say Hi mùa 1 (2025)
   { title: 'AAA', category: 'fun' },
   { title: 'Bóng Phù Hoa', category: 'love' },
@@ -360,6 +370,9 @@ const SAY_HI_SONGS = [
   { title: 'Nhảy Dưới Ánh Trăng', category: 'fun' },
   { title: 'Lời Thì Thầm', category: 'mood' },
 
+];
+
+const THSH_SONGS = [
   // Tinh Hà Say Hi - playlist chính thức của DatVietVAC (2026)
   { title: 'Together We Shine', category: 'fun' },
   { title: 'Xoay Vòng', category: 'fun' },
@@ -384,6 +397,15 @@ const SAY_HI_SONGS = [
   { title: 'Một Người Như Thế', category: 'love' },
   { title: 'Người Trên Dây', category: 'mood' },
   { title: 'Happy! - Outro', category: 'fun' }
+];
+
+const withShow = (songs, show) => songs.map((song) => ({ ...song, show }));
+
+const SAY_HI_SONGS = [
+  ...withShow(ATSH_2024_SONGS, 'atsh-2024'),
+  ...withShow(ATSH_2025_SONGS, 'atsh-2025'),
+  ...withShow(THSH_SONGS, 'thsh'),
+  ...withShow(EXSH_SONGS, 'exsh')
 ];
 
 const ALL_KARAOKE_SONGS = [...KARAOKE_SONGS, ...SAY_HI_SONGS];
