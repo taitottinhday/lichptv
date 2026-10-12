@@ -884,6 +884,30 @@ function renderKaraoke() {
   }));
 }
 
+function renderAdminKaraokeList() {
+  const list = $('#adminKaraokeList');
+  const empty = $('#adminKaraokeEmpty');
+  if (!list || !empty) return;
+  const query = ($('#adminKaraokeSearch')?.value || '').trim().toLocaleLowerCase();
+  const songs = UNIQUE_KARAOKE_SONGS.filter((song) => !query || song.title.toLocaleLowerCase().includes(query));
+  list.innerHTML = songs.map((song, index) => `
+    <article class="karaoke-song-card" role="button" tabindex="0" data-admin-karaoke-song-id="${escapeHtml(song.songId)}" aria-label="Xem lời bài ${escapeHtml(song.title)}" style="--karaoke-index:${index}">
+      <span class="karaoke-song-copy"><strong>${escapeHtml(song.title)}</strong><small>${escapeHtml(karaokeCategoryLabel(song.category))}</small></span>
+      <span class="karaoke-song-action">Xem lời ↗</span>
+    </article>
+  `).join('');
+  empty.hidden = songs.length > 0;
+  list.querySelectorAll('[data-admin-karaoke-song-id]').forEach((card) => {
+    const openLyrics = () => openKaraokeLyrics(card.dataset.adminKaraokeSongId);
+    card.addEventListener('click', openLyrics);
+    card.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      openLyrics();
+    });
+  });
+}
+
 function toggleAllKaraokeLyricsLines(shouldHide) {
   const session = state.karaokeLyricsModal;
   const lines = session.text.replace(/\r\n?/g, '\n').split('\n');
@@ -999,6 +1023,8 @@ function bindKaraoke() {
     state.karaokeQuery = search.value;
     renderKaraoke();
   });
+  $('#adminKaraokeSearch')?.addEventListener('input', renderAdminKaraokeList);
+  renderAdminKaraokeList();
   selectedToggle.addEventListener('click', () => {
     state.karaokeShowSelected = !state.karaokeShowSelected;
     if (state.karaokeShowSelected) {
