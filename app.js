@@ -438,14 +438,14 @@ async function preloadKaraokeLyricsLibrary() {
   if (!button || !status) return;
   const songs = UNIQUE_KARAOKE_SONGS.filter((song) => !karaokeLyricsForSong(song));
   if (!songs.length) {
-    status.textContent = 'Lời của các bài đã nạp trong phiên này.';
+    status.textContent = 'Các lời đã tìm trực tuyến đều có trong phiên này.';
     return;
   }
   button.disabled = true;
   const counts = { loaded: 0, verify: 0, missing: 0, failed: 0 };
   for (let index = 0; index < songs.length; index += 1) {
     const song = songs[index];
-    status.textContent = `Đang nạp lời ${index + 1}/${songs.length}: ${song.title}`;
+    status.textContent = `Đang tìm thêm lời ${index + 1}/${songs.length}: ${song.title}`;
     try {
       const response = await fetch(`/api/lyrics/resolve/${encodeURIComponent(song.songId)}`, { cache: 'no-store' });
       const data = await response.json().catch(() => ({}));
@@ -466,7 +466,7 @@ async function preloadKaraokeLyricsLibrary() {
     if (index < songs.length - 1) await waitBetweenKaraokeLibraryLookups();
   }
   button.disabled = false;
-  status.textContent = `Đã nạp ${counts.loaded} bài trong phiên · cần xác minh ${counts.verify} · chưa có ${counts.missing} · lỗi ${counts.failed}.`;
+  status.textContent = `Tìm trực tuyến: ${counts.loaded} bài có lời trong phiên · cần xác minh ${counts.verify} · chưa có ${counts.missing} · lỗi ${counts.failed}.`;
 }
 
 async function fetchStoredKaraokeLyrics(song) {
