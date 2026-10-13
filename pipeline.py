@@ -13,7 +13,9 @@ import argparse
 import difflib
 import json
 import math
+import os
 import re
+import shutil
 import subprocess
 import sys
 import unicodedata
@@ -179,6 +181,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--language", default="auto", help="Mã ngôn ngữ WhisperX, mặc định auto")
     parser.add_argument("--align-model", default=None, help="Tên model alignment tùy chọn cho ngôn ngữ ít phổ biến")
     parser.add_argument("--batch-size", type=int, default=4)
+    parser.add_argument("--ffmpeg", default="ffmpeg", help="Tên hoặc đường dẫn tới ffmpeg.exe")
     parser.add_argument("--list-only", action="store_true", help="Liệt kê songId và audio đã ghép, không chạy AI")
     parser.add_argument(
         "--min-lyric-match", type=float, default=0.30,
@@ -226,44 +229,23 @@ def main() -> int:
                 print(f"CÓ AUDIO  {song['songId']}  {audio_path.name}")
         print(f"Đã ghép {matched}/{len(songs)} bài. Chưa chạy nhận dạng hoặc alignment.")
         return 0
-    if args.list_only:
-        matched = 0
-        for song in songs:
-            try:
-                audio_path = resolve_audio(audio_dir, song["songId"])
-            except RuntimeError as exc:
-                print(f"LỖI {song['songId']}: {exc}")
-                continue
-            if audio_path:
-                matched += 1
-                print(f"CÓ AUDIO  {song['songId']}  {audio_path.name}")
-        print(f"Đã ghép {matched}/{len(songs)} bài. Chưa chạy nhận dạng hoặc alignment.")
-        return 0
-
-    whisperx = None
-    model = None
-    device = args.device
-    align_model_cache: dict[str, tuple[Any, dict[str, Any]]] = {}
-
+    jobs: list[tuple[dict[str, str], Path]] = []
     for index, song in enumerate(songs, start=1):
-        song_id = song["songId"]
-        output_path = output_dir / f"{song_id}.json"
+        output_path = output_dir / f"{song['songId']}.json"
         try:
-            audio_path = resolve_audio(audio_dir, song_id)
+            audio_path = resolve_audio(audio_dir, song["songId"])
         except RuntimeError as exc:
             print(f"[{index}/{len(songs)}] LỖI {song['title']}: {exc}")
             continue
-
         if audio_path is None:
-            print(f"[{index}/{len(songs)}] BỎ QUA, chưa có audio: {song['title']} ({song_id})")
+            print(f"[{index}/{len(songs)}] BỎ QUA, chưa có audio: {song['title']} ({song['songId']})")
             if args.include_missing and (args.force or not output_path.exists()):
                 atomic_json_write(output_path, {
-                    "title": song["title"], "songId": song_id,
+                    "title": song["title"], "songId": song["songId"],
                     "status": "missing_audio", "sentences": [],
                     "warnings": ["Chưa có audio local được ghép theo songId."],
                 })
             continue
-
         if output_path.exists() and not args.force:
             try:
                 old = json.loads(output_path.read_text(encoding="utf-8"))
@@ -272,6 +254,59 @@ def main() -> int:
             if old.get("status") == "success":
                 print(f"[{index}/{len(songs)}] ĐÃ CÓ, bỏ qua: {song['title']}")
                 continue
+        jobs.append((song, audio_path))
+
+    if not jobs:
+        print("Không có bài nào cần xử lý. Kiểm tra tên file theo songId trong downloads/audios.")
+        return 0
+
+    ffmpeg_path = shutil.which(args.ffmpeg)
+    if not ffmpeg_path and Path(args.ffmpeg).is_file():
+        ffmpeg_path = str(Path(args.ffmpeg).resolve())
+    if not ffmpeg_path:
+        print(
+            "Không tìm thấy FFmpeg CLI. Cài FFmpeg, mở terminal mới và kiểm tra `ffmpeg -version`; "
+            "hoặc chạy lại với `--ffmpeg <đường-dẫn-ffmpeg.exe>`.",
+            file=sys.stderr,
+        )
+        return 2
+    # WhisperX invokes the executable by the name 'ffmpeg' internally.
+    ffmpeg_dir = str(Path(ffmpeg_path).resolve().parent)
+    os.environ["PATH"] = ffmpeg_dir + os.pathsep + os.environ.get("PATH", "")
+
+    try:
+        import whisperx
+        import torch
+    except Exception as exc:
+        print(
+            f"Không nạp được WhisperX/PyTorch: {type(exc).__name__}: {exc}\n"
+            "Hãy cài trong môi trường ảo của project bằng `python -m pip install -r requirements.txt`, "
+            "không cài đè Python dùng chung.",
+            file=sys.stderr,
+        )
+        return 2
+
+    device = "cuda" if args.device == "auto" and torch.cuda.is_available() else args.device
+    if device == "auto":
+        device = "cpu"
+    print(f"Số bài có audio cần xử lý: {len(jobs)} · thiết bị: {device} · model: {args.model}")
+    print("Lần đầu chạy sẽ tải model WhisperX; giữ terminal mở đến khi tải xong.")
+    try:
+        model = whisperx.load_model(args.model, device, compute_type=args.compute_type)
+    except Exception as exc:
+        print(
+            f"Không nạp được model WhisperX: {type(exc).__name__}: {exc}\n"
+            "Kiểm tra kết nối tải model, dung lượng trống, và dùng `--device cpu --compute-type int8` "
+            "nếu máy không có CUDA.",
+            file=sys.stderr,
+        )
+        return 2
+
+    align_model_cache: dict[str, tuple[Any, dict[str, Any]]] = {}
+
+    for index, (song, audio_path) in enumerate(jobs, start=1):
+        song_id = song["songId"]
+        output_path = output_dir / f"{song_id}.json"
 
         lyric_lines = read_static_lyrics(lyrics_dir, song_id)
         lyric_text = " ".join(
@@ -292,23 +327,6 @@ def main() -> int:
         }
 
         try:
-            if whisperx is None:
-                try:
-                    import whisperx as whisperx_module
-                except ImportError as exc:
-                    raise RuntimeError(
-                        "Thiếu WhisperX. Cài bằng `python -m pip install -r requirements.txt`."
-                    ) from exc
-                whisperx = whisperx_module
-                if device == "auto":
-                    import torch
-                    device = "cuda" if torch.cuda.is_available() else "cpu"
-                model = whisperx.load_model(
-                    args.model,
-                    device,
-                    compute_type=args.compute_type,
-                )
-
             audio = whisperx.load_audio(str(audio_path))
             transcription = model.transcribe(
                 audio,
@@ -331,7 +349,7 @@ def main() -> int:
                     )
                     result_doc["transcriptPreview"] = transcript_text[:500]
                     atomic_json_write(output_path, result_doc)
-                    print(f"[{index}/{len(songs)}] CẦN XEM LẠI (không khớp lời): {song['title']}")
+                    print(f"[{index}/{len(jobs)}] CẦN XEM LẠI (không khớp lời): {song['title']}")
                     continue
                 alignment_segments = [{
                     "start": 0.0,
@@ -351,7 +369,7 @@ def main() -> int:
                         "Whisper không nhận ra vocal có thể căn. Beat/instrumental không thể tạo timestamp lời."
                     )
                     atomic_json_write(output_path, result_doc)
-                    print(f"[{index}/{len(songs)}] CẦN XEM LẠI (không nhận ra lời): {song['title']}")
+                    print(f"[{index}/{len(jobs)}] CẦN XEM LẠI (không nhận ra lời): {song['title']}")
                     continue
                 alignment_segments = transcript_segments
                 result_doc["timingSource"] = "whisperx_transcription_then_alignment"
@@ -404,14 +422,14 @@ def main() -> int:
 
             atomic_json_write(output_path, result_doc)
             print(
-                f"[{index}/{len(songs)}] {result_doc['status'].upper()}: {song['title']} "
+                f"[{index}/{len(jobs)}] {result_doc['status'].upper()}: {song['title']} "
                 f"({timed_words}/{all_words} từ có mốc) -> {output_path.name}"
             )
         except Exception as exc:  # Keep the batch moving; write a per-song error record.
             result_doc["status"] = "failed"
             result_doc["warnings"].append(f"{type(exc).__name__}: {exc}")
             atomic_json_write(output_path, result_doc)
-            print(f"[{index}/{len(songs)}] LỖI {song['title']}: {type(exc).__name__}: {exc}")
+            print(f"[{index}/{len(jobs)}] LỖI {song['title']}: {type(exc).__name__}: {exc}")
 
     print(f"\nHoàn tất. JSON nằm trong: {output_dir}")
     print("Kiểm tra status và nghe duyệt trước khi đưa timestamp vào ứng dụng.")
