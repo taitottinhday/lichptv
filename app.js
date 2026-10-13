@@ -51,7 +51,7 @@ const state = {
   // Live lyrics are kept in memory only when the provider does not grant offline caching rights.
   karaokeLyricsSession: {},
   karaokeLyricsModal: createKaraokeLyricsModalState(),
-  karaokeAudio: { songId: null, status: 'idle', message: '', requestId: 0, controller: null, entry: null, activeLineIndex: -1 },
+  karaokeAudio: { songId: null, status: 'idle', message: '', requestId: 0, controller: null, entry: null, activeLineIndex: -1, autoPlay: false },
   toastTimer: null,
   countdownTimer: null,
   chatTimer: null,
@@ -424,12 +424,10 @@ function renderKaraokeAudioControls() {
   const play = $('#karaokeAudioPlay');
   const seek = $('#karaokeAudioSeek');
   const status = $('#karaokeAudioStatus');
-  const vocalToggle = $('#karaokeVocalToggle');
   if (!audio || !play || !seek || !status) return;
   status.textContent = session.message || 'Chưa mở audio';
   status.dataset.state = session.status;
   play.disabled = session.status !== 'ready' && session.status !== 'buffering';
-  if (vocalToggle) vocalToggle.disabled = karaokeVocalProcessing || (!audio.currentSrc && session.status !== 'loading');
   play.textContent = audio.paused ? '▶' : 'Ⅱ';
   play.setAttribute('aria-label', audio.paused ? 'Phát nhạc' : 'Tạm dừng nhạc');
   seek.disabled = !Number.isFinite(audio.duration) || audio.duration <= 0;
@@ -457,9 +455,8 @@ function setKaraokeVocalMix(enabled) {
 
 async function enableKaraokeVocalReduction(enabled) {
   const audio = $('#karaokeAudioElement');
-  const toggle = $('#karaokeVocalToggle');
   const status = $('#karaokeVocalStatus');
-  if (!audio || !toggle || !status || karaokeVocalProcessing) return;
+  if (!audio || !status || karaokeVocalProcessing) return;
   if (!enabled) {
     setKaraokeVocalMix(false);
     status.textContent = 'Đang phát bản gốc.';
@@ -467,7 +464,16 @@ async function enableKaraokeVocalReduction(enabled) {
   }
   if (karaokeVocalGraph) {
     setKaraokeVocalMix(true);
-    if (karaokeVocalGraph.context.state === 'suspended') await karaokeVocalGraph.context.resume().catch(() => {});
+    try {
+      if (karaokeVocalGraph.context.state === 'suspended') await karaokeVocalGraph.context.resume();
+      if (state.karaokeAudio.autoPlay) {
+        await audio.play();
+        state.karaokeAudio.autoPlay = false;
+      }
+    } catch {
+      status.textContent = 'Giảm giọng đã sẵn sàng · chạm nút phát để bắt đầu.';
+      return;
+    }
     status.textContent = 'Đã bật giảm giọng ca sĩ.';
     return;
   }
@@ -475,12 +481,10 @@ async function enableKaraokeVocalReduction(enabled) {
   if (!sourceUrl) return;
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
   if (!AudioContextClass) {
-    toggle.checked = false;
-    status.textContent = 'Thiết bị này chưa hỗ trợ giảm giọng; đang giữ nhạc gốc.';
+    status.textContent = 'Thiết bị chưa hỗ trợ giảm giọng · vẫn phát nhạc gốc.';
     return;
   }
   karaokeVocalProcessing = true;
-  toggle.disabled = true;
   status.textContent = 'Đang bật chế độ giảm giọng…';
   let sourceReloaded = false;
   try {
@@ -533,14 +537,23 @@ async function enableKaraokeVocalReduction(enabled) {
     merger.connect(context.destination);
     karaokeVocalGraph = { context, gains };
     audio.currentTime = Math.min(currentTime, Number.isFinite(audio.duration) ? audio.duration : currentTime);
-    if (wasPlaying) {
+    if (wasPlaying || state.karaokeAudio.autoPlay) {
       await context.resume();
       await audio.play();
+      state.karaokeAudio.autoPlay = false;
     }
     status.textContent = 'Đã bật giảm giọng ca sĩ · hiệu quả tùy bản phối.';
   } catch (error) {
-    toggle.checked = false;
-    status.textContent = 'Bản này không hỗ trợ giảm giọng; vẫn giữ nhạc gốc.';
+    if (karaokeVocalGraph) {
+      status.textContent = 'Giảm giọng đã sẵn sàng · chạm phát để bắt đầu.';
+    } else {
+      status.textContent = 'Bản này chưa hỗ trợ giảm giọng · đang phát nhạc gốc.';
+      if (state.karaokeAudio.autoPlay) {
+        audio.play().then(() => { state.karaokeAudio.autoPlay = false; }).catch(() => {
+          status.textContent = 'Chạm nút phát để bắt đầu nhạc nền.';
+        });
+      }
+    }
     if (sourceReloaded && !audio.currentSrc) {
       audio.removeAttribute('crossorigin');
       audio.src = sourceUrl;
@@ -728,7 +741,8 @@ function resetKaraokeAudio(message = '', status = 'idle') {
     requestId: previous.requestId,
     controller: null,
     entry: null,
-    activeLineIndex: -1
+    activeLineIndex: -1,
+    autoPlay: false
   };
   renderKaraokeAudioControls();
   $('#karaokeLyricsText')?.querySelectorAll('.lyrics-line-row.is-current, .karaoke-word.is-word-current').forEach((line) => {
@@ -779,9 +793,10 @@ async function requestKaraokeAudioUrl(songId, signal) {
   return response;
 }
 
-async function prepareKaraokeAudio(songId) {
+async function prepareKaraokeAudio(songId, autoPlay = false) {
   resetKaraokeAudio('Đang kiểm tra audio riêng tư…', 'loading');
   const audioState = state.karaokeAudio;
+  audioState.autoPlay = autoPlay;
   audioState.songId = songId;
   const requestId = audioState.requestId;
   const controller = new AbortController();
@@ -1231,7 +1246,7 @@ async function openKaraokeLyrics(songId) {
   const stored = karaokeLyricsForSong(song);
   const savedUi = lyricsUiForSong(song.songId);
   const requestId = `${song.songId}:${Date.now()}`;
-  prepareKaraokeAudio(song.songId);
+  prepareKaraokeAudio(song.songId, true);
   session.songId = song.songId;
   session.text = stored?.text || '';
   session.syncedLyrics = stored?.syncedLyrics || '';
@@ -1540,7 +1555,8 @@ function bindKaraoke() {
       renderKaraokeAudioControls();
       renderKaraokeLyricsLines();
       updateKaraokeSyncedLyrics();
-      if ($('#karaokeVocalToggle')?.checked && !karaokeVocalGraph) enableKaraokeVocalReduction(true);
+      if (!karaokeVocalGraph) enableKaraokeVocalReduction(true);
+      else if (current.autoPlay) enableKaraokeVocalReduction(true);
     });
     audio.addEventListener('canplay', () => {
       const current = state.karaokeAudio;
@@ -1549,7 +1565,8 @@ function bindKaraoke() {
       current.message = 'Sẵn sàng phát · nhấn nút để bắt đầu';
       renderKaraokeAudioControls();
       renderKaraokeLyricsLines();
-      if ($('#karaokeVocalToggle')?.checked && !karaokeVocalGraph) enableKaraokeVocalReduction(true);
+      if (!karaokeVocalGraph) enableKaraokeVocalReduction(true);
+      else if (current.autoPlay) enableKaraokeVocalReduction(true);
     });
     audio.addEventListener('playing', () => {
       const current = state.karaokeAudio;
@@ -1597,6 +1614,7 @@ function bindKaraoke() {
     if (!audio || state.karaokeAudio.status !== 'ready' && state.karaokeAudio.status !== 'buffering') return;
     if (audio.paused) {
       try {
+        state.karaokeAudio.autoPlay = false;
         if (karaokeVocalGraph?.context.state === 'suspended') await karaokeVocalGraph.context.resume();
         await audio.play();
       } catch {
@@ -1614,9 +1632,6 @@ function bindKaraoke() {
   });
   $('#karaokeAudioVolume')?.addEventListener('input', (event) => {
     if (audio) audio.volume = Number(event.target.value);
-  });
-  $('#karaokeVocalToggle')?.addEventListener('change', (event) => {
-    enableKaraokeVocalReduction(event.target.checked);
   });
   $('#closeKaraokeLyrics')?.addEventListener('click', closeKaraokeLyrics);
   $('#closeKaraokeScorePopup')?.addEventListener('click', closeKaraokeScorePopup);

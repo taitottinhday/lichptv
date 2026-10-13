@@ -876,12 +876,6 @@ body.karaoke-modal-open { overflow: hidden; }
 .karaoke-audio-topline { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 4px 12px; }
 .karaoke-audio-topline strong { color: #fff; font-size: 13px; }
 .karaoke-audio-status { min-height: 18px; color: rgba(233,240,255,.78); font-size: 12px; }
-.karaoke-mode-switch { display: flex; align-items: center; gap: 10px; width: fit-content; max-width: 100%; padding: 8px 11px; border: 1px solid rgba(143,183,255,.2); border-radius: 14px; background: rgba(8,14,30,.28); color: #f5f7ff; cursor: pointer; }
-.karaoke-mode-switch input { width: 17px; height: 17px; flex: 0 0 auto; margin: 0; accent-color: #ff72aa; }
-.karaoke-mode-switch span { display: grid; gap: 2px; }
-.karaoke-mode-switch strong { font-size: 11px; }
-.karaoke-mode-switch small { color: rgba(233,240,255,.68); font-size: 10px; }
-.karaoke-mode-switch input:disabled { opacity: .65; }
 .karaoke-vocal-status { min-height: 0; color: #a9d9ff; font-size: 10px; line-height: 1.4; }
 .karaoke-audio-controls { display: grid; grid-template-columns: 42px minmax(0,1fr) minmax(90px,140px); align-items: center; gap: 12px; }
 .karaoke-audio-play { width: 44px; height: 44px; border: 0; border-radius: 50%; background: linear-gradient(135deg,#ff69a4,#8d7cff); color: #fff; font-size: 17px; box-shadow: 0 6px 18px rgba(255,95,175,.25); touch-action: manipulation; }
