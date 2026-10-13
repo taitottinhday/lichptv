@@ -243,6 +243,22 @@ function karaokeSongById(songId) {
   return UNIQUE_KARAOKE_SONGS.find((song) => song.songId === String(songId || '').trim());
 }
 
+async function karaokeManifestArtist(song) {
+  if (song.artist || song.composer) return song.artist || song.composer;
+  try {
+    const manifest = JSON.parse(await readFile(audioManifestPath, 'utf8'));
+    const entry = manifest.entries?.[song.songId];
+    if (entry?.artist) return String(entry.artist).trim();
+    const sourceLabel = String(entry?.sourceFile || '').replace(/\s*\[[^\]]+\]\.(mp3|m4a|wav|flac|ogg)$/i, '');
+    const firstPart = sourceLabel.split(/\s+[—–|｜-]\s+/).filter(Boolean)[0] || '';
+    return normalizeMusicText(firstPart) && normalizeMusicText(firstPart) !== normalizeMusicText(entry?.title || song.title)
+      ? firstPart.trim()
+      : '';
+  } catch {
+    return '';
+  }
+}
+
 function lyricsAttribution(source) {
   if (source === 'musixmatch') return 'Lyrics data provided under the Musixmatch API terms.';
   if (source === 'lrclib') return 'Lyrics retrieved from LRCLIB; verify rights before redistribution.';
@@ -456,9 +472,11 @@ function chooseLrclibTrack(song, records) {
 }
 
 async function resolveLrclibLyrics(song) {
+  const artist = await karaokeManifestArtist(song);
+  const lookupSong = artist && !song.artist && !song.composer ? { ...song, artist } : song;
   const searchParams = {
     track_name: song.title,
-    ...(song.artist || song.composer ? { artist_name: song.artist || song.composer } : {})
+    ...(lookupSong.artist || lookupSong.composer ? { artist_name: lookupSong.artist || lookupSong.composer } : {})
   };
   let records = await lrclibRequest('/api/search', searchParams);
   if (!Array.isArray(records) || !records.length) {
@@ -467,7 +485,7 @@ async function resolveLrclibLyrics(song) {
       records = await lrclibRequest('/api/search', { ...searchParams, track_name: asciiTitle });
     }
   }
-  const match = chooseLrclibTrack(song, Array.isArray(records) ? records : []);
+  const match = chooseLrclibTrack(lookupSong, Array.isArray(records) ? records : []);
   if (match.status !== 'matched') return { ...match, provider: 'lrclib' };
   const track = match.track;
   const plainLyrics = String(track.plainLyrics || '').trim();
