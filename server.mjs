@@ -475,18 +475,19 @@ function chooseLrclibTrack(song, records) {
 async function resolveLrclibLyrics(song) {
   const artist = await karaokeManifestArtist(song);
   const lookupSong = artist && !song.artist && !song.composer ? { ...song, artist } : song;
-  const searchParams = {
-    track_name: song.title,
-    ...(lookupSong.artist || lookupSong.composer ? { artist_name: lookupSong.artist || lookupSong.composer } : {})
-  };
-  let records = await lrclibRequest('/api/search', searchParams);
-  if (!Array.isArray(records) || !records.length) {
-    const asciiTitle = normalizeMusicText(song.title);
-    if (asciiTitle && asciiTitle !== song.title.toLocaleLowerCase('vi-VN')) {
-      records = await lrclibRequest('/api/search', { ...searchParams, track_name: asciiTitle });
-    }
+  const artistName = lookupSong.artist || lookupSong.composer;
+  const searchTitles = [...new Set([song.title, normalizeMusicText(song.title)].filter(Boolean))];
+  const records = [];
+  for (const trackName of searchTitles) {
+    const found = await lrclibRequest('/api/search', {
+      track_name: trackName,
+      ...(artistName ? { artist_name: artistName } : {})
+    });
+    if (Array.isArray(found)) records.push(...found);
+    if (chooseLrclibTrack(lookupSong, records).status === 'matched') break;
   }
-  const match = chooseLrclibTrack(lookupSong, Array.isArray(records) ? records : []);
+  const uniqueRecords = [...new Map(records.map((record) => [record.id, record])).values()];
+  const match = chooseLrclibTrack(lookupSong, uniqueRecords);
   if (match.status !== 'matched') return { ...match, provider: 'lrclib' };
   const track = match.track;
   const plainLyrics = String(track.plainLyrics || '').trim();

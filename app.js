@@ -928,13 +928,15 @@ function cacheKaraokeLyrics(song, data) {
   return true;
 }
 
-async function fetchLiveKaraokeLyrics(song) {
+async function fetchLiveKaraokeLyrics(song, { store = true } = {}) {
   try {
     const response = await fetch(`/api/lyrics/resolve/${encodeURIComponent(song.songId)}`, { cache: 'no-store' });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !data?.lyrics?.trim()) return null;
-    if (data.cacheable) cacheKaraokeLyrics(song, data);
-    else rememberKaraokeLyricsSession(song, data);
+    if (store) {
+      if (data.cacheable) cacheKaraokeLyrics(song, data);
+      else rememberKaraokeLyricsSession(song, data);
+    }
     return data;
   } catch {
     return null;
@@ -945,13 +947,28 @@ function karaokeSessionHasTimestamps(session) {
   return Boolean(session?.wordSyncLines?.length || parseSyncedKaraokeLyrics(session?.syncedLyrics).length);
 }
 
+function normalizeKaraokeLyricsText(value) {
+  return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLocaleLowerCase('vi-VN').replace(/[^\p{L}\p{N}]+/gu, ' ').trim().replace(/\s+/g, ' ');
+}
+
+function sameKaraokeLyricsText(left, right) {
+  const normalizedLeft = normalizeKaraokeLyricsText(left);
+  const normalizedRight = normalizeKaraokeLyricsText(right);
+  return Boolean(normalizedLeft && normalizedRight && normalizedLeft === normalizedRight);
+}
+
 async function refreshKaraokeTimedLyrics(song, requestId) {
   const session = state.karaokeLyricsModal;
-  if (session.requestId !== requestId || session.editing || session.sourceName === 'Lời tự nhập' || session.sourceName === 'LRC có timestamp' || karaokeSessionHasTimestamps(session)) return;
-  const liveLyrics = await fetchLiveKaraokeLyrics(song);
+  if (session.requestId !== requestId || session.editing || session.sourceName === 'LRC có timestamp' || karaokeSessionHasTimestamps(session)) return;
+  const liveLyrics = await fetchLiveKaraokeLyrics(song, { store: false });
   if (session.requestId !== requestId || session.editing || !liveLyrics || !(
     liveLyrics.wordSyncLines?.length || parseSyncedKaraokeLyrics(liveLyrics.syncedLyrics).length
   )) return;
+  if (session.text.trim() && !sameKaraokeLyricsText(session.text, liveLyrics.lyrics)) return;
+  const matchedLyrics = { ...liveLyrics, lyrics: session.text || liveLyrics.lyrics };
+  if (matchedLyrics.cacheable) cacheKaraokeLyrics(song, matchedLyrics);
+  else rememberKaraokeLyricsSession(song, matchedLyrics);
   session.syncedLyrics = liveLyrics.syncedLyrics || '';
   session.wordSyncLines = liveLyrics.wordSyncLines || [];
   if (!session.text.trim()) session.text = liveLyrics.lyrics || '';
@@ -972,23 +989,31 @@ async function preloadKaraokeLyricsLibrary() {
   const button = $('#preloadKaraokeLyrics');
   const status = $('#karaokeLibraryLyricsStatus');
   if (!button || !status) return;
-  const songs = UNIQUE_KARAOKE_SONGS.filter((song) => !karaokeLyricsForSong(song));
+  const songs = UNIQUE_KARAOKE_SONGS.filter((song) => !karaokeSessionHasTimestamps(karaokeLyricsForSong(song)));
   if (!songs.length) {
-    status.textContent = 'Các lời đã tìm trực tuyến đều có trong phiên này.';
+    status.textContent = 'Các bài hiện có lời đồng bộ đã sẵn sàng trong phiên này.';
     return;
   }
   button.disabled = true;
-  const counts = { loaded: 0, verify: 0, missing: 0, failed: 0 };
+  const counts = { synced: 0, mismatch: 0, verify: 0, missing: 0, failed: 0 };
   for (let index = 0; index < songs.length; index += 1) {
     const song = songs[index];
     status.textContent = `Đang tìm thêm lời ${index + 1}/${songs.length}: ${song.title}`;
     try {
       const response = await fetch(`/api/lyrics/resolve/${encodeURIComponent(song.songId)}`, { cache: 'no-store' });
       const data = await response.json().catch(() => ({}));
-      if (data?.lyrics?.trim()) {
-        if (data.cacheable) cacheKaraokeLyrics(song, data);
-        else rememberKaraokeLyricsSession(song, data);
-        counts.loaded += 1;
+      if (data?.lyrics?.trim() && (data.wordSyncLines?.length || parseSyncedKaraokeLyrics(data.syncedLyrics).length)) {
+        const existing = karaokeLyricsForSong(song);
+        if (existing?.text?.trim() && !sameKaraokeLyricsText(existing.text, data.lyrics)) {
+          counts.mismatch += 1;
+        } else {
+          const matchedLyrics = { ...data, lyrics: existing?.text || data.lyrics };
+          if (data.cacheable) cacheKaraokeLyrics(song, matchedLyrics);
+          else rememberKaraokeLyricsSession(song, matchedLyrics);
+          counts.synced += 1;
+        }
+      } else if (data?.lyrics?.trim()) {
+        counts.missing += 1;
       } else if (data?.status === 'needs_verification') {
         counts.verify += 1;
       } else if (response.ok) {
@@ -1002,7 +1027,7 @@ async function preloadKaraokeLyricsLibrary() {
     if (index < songs.length - 1) await waitBetweenKaraokeLibraryLookups();
   }
   button.disabled = false;
-  status.textContent = `Tìm trực tuyến: ${counts.loaded} bài có lời trong phiên · cần xác minh ${counts.verify} · chưa có ${counts.missing} · lỗi ${counts.failed}.`;
+  status.textContent = `Đã đồng bộ ${counts.synced} bài · lời không khớp ${counts.mismatch} · cần xác minh ${counts.verify} · chưa có timestamp ${counts.missing} · lỗi ${counts.failed}.`;
 }
 
 async function fetchStoredKaraokeLyrics(song) {
