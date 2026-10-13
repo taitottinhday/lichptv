@@ -12,6 +12,7 @@ import { AccessToken, LiveKitAPI } from 'livekit-server-sdk';
 import { defaultSchedule } from './schedule-data.js';
 import { AVATAR_IMAGE_URL } from './avatar-config.js';
 import { UNIQUE_KARAOKE_SONGS } from './karaoke-data.js';
+import { karaokeLyricsTextSimilarity } from './karaoke-timing.js';
 
 const { Pool } = pg;
 const app = express();
@@ -191,6 +192,18 @@ function normalizeMusicText(value) {
     .trim();
 }
 
+function normalizeTrackTitle(value) {
+  const title = String(value || '');
+  const normalize = (text) => text.normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/gi, 'd')
+    .toLocaleLowerCase('vi-VN')
+    .match(/[\p{L}\p{N}]+/gu)?.join(' ') || '';
+  const normalized = normalize(title);
+  const withoutTrailingQualifier = normalize(title.replace(/\s*[([{][^()[\]{}]*[)\]}]\s*$/g, ''));
+  return withoutTrailingQualifier || normalized;
+}
+
 function parseLrcLibLyricsfile(raw) {
   const source = String(raw || '');
   if (!source.trim()) return [];
@@ -244,19 +257,16 @@ function karaokeSongById(songId) {
   return UNIQUE_KARAOKE_SONGS.find((song) => song.songId === String(songId || '').trim());
 }
 
-async function karaokeManifestArtist(song) {
-  if (song.artist || song.composer) return song.artist || song.composer;
+async function karaokeManifestMetadata(song) {
   try {
     const manifest = JSON.parse(await readFile(audioManifestPath, 'utf8'));
     const entry = manifest.entries?.[song.songId];
-    if (entry?.artist) return String(entry.artist).trim();
-    const sourceLabel = String(entry?.sourceFile || '').replace(/\s*\[[^\]]+\]\.(mp3|m4a|wav|flac|ogg)$/i, '');
-    const firstPart = sourceLabel.split(/\s+[—–|｜-]\s+/).filter(Boolean)[0] || '';
-    return normalizeMusicText(firstPart) && normalizeMusicText(firstPart) !== normalizeMusicText(entry?.title || song.title)
-      ? firstPart.trim()
-      : '';
+    return {
+      artist: String(entry?.artist || '').trim(),
+      duration: Number(entry?.durationSeconds) || null
+    };
   } catch {
-    return '';
+    return { artist: '', duration: null };
   }
 }
 
@@ -296,6 +306,16 @@ async function readStoredLyrics(songId) {
     return result.rows[0] || null;
   }
   return memoryLyrics.get(songId) || null;
+}
+
+function lyricsEntryHasTiming(entry) {
+  if (entry?.has_word_sync === true || entry?.hasWordSync === true) return true;
+  const synced = String(entry?.synced_lyrics_text || entry?.syncedLyrics || '');
+  return (synced.match(/\[\d{1,3}:\d{2}(?:\.\d{1,3})?\]/g) || []).length >= 2;
+}
+
+function lyricsTextMatches(left, right) {
+  return karaokeLyricsTextSimilarity(left, right) >= 0.9;
 }
 
 async function writeStoredLyrics(entry) {
@@ -441,12 +461,12 @@ async function lrclibRequest(path, params = {}) {
 }
 
 function chooseLrclibTrack(song, records) {
-  const titleKey = normalizeMusicText(song.title);
-  const artistKey = normalizeMusicText(song.artist || song.composer);
-  const exactTitle = records.filter((record) => normalizeMusicText(record.trackName || record.name) === titleKey);
+  const titleKey = normalizeTrackTitle(song.title);
+  const artistKey = normalizeTrackTitle(song.artist || song.composer);
+  const exactTitle = records.filter((record) => normalizeTrackTitle(record.trackName || record.name) === titleKey);
   if (!exactTitle.length) return { status: 'not_found', reason: 'LRCLIB không có kết quả trùng chính xác tên bài.' };
   const artistMatches = artistKey
-    ? exactTitle.filter((record) => normalizeMusicText(record.artistName) === artistKey)
+    ? exactTitle.filter((record) => normalizeTrackTitle(record.artistName) === artistKey)
     : exactTitle;
   if (artistKey && artistMatches.length === 0) {
     return { status: 'needs_verification', reason: 'Tên bài khớp nhưng ca sĩ không khớp.' };
@@ -456,10 +476,12 @@ function chooseLrclibTrack(song, records) {
       === String(song.artist || song.composer || '').trim().toLocaleLowerCase('vi-VN'))
     : exactTitle;
   const candidates = artistKey ? (exactArtistSpelling.length ? exactArtistSpelling : artistMatches) : exactTitle;
-  if (!artistKey && candidates.length > 1) {
-    return { status: 'needs_verification', reason: 'Có nhiều bài trùng tên; cần bổ sung ca sĩ.' };
-  }
   const expectedDuration = Number(song.duration);
+  const hasExpectedDuration = Number.isFinite(expectedDuration) && expectedDuration > 0;
+  const durationTolerance = hasExpectedDuration ? Math.max(8, expectedDuration * 0.05) : 0;
+  if (candidates.length > 1 && (!hasExpectedDuration || candidates.some((record) => !Number.isFinite(Number(record.duration))))) {
+    return { status: 'needs_verification', reason: 'Có nhiều phiên bản cùng tên nhưng thiếu thời lượng để khớp audio.' };
+  }
   const ranked = [...candidates].sort((left, right) => {
     const leftDistance = Number.isFinite(expectedDuration) && Number.isFinite(Number(left.duration))
       ? Math.abs(Number(left.duration) - expectedDuration) : 0;
@@ -468,26 +490,52 @@ function chooseLrclibTrack(song, records) {
     return leftDistance - rightDistance;
   });
   const selected = ranked[0];
+  if (hasExpectedDuration && Number.isFinite(Number(selected?.duration))) {
+    const distance = Math.abs(Number(selected.duration) - expectedDuration);
+    if (distance > durationTolerance) {
+      return { status: 'needs_verification', reason: 'Thời lượng audio khác bản lời tìm thấy.' };
+    }
+    const secondDistance = ranked[1] && Number.isFinite(Number(ranked[1].duration))
+      ? Math.abs(Number(ranked[1].duration) - expectedDuration) : Infinity;
+    if (secondDistance - distance < 2) {
+      return { status: 'needs_verification', reason: 'Có nhiều bản cùng tên với thời lượng gần nhau.' };
+    }
+  }
   if (!selected?.id) return { status: 'not_found', reason: 'Kết quả LRCLIB không có id.' };
   return { status: 'matched', track: selected, score: artistKey ? 1 : 0.9 };
 }
 
 async function resolveLrclibLyrics(song) {
-  const artist = await karaokeManifestArtist(song);
-  const lookupSong = artist && !song.artist && !song.composer ? { ...song, artist } : song;
-  const artistName = lookupSong.artist || lookupSong.composer;
-  const searchTitles = [...new Set([song.title, normalizeMusicText(song.title)].filter(Boolean))];
-  const records = [];
-  for (const trackName of searchTitles) {
-    const found = await lrclibRequest('/api/search', {
-      track_name: trackName,
-      ...(artistName ? { artist_name: artistName } : {})
-    });
-    if (Array.isArray(found)) records.push(...found);
-    if (chooseLrclibTrack(lookupSong, records).status === 'matched') break;
+  const manifest = await karaokeManifestMetadata(song);
+  const artist = song.artist || song.composer || manifest.artist;
+  const lookupSong = {
+    ...song,
+    ...(artist ? { artist } : {}),
+    ...(Number(song.duration) > 0 ? {} : manifest.duration ? { duration: manifest.duration } : {})
+  };
+  const searchParams = {
+    track_name: song.title,
+    ...(lookupSong.artist || lookupSong.composer ? { artist_name: lookupSong.artist || lookupSong.composer } : {})
+  };
+  let records = await lrclibRequest('/api/search', searchParams);
+  let match = chooseLrclibTrack(lookupSong, Array.isArray(records) ? records : []);
+  if (match.status === 'not_found') {
+    const asciiTitle = normalizeMusicText(song.title);
+    if (asciiTitle && asciiTitle !== song.title.toLocaleLowerCase('vi-VN')) {
+      await waitForLyricsRetry(550);
+      const fallbackRecords = await lrclibRequest('/api/search', { ...searchParams, track_name: asciiTitle });
+      if (Array.isArray(fallbackRecords)) records = [...(Array.isArray(records) ? records : []), ...fallbackRecords];
+      match = chooseLrclibTrack(lookupSong, records);
+    }
   }
-  const uniqueRecords = [...new Map(records.map((record) => [record.id, record])).values()];
-  const match = chooseLrclibTrack(lookupSong, uniqueRecords);
+  if (match.status === 'not_found') {
+    await waitForLyricsRetry(550);
+    const query = [song.title, lookupSong.artist || lookupSong.composer].filter(Boolean).join(' ');
+    const fallbackRecords = await lrclibRequest('/api/search', { q: query });
+    if (Array.isArray(fallbackRecords)) records = [...(Array.isArray(records) ? records : []), ...fallbackRecords];
+    const uniqueRecords = [...new Map(records.map((record) => [record.id, record])).values()];
+    match = chooseLrclibTrack(lookupSong, uniqueRecords);
+  }
   if (match.status !== 'matched') return { ...match, provider: 'lrclib' };
   const track = match.track;
   const plainLyrics = String(track.plainLyrics || '').trim();
@@ -550,7 +598,9 @@ async function resolveLyrics(song) {
 
 async function syncOneLyrics(song, { force = false } = {}) {
   const existing = await readStoredLyrics(song.songId);
-  if (existing && !force) return { status: 'skipped', reason: 'Bài đã có lời được lưu.', entry: existing };
+  if (existing && !force && lyricsEntryHasTiming(existing)) {
+    return { status: 'skipped', reason: 'Bài đã có lời đồng bộ được lưu.', entry: existing };
+  }
   if (!lyricsProviderConfigured) {
     return {
       status: 'link_only',
@@ -559,13 +609,17 @@ async function syncOneLyrics(song, { force = false } = {}) {
     };
   }
   const resolved = await resolveLyrics(song);
-  if (resolved.status === 'link_only') return resolved;
-  if (resolved.status !== 'matched') return resolved;
+  if (resolved.status === 'link_only') return existing ? { ...resolved, status: 'skipped', entry: existing } : resolved;
+  if (resolved.status !== 'matched') return existing ? { ...resolved, status: 'skipped', entry: existing } : resolved;
+  const existingText = String(existing?.lyrics_text || existing?.lyrics || '').trim();
+  if (existingText && !lyricsTextMatches(existingText, resolved.lyrics)) {
+    return { status: 'skipped', reason: 'Lời có timestamp không khớp lời đang lưu; giữ nguyên để tránh chạy sai bài.', entry: existing };
+  }
   const entry = {
     songId: song.songId,
     title: song.title,
     artist: resolved.track?.artist_name || song.artist || song.composer || '',
-    lyrics: resolved.lyrics,
+    lyrics: existingText || resolved.lyrics,
     syncedLyrics: resolved.syncedLyrics || '',
     source: resolved.provider,
     providerTrackId: String(resolved.track.track_id || resolved.track.id),

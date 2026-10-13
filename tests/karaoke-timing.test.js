@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { activeLyricIndex, parseSyncedKaraokeLyrics, wordPlaybackState } from '../karaoke-timing.js';
+import { activeLyricIndex, karaokeLyricsTextSimilarity, parseSyncedKaraokeLyrics, wordPlaybackState } from '../karaoke-timing.js';
 
 // Explicit test-only timing fixture. These timestamps do not represent a real song.
 const fixtureLrc = '[00:00.00]Mẫu lời một\n[00:01.00]Mẫu lời hai';
@@ -46,6 +46,25 @@ test('switching tracks uses the new track timeline from its own start', () => {
   assert.equal(activeLyricIndex(nextTrack, 0.5), 0);
 });
 
+test('LRC offset is applied to the audio timeline', () => {
+  const lines = parseSyncedKaraokeLyrics('[offset:+500]\n[00:01.00]Lời đầu\n[00:02.25]Lời sau');
+  assert.deepEqual(lines, [
+    { seconds: 1.5, text: 'Lời đầu' },
+    { seconds: 2.75, text: 'Lời sau' }
+  ]);
+  const earlyLines = parseSyncedKaraokeLyrics('[offset:-1500]\n[00:01.00]Bắt đầu sớm\n[00:02.00]Dòng kế tiếp');
+  assert.equal(earlyLines[0].seconds, 0);
+  assert.equal(earlyLines[1].seconds, 0.5);
+});
+
 test('plain text has no inferred synchronization timestamps', () => {
   assert.deepEqual(parseSyncedKaraokeLyrics('Chỉ là lời văn bản\nKhông có mốc thời gian'), []);
+});
+
+test('lyrics with small transcription differences can still match while different lyrics do not', () => {
+  const local = 'Mình yêu nhau từ kiếp nào em có nhớ không anh vẫn luôn chờ em quay về bên anh';
+  const provider = 'Mình yêu nhau từ kiếp nào em có nhớ không anh vẫn luôn chờ em quay về bên nhau';
+  const unrelated = 'Mưa rơi trên phố xưa lòng anh đau khi em đã xa nơi đây';
+  assert.ok(karaokeLyricsTextSimilarity(local, provider) >= 0.9);
+  assert.ok(karaokeLyricsTextSimilarity(local, unrelated) < 0.9);
 });

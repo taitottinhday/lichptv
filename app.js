@@ -1,7 +1,7 @@
 import { defaultSchedule } from './schedule-data.js';
 import { AVATAR_IMAGE_URL } from './avatar-config.js';
 import { KARAOKE_CATEGORIES, UNIQUE_KARAOKE_SONGS } from './karaoke-data.js';
-import { activeLyricIndex, parseSyncedKaraokeLyrics, wordPlaybackState } from './karaoke-timing.js';
+import { activeLyricIndex, karaokeLyricsTextSimilarity, parseSyncedKaraokeLyrics, wordPlaybackState } from './karaoke-timing.js';
 import { LocalAudioTrack, LocalVideoTrack, Room, RoomEvent, Track, VideoPresets } from 'livekit-client';
 
 const STORAGE_KEY = 'lich-cua-vy-schedule-v2';
@@ -949,15 +949,8 @@ function karaokeSessionHasTimestamps(session) {
   return Boolean(session?.wordSyncLines?.length || parseSyncedKaraokeLyrics(session?.syncedLyrics).length);
 }
 
-function normalizeKaraokeLyricsText(value) {
-  return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-    .toLocaleLowerCase('vi-VN').replace(/[^\p{L}\p{N}]+/gu, ' ').trim().replace(/\s+/g, ' ');
-}
-
 function sameKaraokeLyricsText(left, right) {
-  const normalizedLeft = normalizeKaraokeLyricsText(left);
-  const normalizedRight = normalizeKaraokeLyricsText(right);
-  return Boolean(normalizedLeft && normalizedRight && normalizedLeft === normalizedRight);
+  return karaokeLyricsTextSimilarity(left, right) >= 0.9;
 }
 
 async function refreshKaraokeTimedLyrics(song, requestId) {
