@@ -65,6 +65,7 @@ const memoryChatMessages = [];
 let memoryChatMessageId = 0;
 const memoryChatReactions = new Map();
 const memoryLyrics = new Map();
+const karaokeMetadataCache = new Map();
 const memorySchedule = {};
 let memoryScheduleUpdatedAt = null;
 let pushConfigured = false;
@@ -187,6 +188,55 @@ function normalizeMusicText(value) {
     .toLocaleLowerCase('vi-VN')
     .replace(/[^a-z0-9]+/g, ' ')
     .trim();
+}
+
+function parseLrcLibLyricsfile(raw) {
+  const source = String(raw || '');
+  if (!source.trim()) return [];
+  const rows = [];
+  let line = null;
+  let word = null;
+  let inLines = false;
+  let inWords = false;
+  const scalar = (value) => {
+    const text = String(value || '').trim();
+    if (text.startsWith('"')) { try { return JSON.parse(text); } catch { return text.slice(1, -1); } }
+    if (text.startsWith("'")) return text.slice(1, text.endsWith("'") ? -1 : undefined).replace(/''/g, "'");
+    return text.replace(/\s+#.*$/, '').trim();
+  };
+  for (const rawLine of source.split(/\r?\n/)) {
+    const indent = rawLine.match(/^\s*/)[0].length;
+    const text = rawLine.trim();
+    if (text === 'lines:') { inLines = true; continue; }
+    if (!inLines || !text || text.startsWith('#')) continue;
+    const lineStart = rawLine.match(/^\s*-\s+text:\s*(.*)$/);
+    const wordStart = rawLine.match(/^\s+-\s+text:\s*(.*)$/);
+    if (lineStart && indent <= 4) {
+      if (word?.text && Number.isFinite(word.startMs) && Number.isFinite(word.endMs) && line) line.words.push(word);
+      if (line?.text && Number.isFinite(line.startMs) && Number.isFinite(line.endMs) && line.words.length) rows.push(line);
+      line = { text: scalar(lineStart[1]), startMs: NaN, endMs: NaN, words: [] };
+      word = null; inWords = false; continue;
+    }
+    if (!line) continue;
+    if (/^words:\s*$/.test(text) && indent >= 6) { inWords = true; continue; }
+    if (inWords && wordStart) {
+      if (word?.text && Number.isFinite(word.startMs) && Number.isFinite(word.endMs)) line.words.push(word);
+      word = { text: scalar(wordStart[1]), startMs: NaN, endMs: NaN };
+      continue;
+    }
+    const timing = text.match(/^(start_ms|end_ms):\s*(-?\d+(?:\.\d+)?)/);
+    if (timing) {
+      const value = Number(timing[2]);
+      if (inWords && word) word[timing[1] === 'start_ms' ? 'startMs' : 'endMs'] = value;
+      else if (!inWords) line[timing[1] === 'start_ms' ? 'startMs' : 'endMs'] = value;
+      continue;
+    }
+    if (inWords && indent <= 6) inWords = false;
+    if (!inWords && indent <= 4 && /^(plain|metadata|version):/.test(text)) inLines = false;
+  }
+  if (word?.text && Number.isFinite(word.startMs) && Number.isFinite(word.endMs) && line) line.words.push(word);
+  if (line?.text && Number.isFinite(line.startMs) && Number.isFinite(line.endMs) && line.words.length) rows.push(line);
+  return rows.filter((row) => row.words.length);
 }
 
 function karaokeSongById(songId) {
@@ -431,6 +481,7 @@ async function resolveLrclibLyrics(song) {
     provider: 'lrclib',
     lyrics,
     syncedLyrics,
+    lyricsfile: String(track.lyricsfile || ''),
     track,
     score: match.score,
     attribution: lyricsAttribution('lrclib')
@@ -530,6 +581,7 @@ function lyricsResultPayload(song, result) {
     albumName: entry?.album_name || result.track?.albumName || result.track?.album_name || '',
     durationSeconds: entry?.duration_seconds || result.track?.duration || null,
     hasWordSync: entry?.has_word_sync === true || result.track?.hasWordSync === true,
+    wordSyncLines: entry?.wordSyncLines || parseLrcLibLyricsfile(result.track?.lyricsfile),
     cacheable: (result.status === 'saved' || result.status === 'skipped')
       && (entry?.cache_allowed === true || lyricsCacheAllowed),
     matchScore: result.score || entry?.match_score || 0
@@ -930,6 +982,69 @@ app.get('/api/lyrics/source/:songId', (request, response) => {
   const song = karaokeSongById(request.params.songId);
   if (!song) return response.status(404).json({ error: 'Không tìm thấy bài hát.' });
   return response.json({ ok: true, songId: song.songId, title: song.title, artist: song.artist || song.composer || '', ...lyricsSourceForSong(song) });
+});
+
+app.get('/api/karaoke/metadata/:songId', async (request, response) => {
+  const song = karaokeSongById(request.params.songId);
+  if (!song) return response.status(404).json({ error: 'KhÃ´ng tÃ¬m tháº¥y bÃ i hÃ¡t.' });
+  const cached = karaokeMetadataCache.get(song.songId);
+  if (cached && cached.expiresAt > Date.now()) return response.json(cached.data);
+  try {
+    const manifest = JSON.parse(await readFile(audioManifestPath, 'utf8'));
+    const entry = manifest.entries?.[song.songId];
+    const sourceLabel = String(entry?.sourceFile || '').replace(/\s*\[[^\]]+\]\.(mp3|m4a|wav|flac|ogg)$/i, '');
+    const sourceTitle = String(entry?.title || song.title);
+    const split = sourceLabel.split(/\s+[—–-]\s+/).filter(Boolean);
+    const filenameArtist = split.length > 1 && normalizeMusicText(split[0]) !== normalizeMusicText(sourceTitle) ? split[0] : '';
+    const sourceArtist = String(entry?.artist || filenameArtist || song.artist || song.composer || '').trim();
+    let metadata = { songId: song.songId, title: sourceTitle, artist: sourceArtist, album: '', year: '', durationSeconds: null, coverUrl: '', artistImageUrl: '', artistImageSourceUrl: '', artistUrl: '', artworkCredit: '', artistImageCredit: '' };
+    const query = [sourceArtist, sourceTitle].filter(Boolean).join(' ');
+    const searchUrl = new URL('https://itunes.apple.com/search');
+    searchUrl.search = new URLSearchParams({ term: query, entity: 'song', limit: '25', country: 'vn' });
+    const searchResponse = await fetch(searchUrl, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(9000) });
+    if (searchResponse.ok) {
+      const results = (await searchResponse.json()).results || [];
+      const titleKey = normalizeMusicText(sourceTitle);
+      const artistKey = normalizeMusicText(sourceArtist);
+      const exact = results.filter((item) => normalizeMusicText(item.trackName) === titleKey);
+      const match = exact.find((item) => !artistKey || normalizeMusicText(item.artistName).includes(artistKey) || artistKey.includes(normalizeMusicText(item.artistName)))
+        || (exact.length === 1 && !sourceArtist ? exact[0] : null);
+      if (match) {
+        metadata = {
+          ...metadata,
+          artist: match.artistName || metadata.artist,
+          album: match.collectionName || '',
+          year: match.releaseDate ? String(match.releaseDate).slice(0, 4) : '',
+          durationSeconds: Number.isFinite(match.trackTimeMillis) ? Math.round(match.trackTimeMillis / 1000) : null,
+          coverUrl: String(match.artworkUrl100 || '').replace(/^http:/i, 'https:').replace(/100x100bb/, '600x600bb'),
+          artistUrl: String(match.artistViewUrl || ''),
+          artworkCredit: 'Ảnh bìa: Apple Music/iTunes'
+        };
+      }
+    }
+    if (metadata.artist) {
+      try {
+        const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(metadata.artist.replace(/\s+/g, '_'))}`;
+        const wikiResponse = await fetch(wikiUrl, { headers: { Accept: 'application/json', 'User-Agent': lrclibUserAgent }, signal: AbortSignal.timeout(5000) });
+        if (wikiResponse.ok) {
+          const article = await wikiResponse.json();
+          const imageUrl = article.thumbnail?.source || article.originalimage?.source || '';
+          if (article.type === 'standard' && normalizeMusicText(article.title) === normalizeMusicText(metadata.artist) && imageUrl.startsWith('https://')) {
+            metadata.artistImageUrl = imageUrl;
+            metadata.artistImageSourceUrl = `https://en.wikipedia.org/wiki/${encodeURIComponent(String(article.title).replace(/\s+/g, '_'))}`;
+            metadata.artistImageCredit = 'Ảnh nghệ sĩ: Wikipedia';
+          }
+        }
+      } catch { /* An artist photo is optional; the UI uses a designed fallback. */ }
+    }
+    const data = { ok: true, ...metadata };
+    karaokeMetadataCache.set(song.songId, { data, expiresAt: Date.now() + 6 * 60 * 60 * 1000 });
+    return response.json(data);
+  } catch (error) {
+    const data = { ok: true, songId: song.songId, title: song.title, artist: song.artist || song.composer || '', album: '', year: '', durationSeconds: null, coverUrl: '', artistImageUrl: '', artistImageSourceUrl: '', artistUrl: '', artworkCredit: '', artistImageCredit: '', metadataUnavailable: true };
+    karaokeMetadataCache.set(song.songId, { data, expiresAt: Date.now() + 5 * 60 * 1000 });
+    return response.json(data);
+  }
 });
 
 app.get('/api/lyrics/:songId', async (request, response) => {

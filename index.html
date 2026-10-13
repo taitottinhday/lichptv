@@ -489,11 +489,13 @@
     <div class="karaoke-lyrics-modal" id="karaokeLyricsModal" hidden>
       <div class="karaoke-lyrics-card" role="dialog" aria-modal="true" aria-labelledby="karaokeLyricsTitle">
         <div class="karaoke-lyrics-topbar">
+          <div class="karaoke-cover-wrap" aria-hidden="true"><img class="karaoke-cover-art" id="karaokeCoverArt" alt="" hidden /></div>
           <div class="karaoke-lyrics-heading">
             <p class="section-kicker">GÓC HÁT CỦA ANH & VY</p>
             <h3 id="karaokeLyricsTitle">Lời bài hát</h3>
             <span id="karaokeLyricsArtist">Chưa có thông tin ca sĩ / nhạc sĩ</span>
             <small id="karaokeLyricsCategory">Karaoke</small>
+            <small class="karaoke-album-meta" id="karaokeAlbumMeta"></small>
           </div>
           <button class="karaoke-lyrics-close" id="closeKaraokeLyrics" type="button" aria-label="Đóng lời bài hát">×</button>
         </div>
@@ -536,6 +538,12 @@
             <button class="button button-primary" id="addKaraokeLyrics" type="button">＋ Thêm lời bài hát</button>
           </div>
           <div class="karaoke-lyrics-text" id="karaokeLyricsText" tabindex="0" aria-live="polite"></div>
+          <aside class="karaoke-artist-card" aria-label="Thông tin nghệ sĩ">
+            <div class="karaoke-artist-avatar"><span id="karaokeArtistInitial">♪</span><img id="karaokeArtistImage" alt="" hidden /></div>
+            <div class="karaoke-artist-copy"><small>Nghệ sĩ</small><strong id="karaokeArtistName">Chưa có thông tin</strong><a id="karaokeArtistLink" href="#" target="_blank" rel="noopener noreferrer" hidden>Xem hồ sơ nghệ sĩ ↗</a></div>
+            <small class="karaoke-artist-credit" id="karaokeArtistCredit"></small>
+            <a class="karaoke-artist-image-credit" id="karaokeArtistImageCredit" href="#" target="_blank" rel="noopener noreferrer" hidden></a>
+          </aside>
           <div class="karaoke-study-tools" id="karaokeStudyTools">
             <span>Học thuộc từng dòng:</span>
             <button class="lyrics-mini-button" id="hideAllLyrics" type="button">Ẩn tất cả</button>

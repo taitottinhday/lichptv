@@ -310,6 +310,7 @@ function rememberKaraokeLyricsSession(song, data) {
   state.karaokeLyricsSession[song.songId] = {
     text: data.lyrics,
     syncedLyrics: data.syncedLyrics || '',
+    wordSyncLines: Array.isArray(data.wordSyncLines) ? data.wordSyncLines : [],
     source: data.source || 'lrclib',
     artist: data.artist || '',
     providerTrackId: data.providerTrackId || '',
@@ -370,6 +371,8 @@ function createKaraokeLyricsModalState() {
     songId: null,
     text: '',
     syncedLyrics: '',
+    wordSyncLines: [],
+    metadata: null,
     providerTrackId: '',
     loading: false,
     error: false,
@@ -570,21 +573,34 @@ function updateKaraokeSyncedLyrics() {
   const audioState = state.karaokeAudio;
   const session = state.karaokeLyricsModal;
   if (!audio || audioState.songId !== session.songId) return;
-  const lines = parseSyncedKaraokeLyrics(session.syncedLyrics);
-  if (!lines.length) return;
+  const wordLines = Array.isArray(session.wordSyncLines) ? session.wordSyncLines : [];
+  const lines = wordLines.length
+    ? wordLines.map((line) => ({ seconds: Number(line.startMs) / 1000, text: line.text || '' }))
+    : parseSyncedKaraokeLyrics(session.syncedLyrics);
+  if (!lines.length) {
+    $('#karaokeLyricsText')?.querySelectorAll('.is-word-current').forEach((word) => word.classList.remove('is-word-current'));
+    return;
+  }
   let activeIndex = -1;
   for (let index = 0; index < lines.length; index += 1) {
     if (lines[index].seconds > audio.currentTime) break;
     activeIndex = index;
   }
-  if (activeIndex === audioState.activeLineIndex) return;
-  audioState.activeLineIndex = activeIndex;
-  const rows = $('#karaokeLyricsText')?.querySelectorAll('[data-synced-lyric-index]') || [];
-  rows.forEach((row) => {
-    const isCurrent = Number(row.dataset.syncedLyricIndex) === activeIndex;
-    row.classList.toggle('is-current', isCurrent);
-    if (isCurrent) row.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-  });
+  if (activeIndex !== audioState.activeLineIndex) {
+    audioState.activeLineIndex = activeIndex;
+    const rows = $('#karaokeLyricsText')?.querySelectorAll('[data-synced-lyric-index]') || [];
+    rows.forEach((row) => {
+      const isCurrent = Number(row.dataset.syncedLyricIndex) === activeIndex;
+      row.classList.toggle('is-current', isCurrent);
+      if (isCurrent) row.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    });
+  }
+  const wordRows = $('#karaokeLyricsText')?.querySelectorAll('[data-word-sync-line]') || [];
+  wordRows.forEach((row) => row.querySelectorAll('[data-word-start]').forEach((element) => {
+    const start = Number(element.dataset.wordStart);
+    const end = Number(element.dataset.wordEnd);
+    element.classList.toggle('is-word-current', audio.currentTime * 1000 >= start && audio.currentTime * 1000 < end);
+  }));
 }
 
 function cacheKaraokeLyrics(song, data) {
@@ -592,6 +608,7 @@ function cacheKaraokeLyrics(song, data) {
   state.karaokeLyrics[song.songId] = {
     text: data.lyrics,
     syncedLyrics: data.syncedLyrics || '',
+    wordSyncLines: Array.isArray(data.wordSyncLines) ? data.wordSyncLines : [],
     source: data.source || 'licensed-api',
     artist: data.artist || '',
     providerTrackId: data.providerTrackId || '',
@@ -791,7 +808,10 @@ function renderKaraokeLyricsLines() {
   const session = state.karaokeLyricsModal;
   const view = $('#karaokeLyricsText');
   if (!view) return;
-  const syncedLines = parseSyncedKaraokeLyrics(session.syncedLyrics);
+  const wordLines = Array.isArray(session.wordSyncLines) ? session.wordSyncLines : [];
+  const syncedLines = wordLines.length
+    ? wordLines.map((line) => ({ seconds: Number(line.startMs) / 1000, text: line.text || line.words.map((word) => word.text).join('') }))
+    : parseSyncedKaraokeLyrics(session.syncedLyrics);
   const lines = syncedLines.length
     ? syncedLines.map((line) => line.text)
     : session.text.replace(/\r\n?/g, '\n').split('\n');
@@ -806,15 +826,20 @@ function renderKaraokeLyricsLines() {
     }
     const hidden = session.studyMode && session.hiddenLines.has(index);
     const important = session.importantLines.has(index);
-    const lineData = syncedLines.length
-      ? ` data-synced-lyric-index="${index}" data-lyric-time="${syncedLines[index].seconds}"`
-      : '';
-    const disabled = syncedLines.length && !canSeek ? ' disabled' : '';
-    const timedClass = syncedLines.length ? ' is-timed' : '';
+    const wordLine = wordLines[index];
+    const lineData = wordLine
+      ? ` data-synced-lyric-index="${index}" data-word-sync-line="${index}"`
+      : syncedLines.length ? ` data-synced-lyric-index="${index}" data-lyric-time="${syncedLines[index].seconds}"` : '';
+    const disabled = (wordLine || syncedLines.length) && !canSeek ? ' disabled' : '';
+    const timedClass = wordLine || syncedLines.length ? ' is-timed' : '';
+    const time = wordLine ? wordLine.startMs / 1000 : syncedLines[index]?.seconds;
+    const lineContent = wordLine?.words?.length
+      ? wordLine.words.map((word) => `<span class="karaoke-word" data-word-start="${Number(word.startMs)}" data-word-end="${Number(word.endMs)}">${escapeHtml(word.text)}</span>`).join(' ')
+      : escapeHtml(line);
     return `
       <div class="lyrics-line-row${important ? ' is-important' : ''}${timedClass}"${lineData}>
         <button class="lyrics-line${hidden ? ' is-hidden' : ''}" type="button" data-lyrics-line="${index}" aria-label="${syncedLines.length ? `Tua đến ${formatKaraokeTime(syncedLines[index].seconds)}: ` : ''}${hidden ? 'Hiện dòng lời bài hát' : 'Dòng lời bài hát'}"${syncedLines.length ? ` data-lyric-time="${syncedLines[index].seconds}"${disabled}` : ''}>
-          ${hidden ? '••• Nhấn để hiện dòng •••' : escapeHtml(line)}
+          ${hidden ? '••• Nhấn để hiện dòng •••' : lineContent}
         </button>
         <button class="lyrics-mark-button${important ? ' is-active' : ''}" type="button" data-lyrics-mark="${index}" aria-label="${important ? 'Bỏ đánh dấu dòng' : 'Đánh dấu dòng quan trọng'}">${important ? '★' : '☆'}</button>
       </div>
@@ -827,8 +852,9 @@ function renderKaraokeLyricsModal() {
   const song = currentKaraokeLyricsSong();
   if (!modal || !song) return;
   const session = state.karaokeLyricsModal;
+  const wordLines = Array.isArray(session.wordSyncLines) ? session.wordSyncLines : [];
   const syncedLines = parseSyncedKaraokeLyrics(session.syncedLyrics);
-  const hasLyrics = Boolean(session.text.trim() || syncedLines.length);
+  const hasLyrics = Boolean(session.text.trim() || syncedLines.length || wordLines.length);
   const status = $('#karaokeLyricsStatus');
   const view = $('#karaokeLyricsText');
   const empty = $('#karaokeLyricsEmpty');
@@ -843,7 +869,28 @@ function renderKaraokeLyricsModal() {
   const hiddenCount = [...session.hiddenLines].filter((line) => Number.isInteger(line)).length;
 
   $('#karaokeLyricsTitle').textContent = song.title;
-  $('#karaokeLyricsArtist').textContent = song.artist || song.composer || 'Chưa có thông tin ca sĩ / nhạc sĩ';
+  const metadata = session.metadata || {};
+  const artist = metadata.artist || song.artist || song.composer || 'Chưa có thông tin ca sĩ / nhạc sĩ';
+  $('#karaokeLyricsArtist').textContent = artist;
+  const cover = $('#karaokeCoverArt');
+  if (metadata.coverUrl) cover.src = metadata.coverUrl;
+  else cover.removeAttribute('src');
+  cover.hidden = !metadata.coverUrl;
+  $('#karaokeAlbumMeta').textContent = [metadata.album, metadata.year, metadata.durationSeconds ? formatKaraokeTime(metadata.durationSeconds) : ''].filter(Boolean).join(' · ');
+  $('#karaokeArtistName').textContent = artist;
+  const artistImage = $('#karaokeArtistImage');
+  if (metadata.artistImageUrl) artistImage.src = metadata.artistImageUrl;
+  else artistImage.removeAttribute('src');
+  artistImage.hidden = !metadata.artistImageUrl;
+  $('#karaokeArtistInitial').textContent = artist && !artist.startsWith('Chưa có') ? artist.trim().charAt(0).toLocaleUpperCase('vi-VN') : '♪';
+  const artistLink = $('#karaokeArtistLink');
+  artistLink.href = metadata.artistUrl || '#';
+  artistLink.hidden = !metadata.artistUrl;
+  $('#karaokeArtistCredit').textContent = metadata.artworkCredit || '';
+  const imageCredit = $('#karaokeArtistImageCredit');
+  imageCredit.textContent = metadata.artistImageCredit || '';
+  imageCredit.href = metadata.artistImageSourceUrl || '#';
+  imageCredit.hidden = !metadata.artistImageCredit || !metadata.artistImageSourceUrl;
   $('#karaokeLyricsCategory').textContent = karaokeCategoryLabel(song.category);
   sourceLink.hidden = !session.sourceUrl || hasLyrics || session.loading || session.editing;
   sourceLink.href = session.sourceUrl || '#';
@@ -874,10 +921,12 @@ function renderKaraokeLyricsModal() {
   if (session.editing && hasLyrics) view.hidden = false;
   const lyricsMode = $('#karaokeLyricsMode');
   const lyricsModeDetail = $('#karaokeLyricsModeDetail');
-  lyricsMode.textContent = syncedLines.length ? 'Có lời đồng bộ' : hasLyrics ? 'Chỉ có lời văn bản' : 'Chưa có lời';
-  lyricsMode.dataset.mode = syncedLines.length ? 'synced' : hasLyrics ? 'plain' : 'missing';
-  lyricsModeDetail.textContent = syncedLines.length
-    ? `${syncedLines.length} dòng có timestamp · chạm dòng để tua khi audio sẵn sàng`
+  const hasTimedLyrics = wordLines.length > 0 || syncedLines.length > 0;
+  lyricsMode.textContent = wordLines.length ? 'Có lời đồng bộ từng từ' : syncedLines.length ? 'Có lời đồng bộ' : hasLyrics ? 'Chỉ có lời văn bản' : 'Chưa có lời';
+  lyricsMode.dataset.mode = hasTimedLyrics ? 'synced' : hasLyrics ? 'plain' : 'missing';
+  lyricsModeDetail.textContent = wordLines.length
+    ? `${wordLines.length} câu có timestamp từng từ · tự sáng theo nhạc`
+    : syncedLines.length ? `${syncedLines.length} dòng có timestamp · chạm dòng để tua khi audio sẵn sàng`
     : hasLyrics ? 'Lời hiển thị đầy đủ, không giả lập đồng bộ' : 'Chưa có dữ liệu lời bài hát';
   renderKaraokeAudioControls();
   if (hasLyrics) renderKaraokeLyricsLines();
@@ -905,6 +954,8 @@ async function openKaraokeLyrics(songId) {
   session.songId = song.songId;
   session.text = stored?.text || '';
   session.syncedLyrics = stored?.syncedLyrics || '';
+  session.wordSyncLines = stored?.wordSyncLines || [];
+  session.metadata = null;
   session.providerTrackId = stored?.providerTrackId || '';
   session.loading = !session.text;
   session.error = false;
@@ -919,12 +970,17 @@ async function openKaraokeLyrics(songId) {
   document.body.classList.add('karaoke-modal-open');
   $('#closeKaraokeLyrics')?.focus();
   renderKaraokeLyricsModal();
+  fetch(`/api/karaoke/metadata/${encodeURIComponent(song.songId)}`, { cache: 'no-store' })
+    .then((response) => response.ok ? response.json() : null)
+    .then((metadata) => { if (metadata?.ok && session.requestId === requestId) { session.metadata = metadata; renderKaraokeLyricsModal(); } })
+    .catch(() => {});
   if (stored?.text) return;
   const serverLyrics = await fetchStoredKaraokeLyrics(song);
   if (session.requestId !== requestId) return;
   if (serverLyrics?.lyrics) {
     session.text = serverLyrics.lyrics;
     session.syncedLyrics = serverLyrics.syncedLyrics || '';
+    session.wordSyncLines = serverLyrics.wordSyncLines || [];
     session.providerTrackId = serverLyrics.providerTrackId || '';
     session.sourceName = serverLyrics.source || '';
     session.loading = false;
@@ -955,6 +1011,7 @@ async function openKaraokeLyrics(songId) {
   if (liveLyrics?.lyrics) {
     session.text = liveLyrics.lyrics;
     session.syncedLyrics = liveLyrics.syncedLyrics || '';
+    session.wordSyncLines = liveLyrics.wordSyncLines || [];
     session.providerTrackId = liveLyrics.providerTrackId || '';
     session.sourceName = liveLyrics.sourceName || liveLyrics.source || '';
     session.sourceUrl = '';
@@ -1148,6 +1205,7 @@ function saveEditedKaraokeLyrics() {
   saveKaraokeLyrics();
   state.karaokeLyricsModal.text = text;
   state.karaokeLyricsModal.syncedLyrics = '';
+  state.karaokeLyricsModal.wordSyncLines = [];
   state.karaokeLyricsModal.editing = false;
   state.karaokeLyricsModal.error = false;
   state.karaokeLyricsModal.hiddenLines = new Set();
