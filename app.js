@@ -323,7 +323,12 @@ function rememberKaraokeLyricsSession(song, data) {
 }
 
 function karaokeLyricsForSong(song) {
-  return state.karaokeLyrics[song.songId] || state.karaokeLyricsSession[song.songId] || null;
+  const saved = state.karaokeLyrics[song.songId];
+  const live = state.karaokeLyricsSession[song.songId];
+  if (saved && live && karaokeSessionHasTimestamps(live) && !karaokeSessionHasTimestamps(saved)) {
+    return { ...saved, ...live, text: saved.text || live.text };
+  }
+  return saved || live || null;
 }
 
 function loadKaraokeLyricsUi() {
@@ -468,7 +473,9 @@ function resetKaraokeAudio(message = '', status = 'idle') {
     activeLineIndex: -1
   };
   renderKaraokeAudioControls();
-  $('#karaokeLyricsText')?.querySelectorAll('.lyrics-line.is-current').forEach((line) => line.classList.remove('is-current'));
+  $('#karaokeLyricsText')?.querySelectorAll('.lyrics-line-row.is-current, .karaoke-word.is-word-current').forEach((line) => {
+    line.classList.remove('is-current', 'is-word-current');
+  });
 }
 
 async function refreshVyKaraokeAudioSession(signal) {
@@ -586,15 +593,15 @@ function updateKaraokeSyncedLyrics() {
     if (lines[index].seconds > audio.currentTime) break;
     activeIndex = index;
   }
-  if (activeIndex !== audioState.activeLineIndex) {
-    audioState.activeLineIndex = activeIndex;
-    const rows = $('#karaokeLyricsText')?.querySelectorAll('[data-synced-lyric-index]') || [];
-    rows.forEach((row) => {
-      const isCurrent = Number(row.dataset.syncedLyricIndex) === activeIndex;
-      row.classList.toggle('is-current', isCurrent);
-      if (isCurrent) row.scrollIntoView({ block: 'center', behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-    });
-  }
+  const changedLine = activeIndex !== audioState.activeLineIndex;
+  audioState.activeLineIndex = activeIndex;
+  const rows = $('#karaokeLyricsText')?.querySelectorAll('[data-synced-lyric-index]') || [];
+  rows.forEach((row) => {
+    const isCurrent = Number(row.dataset.syncedLyricIndex) === activeIndex;
+    const needsScroll = isCurrent && (changedLine || !row.classList.contains('is-current'));
+    row.classList.toggle('is-current', isCurrent);
+    if (needsScroll) row.scrollIntoView({ block: 'center', behavior: audio.seeking || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+  });
   const wordRows = $('#karaokeLyricsText')?.querySelectorAll('[data-word-sync-line]') || [];
   wordRows.forEach((row) => row.querySelectorAll('[data-word-start]').forEach((element) => {
     const start = Number(element.dataset.wordStart);
@@ -633,6 +640,29 @@ async function fetchLiveKaraokeLyrics(song) {
   } catch {
     return null;
   }
+}
+
+function karaokeSessionHasTimestamps(session) {
+  return Boolean(session?.wordSyncLines?.length || parseSyncedKaraokeLyrics(session?.syncedLyrics).length);
+}
+
+async function refreshKaraokeTimedLyrics(song, requestId) {
+  const session = state.karaokeLyricsModal;
+  if (session.requestId !== requestId || session.editing || session.sourceName === 'Lời tự nhập' || session.sourceName === 'LRC có timestamp' || karaokeSessionHasTimestamps(session)) return;
+  const liveLyrics = await fetchLiveKaraokeLyrics(song);
+  if (session.requestId !== requestId || session.editing || !liveLyrics || !(
+    liveLyrics.wordSyncLines?.length || parseSyncedKaraokeLyrics(liveLyrics.syncedLyrics).length
+  )) return;
+  session.syncedLyrics = liveLyrics.syncedLyrics || '';
+  session.wordSyncLines = liveLyrics.wordSyncLines || [];
+  if (!session.text.trim()) session.text = liveLyrics.lyrics || '';
+  session.providerTrackId = liveLyrics.providerTrackId || session.providerTrackId;
+  session.sourceName = liveLyrics.sourceName || liveLyrics.source || 'LRCLIB';
+  session.loading = false;
+  session.error = false;
+  state.karaokeAudio.activeLineIndex = -1;
+  renderKaraokeLyricsModal();
+  updateKaraokeSyncedLyrics();
 }
 
 function waitBetweenKaraokeLibraryLookups() {
@@ -845,6 +875,7 @@ function renderKaraokeLyricsLines() {
       </div>
     `;
   }).join('');
+  updateKaraokeSyncedLyrics();
 }
 
 function renderKaraokeLyricsModal() {
@@ -974,7 +1005,10 @@ async function openKaraokeLyrics(songId) {
     .then((response) => response.ok ? response.json() : null)
     .then((metadata) => { if (metadata?.ok && session.requestId === requestId) { session.metadata = metadata; renderKaraokeLyricsModal(); } })
     .catch(() => {});
-  if (stored?.text) return;
+  if (stored?.text) {
+    if (!karaokeSessionHasTimestamps(session)) refreshKaraokeTimedLyrics(song, requestId);
+    return;
+  }
   const serverLyrics = await fetchStoredKaraokeLyrics(song);
   if (session.requestId !== requestId) return;
   if (serverLyrics?.lyrics) {
@@ -986,6 +1020,7 @@ async function openKaraokeLyrics(songId) {
     session.loading = false;
     session.error = false;
     renderKaraokeLyricsModal();
+    if (!karaokeSessionHasTimestamps(session)) refreshKaraokeTimedLyrics(song, requestId);
     return;
   }
   try {
@@ -1000,6 +1035,7 @@ async function openKaraokeLyrics(songId) {
     state.karaokeLyrics[song.songId] = { text, source: 'public-file', updatedAt: new Date().toISOString() };
     saveKaraokeLyrics();
     renderKaraokeLyricsModal();
+    refreshKaraokeTimedLyrics(song, requestId);
     return;
   } catch {
     if (session.requestId !== requestId) return;
@@ -1249,6 +1285,7 @@ function bindKaraoke() {
       }
       renderKaraokeAudioControls();
       renderKaraokeLyricsLines();
+      updateKaraokeSyncedLyrics();
     });
     audio.addEventListener('canplay', () => {
       const current = state.karaokeAudio;
@@ -1264,6 +1301,7 @@ function bindKaraoke() {
       current.status = 'ready';
       current.message = 'Đang phát';
       renderKaraokeAudioControls();
+      updateKaraokeSyncedLyrics();
     });
     audio.addEventListener('waiting', () => {
       const current = state.karaokeAudio;
@@ -1272,7 +1310,12 @@ function bindKaraoke() {
       current.message = 'Đang tải thêm audio…';
       renderKaraokeAudioControls();
     });
-    audio.addEventListener('pause', renderKaraokeAudioControls);
+    audio.addEventListener('pause', () => {
+      renderKaraokeAudioControls();
+      updateKaraokeSyncedLyrics();
+    });
+    audio.addEventListener('seeking', updateKaraokeSyncedLyrics);
+    audio.addEventListener('seeked', updateKaraokeSyncedLyrics);
     audio.addEventListener('timeupdate', () => {
       renderKaraokeAudioControls();
       updateKaraokeSyncedLyrics();
