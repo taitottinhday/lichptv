@@ -869,9 +869,8 @@ function renderKaraokeLyricsModal() {
   const song = currentKaraokeLyricsSong();
   if (!modal || !song) return;
   const session = state.karaokeLyricsModal;
-  const wordLines = Array.isArray(session.wordSyncLines) ? session.wordSyncLines : [];
   const syncedLines = parseSyncedKaraokeLyrics(session.syncedLyrics);
-  const hasLyrics = Boolean(session.text.trim() || syncedLines.length || wordLines.length);
+  const hasLyrics = Boolean(session.text.trim() || syncedLines.length || (Array.isArray(session.wordSyncLines) && session.wordSyncLines.length));
   const status = $('#karaokeLyricsStatus');
   const view = $('#karaokeLyricsText');
   const empty = $('#karaokeLyricsEmpty');
@@ -883,7 +882,6 @@ function renderKaraokeLyricsModal() {
   const alignToggle = $('#toggleLyricsAlign');
   const fontSizeValue = $('#lyricsFontSizeValue');
   const sourceLink = $('#openKaraokeLyricsSource');
-  const hiddenCount = [...session.hiddenLines].filter((line) => Number.isInteger(line)).length;
 
   $('#karaokeLyricsTitle').textContent = song.title;
   const metadata = session.metadata || {};
@@ -894,20 +892,6 @@ function renderKaraokeLyricsModal() {
   else cover.removeAttribute('src');
   cover.hidden = !metadata.coverUrl;
   $('#karaokeAlbumMeta').textContent = [metadata.album, metadata.year, metadata.durationSeconds ? formatKaraokeTime(metadata.durationSeconds) : ''].filter(Boolean).join(' · ');
-  $('#karaokeArtistName').textContent = artist;
-  const artistImage = $('#karaokeArtistImage');
-  if (metadata.artistImageUrl) artistImage.src = metadata.artistImageUrl;
-  else artistImage.removeAttribute('src');
-  artistImage.hidden = !metadata.artistImageUrl;
-  $('#karaokeArtistInitial').textContent = artist && !artist.startsWith('Chưa có') ? artist.trim().charAt(0).toLocaleUpperCase('vi-VN') : '♪';
-  const artistLink = $('#karaokeArtistLink');
-  artistLink.href = metadata.artistUrl || '#';
-  artistLink.hidden = !metadata.artistUrl;
-  $('#karaokeArtistCredit').textContent = metadata.artworkCredit || '';
-  const imageCredit = $('#karaokeArtistImageCredit');
-  imageCredit.textContent = metadata.artistImageCredit || '';
-  imageCredit.href = metadata.artistImageSourceUrl || '#';
-  imageCredit.hidden = !metadata.artistImageCredit || !metadata.artistImageSourceUrl;
   $('#karaokeLyricsCategory').textContent = karaokeCategoryLabel(song.category);
   sourceLink.hidden = !session.sourceUrl || hasLyrics || session.loading || session.editing;
   sourceLink.href = session.sourceUrl || '#';
@@ -933,8 +917,9 @@ function renderKaraokeLyricsModal() {
   if (session.loading) status.textContent = 'Đang tải lời bài hát…';
   else if (session.error) status.textContent = 'Không đọc được file lời bài hát';
   else if (!hasLyrics) status.textContent = 'Bài hát này chưa có lời';
-  else if (session.studyMode) status.textContent = `Chế độ học thuộc · ${hiddenCount} dòng đang ẩn`;
-  else status.textContent = session.sourceName ? `Lời bài hát · ${session.sourceName}` : 'Lời bài hát đã sẵn sàng để hát';
+  else if (session.studyMode) status.textContent = 'Chế độ học thuộc';
+  else status.textContent = '';
+  status.hidden = !session.loading && !session.error && !session.studyMode;
 
   view.hidden = session.loading || !hasLyrics || session.editing;
   empty.hidden = session.loading || hasLyrics || session.editing;
@@ -942,15 +927,6 @@ function renderKaraokeLyricsModal() {
   studyTools.hidden = session.loading || !hasLyrics || !session.studyMode;
   if (session.editing && document.activeElement !== textarea) textarea.value = session.text;
   if (session.editing && hasLyrics) view.hidden = false;
-  const lyricsMode = $('#karaokeLyricsMode');
-  const lyricsModeDetail = $('#karaokeLyricsModeDetail');
-  const hasTimedLyrics = wordLines.length > 0 || syncedLines.length > 0;
-  lyricsMode.textContent = wordLines.length ? 'Có lời đồng bộ từng từ' : syncedLines.length ? 'Có lời đồng bộ' : hasLyrics ? 'Chỉ có lời văn bản' : 'Chưa có lời';
-  lyricsMode.dataset.mode = hasTimedLyrics ? 'synced' : hasLyrics ? 'plain' : 'missing';
-  lyricsModeDetail.textContent = wordLines.length
-    ? `${wordLines.length} câu có timestamp từng từ · tự sáng theo nhạc`
-    : syncedLines.length ? `${syncedLines.length} dòng có timestamp · chạm dòng để tua khi audio sẵn sàng`
-    : hasLyrics ? 'Lời hiển thị đầy đủ, không giả lập đồng bộ' : 'Chưa có dữ liệu lời bài hát';
   renderKaraokeAudioControls();
   if (hasLyrics) renderKaraokeLyricsLines();
 }

@@ -514,10 +514,6 @@
             <label class="karaoke-audio-volume" for="karaokeAudioVolume"><span aria-hidden="true">◖))</span><input id="karaokeAudioVolume" type="range" min="0" max="1" step="0.01" value="0.8" aria-label="Âm lượng" /></label>
           </div>
         </section>
-        <div class="karaoke-lyrics-mode-row">
-          <span class="karaoke-lyrics-mode" id="karaokeLyricsMode">Chỉ có lời văn bản</span>
-          <span id="karaokeLyricsModeDetail">Lời không đồng bộ theo nhạc</span>
-        </div>
         <div class="karaoke-lyrics-status" id="karaokeLyricsStatus" role="status" aria-live="polite">Đang tìm lời bài hát…</div>
         <div class="karaoke-lyrics-body">
           <div class="karaoke-lyrics-empty" id="karaokeLyricsEmpty" hidden>
@@ -528,12 +524,6 @@
             <button class="button button-primary" id="addKaraokeLyrics" type="button">＋ Thêm lời bài hát</button>
           </div>
           <div class="karaoke-lyrics-text" id="karaokeLyricsText" tabindex="0" aria-live="polite"></div>
-          <aside class="karaoke-artist-card" aria-label="Thông tin nghệ sĩ">
-            <div class="karaoke-artist-avatar"><span id="karaokeArtistInitial">♪</span><img id="karaokeArtistImage" alt="" hidden /></div>
-            <div class="karaoke-artist-copy"><small>Nghệ sĩ</small><strong id="karaokeArtistName">Chưa có thông tin</strong><a id="karaokeArtistLink" href="#" target="_blank" rel="noopener noreferrer" hidden>Xem hồ sơ nghệ sĩ ↗</a></div>
-            <small class="karaoke-artist-credit" id="karaokeArtistCredit"></small>
-            <a class="karaoke-artist-image-credit" id="karaokeArtistImageCredit" href="#" target="_blank" rel="noopener noreferrer" hidden></a>
-          </aside>
           <div class="karaoke-study-tools" id="karaokeStudyTools">
             <span>Học thuộc từng dòng:</span>
             <button class="lyrics-mini-button" id="hideAllLyrics" type="button">Ẩn tất cả</button>
@@ -548,7 +538,6 @@
             </div>
           </form>
         </div>
-        <p class="karaoke-lyrics-help">Lời trong file có sẵn trên website cho các thiết bị. Sau khi mở một lần, máy lưu lời đó để xem lại offline; lời tra trực tuyến chỉ dùng trong phiên và không tự đồng bộ giữa các máy.</p>
       </div>
     </div>
 
