@@ -1,0 +1,2 @@
+# Dependencies for the local karaoke alignment pipeline (not the Node web app).
+whisperx>=3.8.6,<4

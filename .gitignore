@@ -1,5 +1,10 @@
 node_modules/
 dist/
+/downloads/audios/
+/downloads/json/
+/.venv-align/
+__pycache__/
+*.py[cod]
 *.zip
 .DS_Store
 .env
