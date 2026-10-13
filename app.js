@@ -468,6 +468,49 @@ function resetKaraokeAudio(message = '', status = 'idle') {
   $('#karaokeLyricsText')?.querySelectorAll('.lyrics-line.is-current').forEach((line) => line.classList.remove('is-current'));
 }
 
+async function refreshVyKaraokeAudioSession(signal) {
+  if (localStorage.getItem(AUTH_KEY) !== 'true') return '';
+  try {
+    const response = await fetch('/api/user/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: DEMO_USERNAME, password: DEMO_PASSWORD }),
+      cache: 'no-store',
+      signal
+    });
+    const session = await response.json().catch(() => ({}));
+    if (!response.ok || typeof session.token !== 'string') {
+      localStorage.removeItem(VY_AUDIO_TOKEN_KEY);
+      return '';
+    }
+    localStorage.setItem(VY_AUDIO_TOKEN_KEY, session.token);
+    return session.token;
+  } catch {
+    return '';
+  }
+}
+
+async function requestKaraokeAudioUrl(songId, signal) {
+  const adminView = $('#adminScreen')?.hidden === false;
+  const userView = !adminView;
+  let token = userView
+    ? localStorage.getItem(VY_AUDIO_TOKEN_KEY) || ''
+    : localStorage.getItem(ADMIN_TOKEN_KEY) || '';
+  if (userView && !token) token = await refreshVyKaraokeAudioSession(signal);
+
+  const sendRequest = () => fetch(`/api/audio/url/${encodeURIComponent(songId)}`, {
+    cache: 'no-store',
+    headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
+    signal
+  });
+  let response = await sendRequest();
+  if (response.status === 401 && userView) {
+    token = await refreshVyKaraokeAudioSession(signal);
+    if (token) response = await sendRequest();
+  }
+  return response;
+}
+
 async function prepareKaraokeAudio(songId) {
   resetKaraokeAudio('Đang kiểm tra audio riêng tư…', 'loading');
   const audioState = state.karaokeAudio;
@@ -495,14 +538,7 @@ async function prepareKaraokeAudio(songId) {
     }
     if (typeof entry.mimeType !== 'string' || !entry.mimeType.startsWith('audio/')) throw new Error('Manifest thiếu MIME type audio hợp lệ.');
     audioState.entry = entry;
-    const urlResponse = await fetch(`/api/audio/url/${encodeURIComponent(songId)}`, {
-      cache: 'no-store',
-      headers: {
-        Accept: 'application/json',
-        Authorization: `Bearer ${localStorage.getItem(ADMIN_TOKEN_KEY) || localStorage.getItem(VY_AUDIO_TOKEN_KEY) || ''}`
-      },
-      signal: controller.signal
-    });
+    const urlResponse = await requestKaraokeAudioUrl(songId, controller.signal);
     const payload = await urlResponse.json().catch(() => ({}));
     if (state.karaokeAudio.requestId !== requestId) return;
     if (!urlResponse.ok) {
