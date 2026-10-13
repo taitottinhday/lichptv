@@ -446,10 +446,14 @@ function setKaraokeVocalMix(enabled) {
   const graph = karaokeVocalGraph;
   if (!graph) return;
   const now = graph.context.currentTime;
-  const gains = enabled ? [0.54, -0.46, -0.46, 0.54] : [1, 0, 0, 1];
+  const gains = enabled ? [0.505, -0.495, -0.495, 0.505] : [1, 0, 0, 1];
   graph.gains.forEach((gain, index) => {
     gain.gain.cancelScheduledValues(now);
     gain.gain.setTargetAtTime(gains[index], now, 0.025);
+  });
+  graph.bassGains.forEach((gain) => {
+    gain.gain.cancelScheduledValues(now);
+    gain.gain.setTargetAtTime(enabled ? 0.425 : 0, now, 0.025);
   });
 }
 
@@ -524,25 +528,46 @@ async function enableKaraokeVocalReduction(enabled) {
     const media = context.createMediaElementSource(audio);
     const splitter = context.createChannelSplitter(2);
     const merger = context.createChannelMerger(2);
-    const gains = [0.54, -0.46, -0.46, 0.54].map((value) => {
+    const gains = [0.505, -0.495, -0.495, 0.505].map((value) => {
       const node = context.createGain();
       node.gain.value = value;
       return node;
     });
+    const bassFilters = [0, 1].map(() => {
+      const filter = context.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = 160;
+      filter.Q.value = 0.707;
+      return filter;
+    });
+    const bassGains = bassFilters.map(() => {
+      const node = context.createGain();
+      node.gain.value = 0.425;
+      return node;
+    });
+    const limiter = context.createDynamicsCompressor();
+    limiter.threshold.value = -6;
+    limiter.knee.value = 8;
+    limiter.ratio.value = 4;
+    limiter.attack.value = 0.004;
+    limiter.release.value = 0.18;
     media.connect(splitter);
     splitter.connect(gains[0], 0); gains[0].connect(merger, 0, 0);
     splitter.connect(gains[1], 1); gains[1].connect(merger, 0, 0);
     splitter.connect(gains[2], 0); gains[2].connect(merger, 0, 1);
     splitter.connect(gains[3], 1); gains[3].connect(merger, 0, 1);
-    merger.connect(context.destination);
-    karaokeVocalGraph = { context, gains };
+    splitter.connect(bassFilters[0], 0); bassFilters[0].connect(bassGains[0]); bassGains[0].connect(merger, 0, 0); bassGains[0].connect(merger, 0, 1);
+    splitter.connect(bassFilters[1], 1); bassFilters[1].connect(bassGains[1]); bassGains[1].connect(merger, 0, 0); bassGains[1].connect(merger, 0, 1);
+    merger.connect(limiter);
+    limiter.connect(context.destination);
+    karaokeVocalGraph = { context, gains, bassGains };
     audio.currentTime = Math.min(currentTime, Number.isFinite(audio.duration) ? audio.duration : currentTime);
     if (wasPlaying || state.karaokeAudio.autoPlay) {
       await context.resume();
       await audio.play();
       state.karaokeAudio.autoPlay = false;
     }
-    status.textContent = 'Đã bật giảm giọng ca sĩ · hiệu quả tùy bản phối.';
+    status.textContent = 'Đã triệt giọng mạnh, giữ beat · hiệu quả tùy bản phối.';
   } catch (error) {
     if (karaokeVocalGraph) {
       status.textContent = 'Giảm giọng đã sẵn sàng · chạm phát để bắt đầu.';
