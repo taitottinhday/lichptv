@@ -501,13 +501,20 @@
           </div>
           <button class="karaoke-lyrics-close" id="closeKaraokeLyrics" type="button" aria-label="Đóng lời bài hát">×</button>
         </div>
-        <section class="karaoke-audio-panel" aria-label="Trình phát nhạc karaoke">
+        <section class="karaoke-judge" id="karaokeJudge" aria-label="Bắt đầu karaoke">
+          <div class="karaoke-judge-head">
+            <div><span class="karaoke-judge-kicker">KARAOKE 🎤</span><h4>Hát cùng beat</h4></div>
+          </div>
+          <p class="karaoke-judge-caption" id="karaokeJudgeCaption">Nhấn bắt đầu để mở nhạc nền đã giảm giọng ca sĩ và chạy lời theo nhạc.</p>
+          <div class="karaoke-judge-actions"><button class="karaoke-judge-button" id="karaokeJudgeButton" type="button">🎙️ Bắt đầu hát karaoke</button><span id="karaokeJudgeTimer" aria-live="polite"></span></div>
+        </section>
+        <section class="karaoke-audio-panel" id="karaokeAudioPanel" aria-label="Trình phát nhạc karaoke" hidden>
           <audio id="karaokeAudioElement" preload="none" playsinline aria-hidden="true"></audio>
           <div class="karaoke-audio-topline">
             <strong>Phát nhạc nền</strong>
             <span class="karaoke-audio-status" id="karaokeAudioStatus" role="status" aria-live="polite">Đang kiểm tra audio…</span>
           </div>
-          <small class="karaoke-vocal-status" id="karaokeVocalStatus" role="status" aria-live="polite">Nhạc sẽ tự phát · đang giảm giọng ca sĩ</small>
+          <small class="karaoke-vocal-status" id="karaokeVocalStatus" role="status" aria-live="polite">Beat karaoke đã giảm giọng ca sĩ</small>
           <div class="karaoke-audio-controls">
             <button class="karaoke-audio-play" id="karaokeAudioPlay" type="button" aria-label="Phát nhạc" disabled>▶</button>
             <div class="karaoke-audio-timeline">
@@ -517,8 +524,8 @@
             <label class="karaoke-audio-volume" for="karaokeAudioVolume"><span aria-hidden="true">◖))</span><input id="karaokeAudioVolume" type="range" min="0" max="1" step="0.01" value="0.8" aria-label="Âm lượng" /></label>
           </div>
         </section>
-        <div class="karaoke-lyrics-status" id="karaokeLyricsStatus" role="status" aria-live="polite">Đang tìm lời bài hát…</div>
-        <div class="karaoke-lyrics-body">
+        <div class="karaoke-lyrics-body" id="karaokeLyricsBody" hidden>
+          <div class="karaoke-lyrics-status" id="karaokeLyricsStatus" role="status" aria-live="polite">Đang tìm lời bài hát…</div>
           <div class="karaoke-lyrics-empty" id="karaokeLyricsEmpty" hidden>
             <div class="karaoke-lyrics-empty-icon" aria-hidden="true">♪</div>
             <strong>Bài hát này chưa có lời</strong>
@@ -541,13 +548,6 @@
             </div>
           </form>
         </div>
-        <section class="karaoke-judge" id="karaokeJudge" aria-label="Chấm điểm karaoke">
-          <div class="karaoke-judge-head">
-            <div><span class="karaoke-judge-kicker">KARAOKE 🎤</span><h4>Chấm điểm màn trình diễn</h4></div>
-          </div>
-          <p class="karaoke-judge-caption" id="karaokeJudgeCaption">Hát hết bài rồi xem điểm nhé.</p>
-          <div class="karaoke-judge-actions"><button class="karaoke-judge-button" id="karaokeJudgeButton" type="button">🎙️ Bắt đầu hát</button><span id="karaokeJudgeTimer" aria-live="polite"></span></div>
-        </section>
         <div class="karaoke-score-popup-backdrop" id="karaokeScorePopup" hidden>
           <section class="karaoke-score-popup" role="dialog" aria-modal="true" aria-labelledby="karaokeScorePopupTitle">
             <button class="karaoke-score-popup-close" id="closeKaraokeScorePopup" type="button" aria-label="Đóng kết quả">×</button>
