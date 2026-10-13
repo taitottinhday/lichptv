@@ -1231,14 +1231,23 @@ function renderKaraokeLyricsLines() {
   const lines = syncedLines.length
     ? syncedLines.map((line) => line.text)
     : session.text.replace(/\r\n?/g, '\n').split('\n');
+  const languageMarkers = new Map();
+  if (session.songId === 'hanh-phuc-moi' && lines.length) {
+    languageMarkers.set(0, 'Tiếng Hàn · phiên âm Latin');
+    const vietnameseStart = lines.findIndex((line, index) => index > 0 && /^nhưng giờ đây\b/i.test(line.trim()));
+    if (vietnameseStart > 0) languageMarkers.set(vietnameseStart, 'Tiếng Việt');
+  }
   const audio = $('#karaokeAudioElement');
   const canSeek = state.karaokeAudio.songId === session.songId && Number.isFinite(audio?.duration) && audio.duration > 0;
   view.innerHTML = lines.map((line, index) => {
-    if (!line.trim()) return '<div class="lyrics-line-spacer" aria-hidden="true"></div>';
+    const languageMarker = languageMarkers.has(index)
+      ? `<div class="lyrics-language-label">${escapeHtml(languageMarkers.get(index))}</div>`
+      : '';
+    if (!line.trim()) return `${languageMarker}<div class="lyrics-line-spacer" aria-hidden="true"></div>`;
     const section = !syncedLines.length && line.trim().match(/^\[(verse|chorus|pre-chorus|bridge|điệp khúc|đoạn)\s*([^\]]*)\]$/i);
     if (section) {
       const label = `${section[1]}${section[2] ? ` ${section[2].trim()}` : ''}`;
-      return `<div class="lyrics-section-label">${escapeHtml(label)}</div>`;
+      return `${languageMarker}<div class="lyrics-section-label">${escapeHtml(label)}</div>`;
     }
     const hidden = session.studyMode && session.hiddenLines.has(index);
     const important = session.importantLines.has(index);
@@ -1253,7 +1262,7 @@ function renderKaraokeLyricsLines() {
       ? wordLine.words.map((word) => `<span class="karaoke-word" data-word-start="${Number(word.startMs)}" data-word-end="${Number(word.endMs)}">${escapeHtml(word.text)}</span>`).join(' ')
       : escapeHtml(line);
     return `
-      <div class="lyrics-line-row${important ? ' is-important' : ''}${timedClass}"${lineData}>
+      ${languageMarker}<div class="lyrics-line-row${important ? ' is-important' : ''}${timedClass}"${lineData}>
         <button class="lyrics-line${hidden ? ' is-hidden' : ''}" type="button" data-lyrics-line="${index}" aria-label="${syncedLines.length ? `Tua đến ${formatKaraokeTime(syncedLines[index].seconds)}: ` : ''}${hidden ? 'Hiện dòng lời bài hát' : 'Dòng lời bài hát'}"${syncedLines.length ? ` data-lyric-time="${syncedLines[index].seconds}"${disabled}` : ''}>
           ${hidden ? '••• Nhấn để hiện dòng •••' : lineContent}
         </button>
@@ -1315,12 +1324,14 @@ function renderKaraokeLyricsModal() {
     fullscreenToggle.setAttribute('aria-pressed', String(session.fullscreen));
   }
 
+  const hasLanguageNote = session.songId === 'hanh-phuc-moi' && hasLyrics && !session.editing;
   if (session.loading) status.textContent = 'Đang tải lời bài hát…';
   else if (session.error) status.textContent = 'Không đọc được file lời bài hát';
   else if (!hasLyrics) status.textContent = 'Bài hát này chưa có lời';
   else if (session.studyMode) status.textContent = 'Chế độ học thuộc';
+  else if (hasLanguageNote) status.textContent = 'Đoạn mở đầu là tiếng Hàn viết bằng phiên âm Latin; phần sau là lời tiếng Việt.';
   else status.textContent = '';
-  status.hidden = !session.loading && !session.error && !session.studyMode;
+  status.hidden = !session.loading && !session.error && !session.studyMode && !hasLanguageNote;
 
   view.hidden = session.loading || !hasLyrics || session.editing;
   empty.hidden = session.loading || hasLyrics || session.editing;
