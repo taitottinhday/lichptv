@@ -960,7 +960,7 @@ async function openKaraokeLyrics(songId) {
   session.loading = !session.text;
   session.error = false;
   session.sourceUrl = '';
-  session.sourceName = stored?.source || '';
+  session.sourceName = stored?.source === 'user-lrc' ? 'LRC có timestamp' : stored?.source === 'user-input' ? 'Lời tự nhập' : stored?.source || '';
   session.editing = false;
   session.studyMode = savedUi.studyMode;
   session.hiddenLines = savedUi.hiddenLines;
@@ -1201,18 +1201,27 @@ function saveEditedKaraokeLyrics() {
     textarea.focus();
     return;
   }
-  state.karaokeLyrics[song.songId] = { text, source: 'user-input', updatedAt: new Date().toISOString() };
+  const syncedLines = parseSyncedKaraokeLyrics(text);
+  const isLrc = syncedLines.length >= 2;
+  const lyricsText = isLrc ? syncedLines.map((line) => line.text).join('\n') : text;
+  state.karaokeLyrics[song.songId] = {
+    text: lyricsText,
+    syncedLyrics: isLrc ? text : '',
+    source: isLrc ? 'user-lrc' : 'user-input',
+    updatedAt: new Date().toISOString()
+  };
   saveKaraokeLyrics();
-  state.karaokeLyricsModal.text = text;
-  state.karaokeLyricsModal.syncedLyrics = '';
+  state.karaokeLyricsModal.text = lyricsText;
+  state.karaokeLyricsModal.syncedLyrics = isLrc ? text : '';
   state.karaokeLyricsModal.wordSyncLines = [];
+  state.karaokeLyricsModal.sourceName = isLrc ? 'LRC có timestamp' : 'Lời tự nhập';
   state.karaokeLyricsModal.editing = false;
   state.karaokeLyricsModal.error = false;
   state.karaokeLyricsModal.hiddenLines = new Set();
   state.karaokeLyricsModal.importantLines = new Set();
   saveKaraokeLyricsUi();
   renderKaraokeLyricsModal();
-  showToast('Đã lưu lời bài hát trên thiết bị này 💗');
+  showToast(isLrc ? 'Đã lưu lời LRC đồng bộ theo dòng trên thiết bị này 💗' : 'Đã lưu lời bài hát trên thiết bị này 💗');
 }
 
 function bindKaraoke() {
