@@ -6,6 +6,7 @@ import { readFile } from 'node:fs/promises';
 import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { Readable } from 'node:stream';
 import sharp from 'sharp';
 import { AccessToken, LiveKitAPI } from 'livekit-server-sdk';
 import { defaultSchedule } from './schedule-data.js';
@@ -832,6 +833,28 @@ function createSessionToken(role) {
   return `${payload}.${signature}`;
 }
 
+function createAudioStreamTicket(songId) {
+  const ttlSeconds = 6 * 60 * 60;
+  const payload = Buffer.from(JSON.stringify({ songId, exp: Date.now() + ttlSeconds * 1000 })).toString('base64url');
+  const signature = createHmac('sha256', adminSessionSecret).update(`audio-stream:${payload}`).digest('base64url');
+  return `${payload}.${signature}`;
+}
+
+function isValidAudioStreamTicket(ticket, songId) {
+  const [payload, signature] = String(ticket || '').split('.');
+  if (!payload || !signature) return false;
+  try {
+    const expected = createHmac('sha256', adminSessionSecret).update(`audio-stream:${payload}`).digest('base64url');
+    const providedBytes = Buffer.from(signature);
+    const expectedBytes = Buffer.from(expected);
+    if (providedBytes.length !== expectedBytes.length || !timingSafeEqual(providedBytes, expectedBytes)) return false;
+    const ticketData = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
+    return ticketData.songId === songId && Number(ticketData.exp) > Date.now();
+  } catch {
+    return false;
+  }
+}
+
 function isAdminRequest(request) {
   return isSignedRoleRequest(request, 'admin');
 }
@@ -986,13 +1009,64 @@ app.get('/api/audio/url/:songId', async (request, response) => {
     });
     return response.json({
       songId: song.songId,
-      audioUrl: signR2GetUrl(entry.objectKey),
+      audioUrl: `/api/audio/stream/${encodeURIComponent(song.songId)}?ticket=${encodeURIComponent(createAudioStreamTicket(song.songId))}`,
       mimeType: entry.mimeType,
-      expiresInSeconds: r2UrlTtlSeconds
+      expiresInSeconds: 6 * 60 * 60
     });
   } catch (error) {
     console.error('Không đọc được audio manifest:', error.message);
     return response.status(503).json({ code: 'AUDIO_MANIFEST_UNAVAILABLE', error: 'Chưa đọc được manifest audio riêng tư.' });
+  }
+});
+
+app.get('/api/audio/stream/:songId', async (request, response) => {
+  response.set({ 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff' });
+  const songId = request.params.songId;
+  if (!isValidAudioStreamTicket(request.query.ticket, songId)) {
+    return response.status(401).json({ code: 'AUDIO_STREAM_TICKET_INVALID', error: 'Đường dẫn nghe audio đã hết hạn.' });
+  }
+  const song = karaokeSongById(songId);
+  if (!song) return response.status(404).end();
+
+  let manifest;
+  try {
+    manifest = JSON.parse(await readFile(audioManifestPath, 'utf8'));
+  } catch {
+    return response.status(503).end();
+  }
+  const entry = manifest?.schemaVersion === 1 ? manifest.entries?.[songId] : null;
+  if (!entry || (entry.songId && entry.songId !== songId)
+    || typeof entry.objectKey !== 'string' || !entry.objectKey.startsWith(`audio/${songId}.`)
+    || entry.objectKey.includes('..') || typeof entry.mimeType !== 'string' || !entry.mimeType.startsWith('audio/')) {
+    return response.status(404).end();
+  }
+  if (!r2Configured) return response.status(503).end();
+
+  const abortController = new AbortController();
+  response.on('close', () => {
+    if (!response.writableFinished) abortController.abort();
+  });
+  try {
+    const headers = {};
+    if (request.headers.range) headers.Range = request.headers.range;
+    const upstream = await fetch(signR2GetUrl(entry.objectKey), { headers, signal: abortController.signal });
+    if (upstream.status !== 200 && upstream.status !== 206 && upstream.status !== 416) {
+      await upstream.body?.cancel();
+      return response.status(upstream.status === 404 ? 404 : 502).end();
+    }
+    for (const header of ['content-type', 'content-length', 'content-range', 'accept-ranges', 'etag', 'last-modified']) {
+      const value = upstream.headers.get(header);
+      if (value) response.set(header, value);
+    }
+    response.status(upstream.status);
+    if (upstream.status === 416 || !upstream.body) return response.end();
+    Readable.fromWeb(upstream.body).on('error', (error) => {
+      if (!response.destroyed) response.destroy(error);
+    }).pipe(response);
+  } catch (error) {
+    if (error.name === 'AbortError' || response.destroyed) return;
+    if (response.headersSent) response.destroy(error);
+    else response.status(502).end();
   }
 });
 
