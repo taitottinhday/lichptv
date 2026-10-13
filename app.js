@@ -50,6 +50,7 @@ const state = {
   karaokeLyrics: loadKaraokeLyrics(),
   // Live lyrics are kept in memory only when the provider does not grant offline caching rights.
   karaokeLyricsSession: {},
+  karaokePlaybackQueue: [],
   karaokeLyricsModal: createKaraokeLyricsModalState(),
   karaokeAudio: { songId: null, status: 'idle', message: '', requestId: 0, controller: null, entry: null, activeLineIndex: -1, autoPlay: false },
   toastTimer: null,
@@ -74,6 +75,7 @@ let incomingAudioContext;
 let incomingAlertRole;
 let karaokeJudgeSession;
 let karaokeJudgeRequestId = 0;
+let karaokeNextTrackTimer = 0;
 let karaokeVocalGraph;
 let karaokeVocalProcessing = false;
 const callUiStates = new Map();
@@ -1272,6 +1274,8 @@ function renderKaraokeLyricsModal() {
 function closeKaraokeLyrics() {
   const modal = $('#karaokeLyricsModal');
   if (!modal) return;
+  window.clearTimeout(karaokeNextTrackTimer);
+  karaokeNextTrackTimer = 0;
   karaokeJudgeRequestId += 1;
   $('#karaokeJudgeButton').disabled = false;
   $('#karaokeScorePopup').hidden = true;
@@ -1283,10 +1287,23 @@ function closeKaraokeLyrics() {
   state.karaokeLyricsModal.fullscreen = false;
 }
 
-async function openKaraokeLyrics(songId) {
+function karaokeQueueForSong(songId) {
+  const inAdmin = $('#adminScreen')?.hidden === false;
+  let songs;
+  if (inAdmin) songs = UNIQUE_KARAOKE_SONGS;
+  else if (state.karaokeShowSelected) songs = UNIQUE_KARAOKE_SONGS.filter((song) => state.karaokeSelected.has(song.title));
+  else songs = karaokeSongsForView();
+  if (!songs.some((song) => song.songId === songId)) songs = UNIQUE_KARAOKE_SONGS;
+  return songs.map((song) => song.songId);
+}
+
+async function openKaraokeLyrics(songId, { continueQueue = false } = {}) {
   const modal = $('#karaokeLyricsModal');
   const song = UNIQUE_KARAOKE_SONGS.find((item) => item.songId === songId);
   if (!modal || !song) return;
+  window.clearTimeout(karaokeNextTrackTimer);
+  karaokeNextTrackTimer = 0;
+  if (!continueQueue) state.karaokePlaybackQueue = karaokeQueueForSong(songId);
   if (karaokeJudgeSession) await finishKaraokeJudge();
   $('#karaokeScorePopup').hidden = true;
   $('#karaokeJudgeCaption').textContent = 'Hát hết bài rồi xem điểm nhé.';
@@ -1643,11 +1660,26 @@ function bindKaraoke() {
       renderKaraokeAudioControls();
       updateKaraokeSyncedLyrics();
     });
-    audio.addEventListener('ended', () => {
+    audio.addEventListener('ended', async () => {
+      const endedSongId = state.karaokeLyricsModal.songId;
+      const wasJudging = karaokeJudgeSession?.songId === endedSongId;
       state.karaokeAudio.status = 'ready';
       state.karaokeAudio.message = 'Đã phát xong';
       renderKaraokeAudioControls();
-      if (karaokeJudgeSession?.songId === state.karaokeLyricsModal.songId) finishKaraokeJudge();
+      if (wasJudging) await finishKaraokeJudge();
+      const queue = state.karaokePlaybackQueue;
+      const nextIndex = queue.indexOf(endedSongId) + 1;
+      const nextSongId = nextIndex > 0 ? queue[nextIndex] : '';
+      if (!nextSongId) return;
+      const scorePopup = $('#karaokeScorePopup');
+      const scoreVisible = wasJudging && scorePopup && !scorePopup.hidden;
+      state.karaokeAudio.message = 'Bài tiếp theo sẽ tự phát…';
+      renderKaraokeAudioControls();
+      karaokeNextTrackTimer = window.setTimeout(() => {
+        karaokeNextTrackTimer = 0;
+        if (state.karaokeLyricsModal.songId !== endedSongId || $('#karaokeLyricsModal')?.hidden) return;
+        openKaraokeLyrics(nextSongId, { continueQueue: true });
+      }, scoreVisible ? 5000 : 350);
     });
     audio.addEventListener('error', () => {
       const current = state.karaokeAudio;
