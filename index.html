@@ -507,6 +507,11 @@
             <strong>Phát nhạc nền</strong>
             <span class="karaoke-audio-status" id="karaokeAudioStatus" role="status" aria-live="polite">Đang kiểm tra audio…</span>
           </div>
+          <label class="karaoke-mode-switch" for="karaokeVocalToggle">
+            <input id="karaokeVocalToggle" type="checkbox" checked disabled />
+            <span><strong>Chế độ karaoke</strong><small>Giảm giọng ca sĩ, giữ nhạc nền</small></span>
+          </label>
+          <small class="karaoke-vocal-status" id="karaokeVocalStatus" role="status" aria-live="polite"></small>
           <div class="karaoke-audio-controls">
             <button class="karaoke-audio-play" id="karaokeAudioPlay" type="button" aria-label="Phát nhạc" disabled>▶</button>
             <div class="karaoke-audio-timeline">
@@ -516,24 +521,6 @@
             <label class="karaoke-audio-volume" for="karaokeAudioVolume"><span aria-hidden="true">◖))</span><input id="karaokeAudioVolume" type="range" min="0" max="1" step="0.01" value="0.8" aria-label="Âm lượng" /></label>
           </div>
         </section>
-        <section class="karaoke-judge" id="karaokeJudge" aria-label="Chấm điểm karaoke">
-          <div class="karaoke-judge-head">
-            <div><span class="karaoke-judge-kicker">KARAOKE 🎤</span><h4>Chấm điểm màn trình diễn</h4></div>
-          </div>
-          <p class="karaoke-judge-caption" id="karaokeJudgeCaption">Hát hết bài rồi xem điểm nhé.</p>
-          <div class="karaoke-judge-actions"><button class="karaoke-judge-button" id="karaokeJudgeButton" type="button">🎙️ Bắt đầu hát</button><span id="karaokeJudgeTimer" aria-live="polite"></span></div>
-        </section>
-        <div class="karaoke-score-popup-backdrop" id="karaokeScorePopup" hidden>
-          <section class="karaoke-score-popup" role="dialog" aria-modal="true" aria-labelledby="karaokeScorePopupTitle">
-            <button class="karaoke-score-popup-close" id="closeKaraokeScorePopup" type="button" aria-label="Đóng kết quả">×</button>
-            <div class="karaoke-fireworks" aria-hidden="true"><i>✦</i><i>✧</i><i>✹</i><i>✦</i><i>✧</i></div>
-            <span class="karaoke-score-popup-kicker">MÀN TRÌNH DIỄN HOÀN TẤT</span>
-            <h3 id="karaokeScorePopupTitle">Chúc mừng ca sĩ! 🎉</h3>
-            <div class="karaoke-score-result"><strong id="karaokeFinalScore">0</strong><span>điểm</span></div>
-            <p id="karaokeScoreComment"></p>
-            <button class="karaoke-score-popup-done" id="doneKaraokeScorePopup" type="button">Hát tiếp 🎤</button>
-          </section>
-        </div>
         <div class="karaoke-lyrics-status" id="karaokeLyricsStatus" role="status" aria-live="polite">Đang tìm lời bài hát…</div>
         <div class="karaoke-lyrics-body">
           <div class="karaoke-lyrics-empty" id="karaokeLyricsEmpty" hidden>
@@ -557,6 +544,24 @@
               <button class="button button-light" id="cancelKaraokeLyricsEdit" type="button">Hủy</button>
             </div>
           </form>
+        </div>
+        <section class="karaoke-judge" id="karaokeJudge" aria-label="Chấm điểm karaoke">
+          <div class="karaoke-judge-head">
+            <div><span class="karaoke-judge-kicker">KARAOKE 🎤</span><h4>Chấm điểm màn trình diễn</h4></div>
+          </div>
+          <p class="karaoke-judge-caption" id="karaokeJudgeCaption">Hát hết bài rồi xem điểm nhé.</p>
+          <div class="karaoke-judge-actions"><button class="karaoke-judge-button" id="karaokeJudgeButton" type="button">🎙️ Bắt đầu hát</button><span id="karaokeJudgeTimer" aria-live="polite"></span></div>
+        </section>
+        <div class="karaoke-score-popup-backdrop" id="karaokeScorePopup" hidden>
+          <section class="karaoke-score-popup" role="dialog" aria-modal="true" aria-labelledby="karaokeScorePopupTitle">
+            <button class="karaoke-score-popup-close" id="closeKaraokeScorePopup" type="button" aria-label="Đóng kết quả">×</button>
+            <div class="karaoke-fireworks" aria-hidden="true"><i>✦</i><i>✧</i><i>✹</i><i>✦</i><i>✧</i></div>
+            <span class="karaoke-score-popup-kicker">MÀN TRÌNH DIỄN HOÀN TẤT</span>
+            <h3 id="karaokeScorePopupTitle">Chúc mừng ca sĩ! 🎉</h3>
+            <div class="karaoke-score-result"><strong id="karaokeFinalScore">0</strong><span>điểm</span></div>
+            <p id="karaokeScoreComment"></p>
+            <button class="karaoke-score-popup-done" id="doneKaraokeScorePopup" type="button">Hát tiếp 🎤</button>
+          </section>
         </div>
       </div>
     </div>
