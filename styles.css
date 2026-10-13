@@ -938,6 +938,31 @@ body.karaoke-modal-open { overflow: hidden; }
 .karaoke-audio-panel { margin-inline: 30px; border-radius: 20px; background: linear-gradient(120deg,rgba(39,60,112,.7),rgba(78,36,82,.55)); }
 .karaoke-lyrics-mode-row { margin-inline: 30px; }
 .karaoke-lyrics-status[hidden] { display: none !important; }
+.karaoke-quick-link { position: fixed; z-index: 80; top: 50%; right: max(14px, env(safe-area-inset-right)); display: flex; align-items: center; gap: 8px; padding: 12px 15px; transform: translateY(-50%); border: 1px solid rgba(255,255,255,.16); border-radius: 999px; background: linear-gradient(120deg,#ff5faf,#8d69f5 65%,#4388ff); color: #fff; box-shadow: 0 10px 30px rgba(52,54,122,.38), inset 0 1px rgba(255,255,255,.22); font-size: 13px; font-weight: 800; text-decoration: none; transition: transform .2s, box-shadow .2s; }
+.karaoke-quick-link:hover { transform: translateY(-50%) scale(1.04); box-shadow: 0 14px 35px rgba(52,54,122,.46), inset 0 1px rgba(255,255,255,.22); }
+.karaoke-quick-link > span:first-child { font-size: 18px; }
+.karaoke-judge { display: grid; gap: 10px; margin: 12px 30px 0; padding: 15px 17px; border: 1px solid rgba(255,125,190,.2); border-radius: 20px; background: linear-gradient(120deg,rgba(255,95,175,.1),rgba(67,136,255,.11)),rgba(15,20,39,.72); box-shadow: inset 0 1px rgba(255,255,255,.04); }
+.karaoke-judge-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.karaoke-judge-kicker { color: #ff9dcc; font-size: 9px; font-weight: 850; letter-spacing: .14em; }
+.karaoke-judge h4 { margin: 3px 0 0; color: #f7f8ff; font-size: 15px; }
+.karaoke-score { display: flex; align-items: baseline; gap: 5px; color: #ffd3e9; }
+.karaoke-score strong { font-size: 28px; line-height: 1; font-variant-numeric: tabular-nums; }
+.karaoke-score span { color: #aab2cc; font-size: 10px; }
+.karaoke-judge-caption { margin: 0; color: #c6cce0; font-size: 11px; line-height: 1.45; }
+.karaoke-judge-metrics { display: grid; gap: 7px; }
+.karaoke-judge-metrics[hidden] { display: none; }
+.karaoke-judge-metrics > div { display: grid; grid-template-columns: 82px minmax(0,1fr) 25px; align-items: center; gap: 8px; color: #bfc7df; font-size: 10px; }
+.karaoke-judge-metrics b { color: #f7f8ff; font-size: 10px; text-align: right; font-variant-numeric: tabular-nums; }
+.karaoke-meter { height: 6px; overflow: hidden; border-radius: 999px; background: rgba(255,255,255,.1); }
+.karaoke-meter i { display: block; width: 0; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#ff5faf,#bc79ff,#65c9ff); transition: width .18s ease; }
+.karaoke-judge-actions { display: flex; align-items: center; gap: 10px; }
+.karaoke-judge-button { min-height: 40px; padding: 0 15px; border: 1px solid rgba(255,255,255,.15); border-radius: 999px; background: linear-gradient(110deg,#ff5faf,#8c6afa); color: #fff; font: inherit; font-size: 11px; font-weight: 800; box-shadow: 0 5px 16px rgba(255,95,175,.18); cursor: pointer; touch-action: manipulation; }
+.karaoke-judge-button:hover { filter: brightness(1.08); }
+.karaoke-judge-button:disabled { cursor: wait; opacity: .65; }
+.karaoke-judge-button.is-recording { background: linear-gradient(110deg,#ff496b,#c0447f); animation: karaoke-recording-pulse 1.2s ease-in-out infinite alternate; }
+.karaoke-judge-actions > span { color: #ffafd2; font-size: 11px; font-weight: 750; font-variant-numeric: tabular-nums; }
+.karaoke-judge-note { color: #8995b3; font-size: 9px; line-height: 1.4; }
+@keyframes karaoke-recording-pulse { to { box-shadow: 0 0 0 5px rgba(255,73,107,.12), 0 8px 22px rgba(255,73,107,.3); } }
 @media (max-width: 700px) {
   .karaoke-lyrics-topbar { min-height: 125px; gap: 14px; padding: calc(18px + env(safe-area-inset-top)) 18px 16px; }
   .karaoke-cover-wrap { width: 78px; height: 78px; flex-basis: 78px; border-radius: 11px; }
@@ -950,6 +975,12 @@ body.karaoke-modal-open { overflow: hidden; }
   .karaoke-lyrics-help { margin-inline: 16px; }
   .karaoke-audio-timeline input, .karaoke-audio-volume input { min-height: 44px; }
   .lyrics-tool-button, .lyrics-mini-button { min-height: 44px; }
+}
+@media (max-width: 700px) {
+  .karaoke-quick-link { top: auto; right: max(13px, env(safe-area-inset-right)); bottom: max(18px, calc(env(safe-area-inset-bottom) + 10px)); padding: 11px 15px; transform: none; }
+  .karaoke-quick-link:hover { transform: translateY(-2px); }
+  .karaoke-judge { margin: 12px 14px 0; padding: 14px; border-radius: 18px; }
+  .karaoke-judge-metrics > div { grid-template-columns: 75px minmax(0,1fr) 24px; }
 }
 @media (max-width: 560px) {
   #loginForm .button, #adminLoginForm .button { min-height: 44px; }

@@ -72,6 +72,8 @@ let activeFilterPipeline;
 let incomingAlertTimer;
 let incomingAudioContext;
 let incomingAlertRole;
+let karaokeJudgeSession;
+let karaokeJudgeRequestId = 0;
 const callUiStates = new Map();
 
 const CALL_BACKGROUND_PRESETS = [
@@ -436,6 +438,177 @@ function renderKaraokeAudioControls() {
   }
   if (!audio.seeking) seek.value = String(Number.isFinite(audio.currentTime) ? audio.currentTime : 0);
   $('#karaokeAudioCurrentTime').textContent = formatKaraokeTime(audio.currentTime);
+}
+
+function karaokeJudgeStats(session) {
+  const activeRatio = session.samples ? session.activeSamples / session.samples : 0;
+  const activeVolume = session.activeSamples ? session.activeRms / session.activeSamples : 0;
+  const participation = Math.max(0, Math.min(100, Math.round((activeRatio - 0.06) * 165)));
+  const volume = Math.max(0, Math.min(100, Math.round((activeVolume - 0.008) * 1350)));
+  const steps = [];
+  for (let index = 1; index < session.pitches.length; index += 1) {
+    const semitones = Math.abs(12 * Math.log2(session.pitches[index] / session.pitches[index - 1]));
+    if (Number.isFinite(semitones) && semitones < 12) steps.push(semitones);
+  }
+  const averageStep = steps.length ? steps.reduce((sum, value) => sum + value, 0) / steps.length : null;
+  const pitch = averageStep === null ? 0 : Math.max(0, Math.min(100, Math.round(100 - averageStep * 13)));
+  return { participation, volume, pitch, total: Math.round(participation * 0.4 + volume * 0.25 + pitch * 0.35) };
+}
+
+function renderKaraokeJudgeScore(stats, caption = '') {
+  const entries = [
+    ['karaokeParticipationMeter', 'karaokeParticipationValue', stats.participation],
+    ['karaokePitchMeter', 'karaokePitchValue', stats.pitch],
+    ['karaokeVolumeMeter', 'karaokeVolumeValue', stats.volume]
+  ];
+  entries.forEach(([meterId, valueId, value]) => {
+    const meter = $(`#${meterId}`);
+    const output = $(`#${valueId}`);
+    if (meter) meter.style.width = `${value}%`;
+    if (output) output.textContent = String(value);
+  });
+  $('#karaokeScore strong').textContent = String(stats.total);
+  if (caption) $('#karaokeJudgeCaption').textContent = caption;
+  $('#karaokeJudgeMetrics').hidden = false;
+}
+
+function karaokeJudgeCommentary(score) {
+  if (score >= 95) return 'Giám khảo xin số để đặt show riêng.';
+  if (score >= 85) return 'Hay đến mức bàn bên quên gọi món.';
+  if (score >= 70) return 'Có tố chất! Mic đề nghị hát thêm một bài.';
+  if (score >= 50) return 'Nhiệt tình cứu cả quán, bản phối hơi hồi hộp.';
+  return 'Mic ghi nhận sự tự tin. Khán giả xin encore sau khi tập.';
+}
+
+function karaokePitchFromBuffer(buffer, sampleRate) {
+  const minLag = Math.max(2, Math.floor(sampleRate / 500));
+  const maxLag = Math.min(buffer.length - 2, Math.floor(sampleRate / 75));
+  let energy = 0;
+  for (let index = 0; index < buffer.length; index += 2) energy += buffer[index] * buffer[index];
+  if (energy / (buffer.length / 2) < 0.00008) return null;
+  let bestLag = 0;
+  let bestCorrelation = 0;
+  for (let lag = minLag; lag <= maxLag; lag += 1) {
+    let correlation = 0;
+    let count = 0;
+    for (let index = 0; index < buffer.length - lag; index += 2) {
+      correlation += buffer[index] * buffer[index + lag];
+      count += 1;
+    }
+    correlation /= count || 1;
+    if (correlation > bestCorrelation) {
+      bestCorrelation = correlation;
+      bestLag = lag;
+    }
+  }
+  return bestLag ? sampleRate / bestLag : null;
+}
+
+async function finishKaraokeJudge({ failed = false } = {}) {
+  const session = karaokeJudgeSession;
+  if (!session) return;
+  karaokeJudgeSession = null;
+  cancelAnimationFrame(session.frameId);
+  session.stream.getTracks().forEach((track) => track.stop());
+  await session.context.close().catch(() => {});
+  const button = $('#karaokeJudgeButton');
+  const timer = $('#karaokeJudgeTimer');
+  const caption = $('#karaokeJudgeCaption');
+  const score = $('#karaokeScore strong');
+  button.classList.remove('is-recording');
+  button.textContent = '🎙️ Chấm lại';
+  timer.textContent = '';
+  if (failed) {
+    caption.textContent = 'Không lấy được dữ liệu giọng hát. Kiểm tra quyền mic rồi thử lại nhé.';
+    return;
+  }
+  if (session.samples < 10) {
+    score.textContent = '—';
+    $('#karaokeJudgeMetrics').hidden = true;
+    caption.textContent = 'Màn trình diễn hơi ngắn! Hát thêm vài giây để ban giám khảo chấm nha.';
+    return;
+  }
+  const stats = karaokeJudgeStats(session);
+  renderKaraokeJudgeScore(stats, karaokeJudgeCommentary(stats.total));
+  score.setAttribute('aria-label', `${stats.total} điểm`);
+}
+
+async function startKaraokeJudge() {
+  const button = $('#karaokeJudgeButton');
+  const caption = $('#karaokeJudgeCaption');
+  const timer = $('#karaokeJudgeTimer');
+  const score = $('#karaokeScore strong');
+  const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+  if (!navigator.mediaDevices?.getUserMedia || !AudioContextClass) {
+    caption.textContent = 'Trình duyệt này chưa hỗ trợ chấm bằng mic. Thử mở app trên Safari hoặc Chrome nhé.';
+    return;
+  }
+  const requestId = ++karaokeJudgeRequestId;
+  button.disabled = true;
+  caption.textContent = 'Chuẩn bị sân khấu… xin đừng hát vào mic khi chưa bật nhé!';
+  let stream;
+  let context;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    if (requestId !== karaokeJudgeRequestId || $('#karaokeLyricsModal').hidden) {
+      stream.getTracks().forEach((track) => track.stop());
+      button.disabled = false;
+      return;
+    }
+    context = new AudioContextClass();
+    await context.resume();
+    const analyser = context.createAnalyser();
+    analyser.fftSize = 2048;
+    analyser.smoothingTimeConstant = 0.2;
+    context.createMediaStreamSource(stream).connect(analyser);
+    const session = karaokeJudgeSession = {
+      stream, context, analyser, buffer: new Float32Array(analyser.fftSize),
+      samples: 0, activeSamples: 0, activeRms: 0, pitches: [], frameId: 0,
+      startedAt: performance.now(), lastSampleAt: 0
+    };
+    $('#karaokeJudgeMetrics').hidden = false;
+    score.textContent = '…';
+    caption.textContent = 'Đang nghe… cứ hát tự nhiên, ban giám khảo đang giả vờ nghiêm túc.';
+    button.disabled = false;
+    button.classList.add('is-recording');
+    button.textContent = '■ Kết thúc & nhận điểm';
+    const sample = (now) => {
+      if (karaokeJudgeSession !== session) return;
+      if (now - session.lastSampleAt >= 120) {
+        session.lastSampleAt = now;
+        analyser.getFloatTimeDomainData(session.buffer);
+        let sum = 0;
+        for (let index = 0; index < session.buffer.length; index += 1) sum += session.buffer[index] * session.buffer[index];
+        const rms = Math.sqrt(sum / session.buffer.length);
+        session.samples += 1;
+        if (rms >= 0.009) {
+          session.activeSamples += 1;
+          session.activeRms += rms;
+          const pitch = karaokePitchFromBuffer(session.buffer, context.sampleRate);
+          if (pitch) session.pitches.push(pitch);
+        }
+        const liveStats = karaokeJudgeStats(session);
+        renderKaraokeJudgeScore(liveStats);
+        const elapsed = Math.floor((now - session.startedAt) / 1000);
+        timer.textContent = `${Math.max(0, 30 - elapsed)} giây`;
+        if (elapsed >= 30) {
+          finishKaraokeJudge();
+          return;
+        }
+      }
+      session.frameId = requestAnimationFrame(sample);
+    };
+    session.frameId = requestAnimationFrame(sample);
+  } catch (error) {
+    stream?.getTracks().forEach((track) => track.stop());
+    await context?.close().catch(() => {});
+    button.disabled = false;
+    button.classList.remove('is-recording');
+    button.textContent = '🎙️ Thử bật mic lại';
+    caption.textContent = error.name === 'NotAllowedError'
+      ? 'Mic đang bị từ chối quyền. Cho phép dùng mic trong cài đặt trình duyệt rồi thử lại nha.'
+      : 'Chưa bật được sân khấu. Hãy kiểm tra mic rồi thử lại nhé.';
+  }
 }
 
 function resetKaraokeAudio(message = '', status = 'idle') {
@@ -934,6 +1107,9 @@ function renderKaraokeLyricsModal() {
 function closeKaraokeLyrics() {
   const modal = $('#karaokeLyricsModal');
   if (!modal) return;
+  karaokeJudgeRequestId += 1;
+  $('#karaokeJudgeButton').disabled = false;
+  if (karaokeJudgeSession) finishKaraokeJudge();
   resetKaraokeAudio();
   state.karaokeLyricsModal.requestId = `${state.karaokeLyricsModal.songId || 'closed'}:${Date.now()}`;
   modal.hidden = true;
@@ -945,6 +1121,12 @@ async function openKaraokeLyrics(songId) {
   const modal = $('#karaokeLyricsModal');
   const song = UNIQUE_KARAOKE_SONGS.find((item) => item.songId === songId);
   if (!modal || !song) return;
+  if (karaokeJudgeSession) await finishKaraokeJudge();
+  $('#karaokeScore strong').textContent = '—';
+  $('#karaokeJudgeMetrics').hidden = true;
+  $('#karaokeJudgeCaption').textContent = 'Bật mic rồi hát một đoạn — sân khấu mở cửa miễn phí.';
+  $('#karaokeJudgeButton').textContent = '🎙️ Bắt đầu chấm';
+  $('#karaokeJudgeTimer').textContent = '';
   const session = state.karaokeLyricsModal;
   const stored = karaokeLyricsForSong(song);
   const savedUi = lyricsUiForSong(song.songId);
@@ -1233,6 +1415,10 @@ function bindKaraoke() {
   const selectedToggle = $('#showKaraokeSelected');
   const clearButton = $('#clearKaraokeSelected');
   if (!search || !selectedToggle || !clearButton) return;
+  $('#karaokeJudgeButton')?.addEventListener('click', () => {
+    if (karaokeJudgeSession) finishKaraokeJudge();
+    else startKaraokeJudge();
+  });
   const audio = $('#karaokeAudioElement');
   if (audio) {
     audio.volume = Number($('#karaokeAudioVolume')?.value || 0.8);

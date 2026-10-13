@@ -64,6 +64,8 @@
         </div>
       </header>
 
+      <a class="karaoke-quick-link" href="#karaokeSection" aria-label="Đi tới khu vực karaoke"><span aria-hidden="true">🎤</span><span>Karaoke</span></a>
+
       <main>
         <section class="love-counter-card" id="loveCounter" aria-labelledby="loveCounterHeading">
           <div class="love-counter-glow" aria-hidden="true">❤</div>
@@ -513,6 +515,20 @@
             </div>
             <label class="karaoke-audio-volume" for="karaokeAudioVolume"><span aria-hidden="true">◖))</span><input id="karaokeAudioVolume" type="range" min="0" max="1" step="0.01" value="0.8" aria-label="Âm lượng" /></label>
           </div>
+        </section>
+        <section class="karaoke-judge" id="karaokeJudge" aria-label="Chấm điểm karaoke">
+          <div class="karaoke-judge-head">
+            <div><span class="karaoke-judge-kicker">HỘI ĐỒNG GIÁM KHẢO 🎤</span><h4>Chấm điểm màn trình diễn</h4></div>
+            <div class="karaoke-score" id="karaokeScore" aria-live="polite"><strong>—</strong><span>điểm</span></div>
+          </div>
+          <p class="karaoke-judge-caption" id="karaokeJudgeCaption">Bật mic rồi hát một đoạn — sân khấu mở cửa miễn phí.</p>
+          <div class="karaoke-judge-metrics" id="karaokeJudgeMetrics" hidden>
+            <div><span>Độ cháy</span><div class="karaoke-meter"><i id="karaokeParticipationMeter"></i></div><b id="karaokeParticipationValue">0</b></div>
+            <div><span>Độ vững nốt</span><div class="karaoke-meter"><i id="karaokePitchMeter"></i></div><b id="karaokePitchValue">0</b></div>
+            <div><span>Độ vang mic</span><div class="karaoke-meter"><i id="karaokeVolumeMeter"></i></div><b id="karaokeVolumeValue">0</b></div>
+          </div>
+          <div class="karaoke-judge-actions"><button class="karaoke-judge-button" id="karaokeJudgeButton" type="button">🎙️ Bắt đầu chấm</button><span id="karaokeJudgeTimer" aria-live="polite"></span></div>
+          <small class="karaoke-judge-note">Chấm vui theo mic, không so nốt với bản gốc. Âm thanh được phân tích trực tiếp và không lưu lại.</small>
         </section>
         <div class="karaoke-lyrics-status" id="karaokeLyricsStatus" role="status" aria-live="polite">Đang tìm lời bài hát…</div>
         <div class="karaoke-lyrics-body">
