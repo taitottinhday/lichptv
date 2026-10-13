@@ -900,6 +900,7 @@ body.karaoke-modal-open { overflow: hidden; }
 
 /* Spotify-inspired track detail and karaoke focus, scoped to the lyrics modal. */
 .karaoke-lyrics-card { width: min(1080px, 100%); max-height: min(92svh, 980px); }
+.karaoke-lyrics-modal.is-karaoke-mode .karaoke-lyrics-text { min-height: 120px; font-size: clamp(14px, var(--lyrics-font-size, 17px), 17px); line-height: 1.55; }
 .karaoke-lyrics-topbar { min-height: 160px; align-items: center; gap: 22px; padding: 26px 30px; background: linear-gradient(112deg, #29356e 0%, #223d82 48%, #44234d 100%); }
 .karaoke-cover-wrap { position: relative; display: grid; width: 116px; height: 116px; flex: 0 0 116px; place-items: center; overflow: hidden; border-radius: 14px; background: linear-gradient(145deg, #ff68b3, #496fff); box-shadow: 0 12px 34px rgba(0,0,0,.32); }
 .karaoke-cover-wrap::after { position: absolute; color: rgba(255,255,255,.8); font-size: 40px; content: '♫'; }

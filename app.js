@@ -449,15 +449,21 @@ function setKaraokeVocalMix(enabled) {
   const graph = karaokeVocalGraph;
   if (!graph) return;
   const now = graph.context.currentTime;
-  const gains = enabled ? [0.505, -0.495, -0.495, 0.505] : [1, 0, 0, 1];
+  const gains = enabled ? [0.72, -0.68, -0.68, 0.72] : [1, 0, 0, 1];
   graph.gains.forEach((gain, index) => {
     gain.gain.cancelScheduledValues(now);
     gain.gain.setTargetAtTime(gains[index], now, 0.025);
   });
   graph.bassGains.forEach((gain) => {
     gain.gain.cancelScheduledValues(now);
-    gain.gain.setTargetAtTime(enabled ? 0.425 : 0, now, 0.025);
+    gain.gain.setTargetAtTime(enabled ? 0.58 : 0, now, 0.025);
   });
+  graph.safetyGains.forEach((gain) => {
+    gain.gain.cancelScheduledValues(now);
+    gain.gain.setTargetAtTime(enabled ? 0.12 : 0, now, 0.025);
+  });
+  graph.dryGain.gain.setTargetAtTime(enabled ? 0.12 : 1, now, 0.025);
+  graph.outputGain.gain.setTargetAtTime(enabled ? 1.1 : 0, now, 0.025);
 }
 
 async function enableKaraokeVocalReduction(enabled) {
@@ -531,7 +537,7 @@ async function enableKaraokeVocalReduction(enabled) {
     const media = context.createMediaElementSource(audio);
     const splitter = context.createChannelSplitter(2);
     const merger = context.createChannelMerger(2);
-    const gains = [0.505, -0.495, -0.495, 0.505].map((value) => {
+    const gains = [0.72, -0.68, -0.68, 0.72].map((value) => {
       const node = context.createGain();
       node.gain.value = value;
       return node;
@@ -545,25 +551,39 @@ async function enableKaraokeVocalReduction(enabled) {
     });
     const bassGains = bassFilters.map(() => {
       const node = context.createGain();
-      node.gain.value = 0.425;
+      node.gain.value = 0.58;
+      return node;
+    });
+    const safetyGains = [0, 1].map(() => {
+      const node = context.createGain();
+      node.gain.value = 0.12;
       return node;
     });
     const limiter = context.createDynamicsCompressor();
-    limiter.threshold.value = -6;
+    limiter.threshold.value = -10;
     limiter.knee.value = 8;
-    limiter.ratio.value = 4;
+    limiter.ratio.value = 6;
     limiter.attack.value = 0.004;
     limiter.release.value = 0.18;
+    const outputGain = context.createGain();
+    outputGain.gain.value = 1.1;
+    const dryGain = context.createGain();
+    dryGain.gain.value = 0.12;
     media.connect(splitter);
+    media.connect(dryGain);
+    dryGain.connect(context.destination);
     splitter.connect(gains[0], 0); gains[0].connect(merger, 0, 0);
     splitter.connect(gains[1], 1); gains[1].connect(merger, 0, 0);
     splitter.connect(gains[2], 0); gains[2].connect(merger, 0, 1);
     splitter.connect(gains[3], 1); gains[3].connect(merger, 0, 1);
     splitter.connect(bassFilters[0], 0); bassFilters[0].connect(bassGains[0]); bassGains[0].connect(merger, 0, 0); bassGains[0].connect(merger, 0, 1);
     splitter.connect(bassFilters[1], 1); bassFilters[1].connect(bassGains[1]); bassGains[1].connect(merger, 0, 0); bassGains[1].connect(merger, 0, 1);
+    splitter.connect(safetyGains[0], 0); safetyGains[0].connect(merger, 0, 0);
+    splitter.connect(safetyGains[1], 1); safetyGains[1].connect(merger, 0, 1);
     merger.connect(limiter);
-    limiter.connect(context.destination);
-    karaokeVocalGraph = { context, gains, bassGains };
+    limiter.connect(outputGain);
+    outputGain.connect(context.destination);
+    karaokeVocalGraph = { context, gains, bassGains, safetyGains, dryGain, outputGain };
     audio.currentTime = Math.min(currentTime, Number.isFinite(audio.duration) ? audio.duration : currentTime);
     if (wasPlaying || state.karaokeAudio.autoPlay) {
       await context.resume();
@@ -576,7 +596,12 @@ async function enableKaraokeVocalReduction(enabled) {
       status.textContent = 'Giảm giọng đã sẵn sàng · chạm phát để bắt đầu.';
     } else {
       status.textContent = 'Thiết bị chưa xử lý được giọng ca sĩ; chưa phát bản gốc trong chế độ karaoke.';
-      state.karaokeAudio.autoPlay = false;
+      status.textContent = 'Giảm giọng không khả dụng trên thiết bị này · đang phát nhạc để bạn vẫn hát theo.';
+      if (state.karaokeAudio.autoPlay) {
+        audio.play().then(() => { state.karaokeAudio.autoPlay = false; }).catch(() => {
+          status.textContent = 'Không phát được beat. Chạm nút phát để thử lại.';
+        });
+      }
     }
     if (sourceReloaded && !audio.currentSrc) {
       audio.removeAttribute('crossorigin');
@@ -758,6 +783,8 @@ async function beginKaraokeSession() {
   $('#karaokeJudgeButton').textContent = '🎙️ Bắt đầu hát';
   $('#karaokeJudgeCaption').textContent = 'Beat đã bật, lời sẽ chạy theo nhạc.';
   renderKaraokeLyricsModal();
+  const audio = $('#karaokeAudioElement');
+  if (audio && Number.isFinite(audio.duration)) audio.currentTime = 0;
   if (audioState.status === 'ready' || audioState.status === 'buffering') {
     audioState.autoPlay = true;
     await enableKaraokeVocalReduction(true);
@@ -1247,7 +1274,8 @@ function renderKaraokeLyricsModal() {
   sourceLink.href = session.sourceUrl || '#';
   sourceLink.textContent = session.sourceName ? `${session.sourceName} ↗` : 'Mở nguồn lời bài hát ↗';
   modal.classList.toggle('is-fullscreen', session.fullscreen);
-  modal.style.setProperty('--lyrics-font-size', `${session.fontSize}px`);
+  modal.classList.toggle('is-karaoke-mode', session.karaokeActive);
+  modal.style.setProperty('--lyrics-font-size', `${session.karaokeActive ? Math.min(session.fontSize, 17) : session.fontSize}px`);
   view.classList.toggle('is-left', session.align === 'left');
   if (fontSizeValue) fontSizeValue.textContent = `${session.fontSize}px`;
   if (alignToggle) {
@@ -1325,7 +1353,9 @@ async function openKaraokeLyrics(songId, { continueQueue = false } = {}) {
   const requestId = `${song.songId}:${Date.now()}`;
   const resumeKaraoke = continueQueue && state.karaokeLyricsModal.karaokeActive;
   session.karaokeActive = resumeKaraoke;
-  prepareKaraokeAudio(song.songId, resumeKaraoke);
+  if (karaokeVocalGraph) setKaraokeVocalMix(resumeKaraoke);
+  if (!resumeKaraoke) $('#karaokeVocalStatus').textContent = 'Đang phát bản gốc · nhấn bắt đầu khi muốn hát karaoke.';
+  prepareKaraokeAudio(song.songId, true);
   session.songId = song.songId;
   session.text = stored?.text || '';
   session.syncedLyrics = stored?.syncedLyrics || '';
@@ -1342,8 +1372,8 @@ async function openKaraokeLyrics(songId, { continueQueue = false } = {}) {
   session.importantLines = savedUi.importantLines;
   session.requestId = requestId;
   modal.hidden = false;
-  $('#karaokeAudioPanel').hidden = !resumeKaraoke;
-  $('#karaokeLyricsBody').hidden = !resumeKaraoke;
+  $('#karaokeAudioPanel').hidden = false;
+  $('#karaokeLyricsBody').hidden = false;
   document.body.classList.add('karaoke-modal-open');
   $('#closeKaraokeLyrics')?.focus();
   renderKaraokeLyricsModal();
@@ -1710,8 +1740,8 @@ function bindKaraoke() {
     if (audio.paused) {
       try {
         state.karaokeAudio.autoPlay = false;
-        if (!karaokeVocalGraph) await enableKaraokeVocalReduction(true);
-        if (!karaokeVocalGraph) return;
+        if (state.karaokeLyricsModal.karaokeActive && !karaokeVocalGraph) await enableKaraokeVocalReduction(true);
+        if (state.karaokeLyricsModal.karaokeActive && !karaokeVocalGraph) return;
         if (karaokeVocalGraph?.context.state === 'suspended') await karaokeVocalGraph.context.resume();
         await audio.play();
       } catch {
