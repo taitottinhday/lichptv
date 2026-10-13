@@ -11,5 +11,7 @@
   "unusedLocalAudioFiles": 58,
   "duplicateContentGroups": 0,
   "allR2ExpectedKeysForUnmappedSongsReturned404": true,
-  "browserDecodeTests": 6
+  "browserDecodeTests": 6,
+  "productionRangeApiTests": 5,
+  "productionBrowserDecodeTests": 4
 }
