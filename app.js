@@ -445,6 +445,25 @@ function renderKaraokeAudioControls() {
   $('#karaokeAudioCurrentTime').textContent = formatKaraokeTime(audio.currentTime);
 }
 
+function setKaraokeAudioVolume(value) {
+  const audio = $('#karaokeAudioElement');
+  if (!audio) return;
+  const volume = Math.max(0, Math.min(1, Number(value)));
+  if (!Number.isFinite(volume)) return;
+
+  const graph = karaokeVocalGraph;
+  if (graph?.masterGain) {
+    // MediaElementAudioSourceNode output bypasses the normal element volume
+    // control in some browsers, so control every Web Audio path at the master.
+    audio.volume = 1;
+    const now = graph.context.currentTime;
+    graph.masterGain.gain.cancelScheduledValues(now);
+    graph.masterGain.gain.setTargetAtTime(volume, now, 0.015);
+  } else {
+    audio.volume = volume;
+  }
+}
+
 function setKaraokeVocalMix(enabled) {
   const graph = karaokeVocalGraph;
   if (!graph) return;
@@ -569,9 +588,11 @@ async function enableKaraokeVocalReduction(enabled) {
     outputGain.gain.value = 1.1;
     const dryGain = context.createGain();
     dryGain.gain.value = 0.12;
+    const masterGain = context.createGain();
+    masterGain.gain.value = 1;
     media.connect(splitter);
     media.connect(dryGain);
-    dryGain.connect(context.destination);
+    dryGain.connect(masterGain);
     splitter.connect(gains[0], 0); gains[0].connect(merger, 0, 0);
     splitter.connect(gains[1], 1); gains[1].connect(merger, 0, 0);
     splitter.connect(gains[2], 0); gains[2].connect(merger, 0, 1);
@@ -582,8 +603,10 @@ async function enableKaraokeVocalReduction(enabled) {
     splitter.connect(safetyGains[1], 1); safetyGains[1].connect(merger, 0, 1);
     merger.connect(limiter);
     limiter.connect(outputGain);
-    outputGain.connect(context.destination);
-    karaokeVocalGraph = { context, gains, bassGains, safetyGains, dryGain, outputGain };
+    outputGain.connect(masterGain);
+    masterGain.connect(context.destination);
+    karaokeVocalGraph = { context, gains, bassGains, safetyGains, dryGain, outputGain, masterGain };
+    setKaraokeAudioVolume($('#karaokeAudioVolume')?.value ?? 0.8);
     audio.currentTime = Math.min(currentTime, Number.isFinite(audio.duration) ? audio.duration : currentTime);
     if (wasPlaying || state.karaokeAudio.autoPlay) {
       await context.resume();
@@ -1648,7 +1671,7 @@ function bindKaraoke() {
   });
   const audio = $('#karaokeAudioElement');
   if (audio) {
-    audio.volume = Number($('#karaokeAudioVolume')?.value || 0.8);
+    setKaraokeAudioVolume($('#karaokeAudioVolume')?.value ?? 0.8);
     audio.addEventListener('loadedmetadata', () => {
       const current = state.karaokeAudio;
       if (!current.songId || current.songId !== state.karaokeLyricsModal.songId) return;
@@ -1758,7 +1781,7 @@ function bindKaraoke() {
     renderKaraokeAudioControls();
   });
   $('#karaokeAudioVolume')?.addEventListener('input', (event) => {
-    if (audio) audio.volume = Number(event.target.value);
+    setKaraokeAudioVolume(event.target.value);
   });
   $('#closeKaraokeLyrics')?.addEventListener('click', closeKaraokeLyrics);
   $('#closeKaraokeScorePopup')?.addEventListener('click', closeKaraokeScorePopup);
