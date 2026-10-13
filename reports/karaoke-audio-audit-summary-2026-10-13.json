@@ -1,0 +1,15 @@
+{
+  "totalSongs": 350,
+  "validManifestMappings": 248,
+  "newMappings": 40,
+  "r2ObjectsVerified": 248,
+  "streamRangeApiTests": 6,
+  "songsMissingAudio": 102,
+  "ambiguousOrConflictingCandidates": 36,
+  "noLocalCandidate": 66,
+  "localAudioFiles": 306,
+  "unusedLocalAudioFiles": 58,
+  "duplicateContentGroups": 0,
+  "allR2ExpectedKeysForUnmappedSongsReturned404": true,
+  "browserDecodeTests": 6
+}

@@ -1874,6 +1874,366 @@
       "artist": "",
       "sourceFile": "Những tuyệt chiêu nâng tầm bản lĩnh đàn ông [Lời Thì Thầm - JoyFM] [zePuwx7tQx4].mp3",
       "matchMethod": "unique-normalized-title-substring"
+    },
+    "sau-tat-ca": {
+      "songId": "sau-tat-ca",
+      "objectKey": "audio/sau-tat-ca.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Sau tất cả",
+      "artist": "ERIK",
+      "sourceFile": "ERIK - SAU TẤT CẢ ｜ Official Music Video [wHF3Jv6Gk2o].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "hon-ca-yeu": {
+      "songId": "hon-ca-yeu",
+      "objectKey": "audio/hon-ca-yeu.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Hơn cả yêu",
+      "artist": "Đức Phúc",
+      "sourceFile": "Đức Phúc - Hơn Cả Yêu (Official Music Video) [__kGJZ-kPno].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "em-gai-mua": {
+      "songId": "em-gai-mua",
+      "objectKey": "audio/em-gai-mua.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Em gái mưa",
+      "artist": "Hương Tràm",
+      "sourceFile": "Hương Tràm - Em Gái Mưa (Official MV) [Y29OrOVJUKs].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "lac-troi": {
+      "songId": "lac-troi",
+      "objectKey": "audio/lac-troi.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Lạc trôi",
+      "artist": "Sơn Tùng M-TP",
+      "sourceFile": "LẠC TRÔI ｜ OFFICIAL MUSIC VIDEO ｜ SƠN TÙNG M-TP [Llw9Q6akRo4].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "hao-quang": {
+      "songId": "hao-quang",
+      "objectKey": "audio/hao-quang.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Hào quang",
+      "artist": "RHYDER, Pháp Kiều, Dương Domic",
+      "sourceFile": "HÀO QUANG - Rhyder, Dương Domic, Pháp Kiều bùng nổ cảm xúc ｜ Anh Trai Say Hi [Performance] [Tr5Ty9ZngvE].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "exit-sign": {
+      "songId": "exit-sign",
+      "objectKey": "audio/exit-sign.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Exit sign",
+      "artist": "HIEUTHUHAI, marzuz",
+      "sourceFile": "HIEUTHUHAI - Exit Sign (prod. by Kewtiie) ft. marzuz [Official Lyric Video] [sJt_i0hOugA].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "tim-em": {
+      "songId": "tim-em",
+      "objectKey": "audio/tim-em.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Tìm em",
+      "artist": "Hngle, Bảo Anh",
+      "sourceFile": "Hngle - Tìm em ft. Bảo Anh ｜ Official Music Video [gJAbDSse5WM].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "thu-cuoi": {
+      "songId": "thu-cuoi",
+      "objectKey": "audio/thu-cuoi.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Thu cuối",
+      "artist": "Yanbi, Mr.T, Hằng BingBoong",
+      "sourceFile": "Mr.T - Thu Cuối ft  Yanbi & Hằng BingBoong (Official MV) [tN1TZAuL4P8].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "see-tinh": {
+      "songId": "see-tinh",
+      "objectKey": "audio/see-tinh.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "See tình",
+      "artist": "Hoàng Thùy Linh",
+      "sourceFile": "Hoàng Thuỳ Linh - See Tình ｜ Official Music Video [gJHSDZfJrRY].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "nang-tho": {
+      "songId": "nang-tho",
+      "objectKey": "audio/nang-tho.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Nàng thơ",
+      "artist": "Hoàng Dũng",
+      "sourceFile": "Nàng Thơ ｜ Hoàng Dũng ｜ Official MV [Zzn9-ATB9aU].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "gieo-que": {
+      "songId": "gieo-que",
+      "objectKey": "audio/gieo-que.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Gieo quẻ",
+      "artist": "Hoàng Thùy Linh, Đen",
+      "sourceFile": "Hoàng Thuỳ Linh & ĐEN - Gieo Quẻ (Casting Coins) ｜ Official Music Video [Q6ZNsHvspEg].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "ngao-ngo": {
+      "songId": "ngao-ngo",
+      "objectKey": "audio/ngao-ngo.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Ngáo Ngơ",
+      "artist": "HIEUTHUHAI, JSOL, ERIK, Orange",
+      "sourceFile": "NGÁO NGƠ - HIEUTHUHAI, Atus, Jsol, Erik cùng Orange bùng nổ visual ｜ Anh Trai Say Hi [Performance] [TM9SGdrOMsk].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "who-i-am": {
+      "songId": "who-i-am",
+      "objectKey": "audio/who-i-am.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Who I Am",
+      "artist": "Alan Walker, Putri Ariani, Peder Elias",
+      "sourceFile": "Alan Walker, Putri Ariani, Peder Elias - Who I Am (Official Music Video) [ccu6JuC21rk].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "so-good": {
+      "songId": "so-good",
+      "objectKey": "audio/so-good.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "So Good",
+      "artist": "RIO, Jaysonlei, Hải Nam, Lohan",
+      "sourceFile": "SO GOOD - RIO, Hải Nam, CODY NAM VÕ, Jaysonlei, Lohan ｜ Anh Trai ＂Say Hi＂ 2025 [Performance] [kv4MDXKPt8k].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "da-nghi": {
+      "songId": "da-nghi",
+      "objectKey": "audio/da-nghi.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Đa Nghi",
+      "artist": "Negav, Hải Nam, DILLAN",
+      "sourceFile": "ĐA NGHI - NEGAV, Hải Nam, CODY NAM VÕ, Dillan Hoàng Phan ｜ Anh Trai ＂Say Hi＂ 2025 [Performance] [xEk-D7CycRA].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "ao-anh": {
+      "songId": "ao-anh",
+      "objectKey": "audio/ao-anh.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Ảo Ảnh",
+      "artist": "Vũ Cát Tường, Gill, Ryn Lee",
+      "sourceFile": "ẢO ẢNH - Vũ Cát Tường, Ryn Lee, GILL ｜ Anh Trai ＂Say Hi＂ 2025 [Performance] [x7FnxozM6CI].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "da-tung": {
+      "songId": "da-tung",
+      "objectKey": "audio/da-tung.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Đã Từng",
+      "artist": "Bùi Anh Tuấn, Dương Hoàng Yến",
+      "sourceFile": "[Lyrics] Đã Từng ｜｜ Bùi Anh Tuấn Ft Dương Hoàng Yến ｜｜ Video edit by Duy [1AyFdoqkZhA].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "thuc": {
+      "songId": "thuc",
+      "objectKey": "audio/thuc.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Thức",
+      "artist": "Vũ Cát Tường, Hustlang Robber, Mason Nguyen",
+      "sourceFile": "THỨC - Vũ Cát Tường, HUSTLANG Robber, Mason Nguyễn, Thái Ngân, Jey B ｜ Anh Trai Say Hi [Performance] [0owzdS2dyIU].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "ke-hai-loi": {
+      "songId": "ke-hai-loi",
+      "objectKey": "audio/ke-hai-loi.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Kẻ Hai Lời",
+      "artist": "buitruonglinh, BigDaddy, Phúc Du, Đỗ Nam Sơn",
+      "sourceFile": "KẺ HAI LỜI - buitruonglinh, BigDaddy, Phúc Du, Đỗ Nam Sơn, Vương Bình ｜Anh Trai Say Hi [Performance] [5Xn0GUbUEd0].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "truc-giac": {
+      "songId": "truc-giac",
+      "objectKey": "audio/truc-giac.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Trực Giác",
+      "artist": "Vũ Cát Tường, Hustlang Robber, Jey B, Mason Nguyen",
+      "sourceFile": "TRỰC GIÁC -  Vũ Cát Tường, HUSTLANG Robber, Mason Nguyễn, Thái Ngân, Jey B ｜ ATSH [Performance] [MfpRT5zGj4c].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "cho-anh-ve": {
+      "songId": "cho-anh-ve",
+      "objectKey": "audio/cho-anh-ve.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Chờ Anh Về",
+      "artist": "B Ray, AMEE",
+      "sourceFile": "CHỜ ANH VỀ - B Ray x AMEE x Masew ｜ Anh Trai ＂Say Hi＂ 2025 [Performance] [xzClnybxdbg].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "xoay-vong": {
+      "songId": "xoay-vong",
+      "objectKey": "audio/xoay-vong.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Xoay Vòng",
+      "artist": "HURRYKNG, CONGB, JSOL, VƯƠNG BÌNH",
+      "sourceFile": "XOAY VÒNG - HURRYKNG, JSOL, VƯƠNG BÌNH, CONGB ｜ TINH HÀ SAY HI [PERFORMANCE] [pJ9nx8oL5jk].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "bad-night": {
+      "songId": "bad-night",
+      "objectKey": "audio/bad-night.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Bad Night",
+      "artist": "Dương Domic, Pháp Kiều, DANG HONG HAI, Ali Hoàng Dương",
+      "sourceFile": "BAD NIGHT - Dương Domic, Pháp Kiều, Ali Hoàng Dương, DANG HONG HAI ｜ TINH HÀ SAY HI [PERFORMANCE] [2LVMwQiWekc].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "run-to-you": {
+      "songId": "run-to-you",
+      "objectKey": "audio/run-to-you.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Run To You",
+      "artist": "Ali Hoàng Dương, Song Luân, IVAN, KIMLONG",
+      "sourceFile": "RUN TO YOU - Ali Hoàng Dương, IVAN, KIMLONG, Song Luân ｜ TINH HÀ SAY HI [PERFORMANCE] [hOe5p-yMR_w].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "secret": {
+      "songId": "secret",
+      "objectKey": "audio/secret.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Secret",
+      "artist": "Quang Hùng MasterD, CONGB, Wren Evans",
+      "sourceFile": "Quang Hùng MasterD - 'SECRET' (ft. Cody Nam Võ, Wren Evans, CONGB) ⧸ TINH HÀ SAY HI [XwshmJV-DHg].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "ga-san-ca": {
+      "songId": "ga-san-ca",
+      "objectKey": "audio/ga-san-ca.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Gã Săn Cá",
+      "artist": "Lâm Bảo Ngọc, Quỳnh Anh Shyn, MAIQUINN, Saabirose, Quang Hùng MasterD",
+      "sourceFile": "GÃ SĂN CÁ - MAIQUINN, Saabirose, Lâm Bảo Ngọc, Quỳnh Anh Shyn, Quang Hùng MasterD｜EXSH [Performance] [1py-w6qRUdM].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "so-dam": {
+      "songId": "so-dam",
+      "objectKey": "audio/so-dam.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "So Đậm",
+      "artist": "Phương Ly, Vũ Thảo My, Châu Bùi, Muộii",
+      "sourceFile": "SO ĐẬM - Phương Ly, Vũ Thảo My, Muộii, Châu Bùi ｜ Em Xinh Say Hi [Performance] [jJYQja-E-KI].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "bad-liar": {
+      "songId": "bad-liar",
+      "objectKey": "audio/bad-liar.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Bad Liar",
+      "artist": "Imagine Dragons",
+      "sourceFile": "Imagine Dragons - Bad Liar [I-QfPUz1es8].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "duyen": {
+      "songId": "duyen",
+      "objectKey": "audio/duyen.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Duyên",
+      "artist": "Lâm Bảo Ngọc, Phương Mỹ Chi, Pháo, Saabirose",
+      "sourceFile": "DUYÊN - Lâm Bảo Ngọc, Phương Mỹ Chi, Pháo, Saabirose, Liu Grace ｜ Em Xinh Say Hi [Performance] [5qzRmKmagtU].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "ai-ky": {
+      "songId": "ai-ky",
+      "objectKey": "audio/ai-ky.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Ái Kỷ",
+      "artist": "Lâm Bảo Ngọc",
+      "sourceFile": "ÁI KỶ - Lâm Bảo Ngọc biến hoá mới lạ cùng màn highnote đỉnh cao ｜ Em Xinh Say Hi [Performance] [_WcwIdNymRw].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "troi-sao": {
+      "songId": "troi-sao",
+      "objectKey": "audio/troi-sao.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Trời Sao",
+      "artist": "52Hz",
+      "sourceFile": "TRỜI SAO - 52Hz hoá công chúa trong giai điệu đậm chất cổ tích ｜ Em Xinh Say Hi [Performance] [M7LOi3ShsMY].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "roi-tu-do": {
+      "songId": "roi-tu-do",
+      "objectKey": "audio/roi-tu-do.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Rơi Tự Do",
+      "artist": "LyHan",
+      "sourceFile": "RƠI TỰ DO - LyHan như thiên thần đưa khán giả lạc vào miền cảm xúc ｜ Em Xinh Say Hi [Performance] [c7TLmvJQsB8].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "chu-ky-moi": {
+      "songId": "chu-ky-moi",
+      "objectKey": "audio/chu-ky-moi.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Chu Kỳ Mới",
+      "artist": "Bích Phương",
+      "sourceFile": "CHU KỲ MỚI - Bích Phương hoá nữ thần trong thế giới ma mị huyền ảo ｜ Em Xinh Say Hi [Performance] [mk2rCeo_-gg].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "di-ve": {
+      "songId": "di-ve",
+      "objectKey": "audio/di-ve.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Đi Về",
+      "artist": "Pháo",
+      "sourceFile": "ĐI VỀ - cơ trưởng Pháo mang cả trường quay đi quẩy trên chuyến bay âm nhạc ｜ EXSH [Performance] [MqwoZJg9vyI].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "vo-tay": {
+      "songId": "vo-tay",
+      "objectKey": "audio/vo-tay.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Vỗ Tay",
+      "artist": "Phương Ly",
+      "sourceFile": "VỖ TAY - Phương Ly như nàng công chúa cổ động tinh thần ｜ Em Xinh Say Hi [Performance] [Ta1aWgm6Fd8].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "do-anh-si": {
+      "songId": "do-anh-si",
+      "objectKey": "audio/do-anh-si.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Do Anh Si",
+      "artist": "Han Sara",
+      "sourceFile": "HAN SARA - ＂DO ANH SI＂ ｜ DANCE PERFORMANCE VIDEO [kQARMYyZ3j4].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "mot-nha": {
+      "songId": "mot-nha",
+      "objectKey": "audio/mot-nha.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Một nhà",
+      "artist": "Da LAB",
+      "sourceFile": "Da LAB - Một Nhà (Official Lyric Video) [TKlXc3iywoM].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "trinh": {
+      "songId": "trinh",
+      "objectKey": "audio/trinh.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Trình",
+      "artist": "HIEUTHUHAI",
+      "sourceFile": "HIEUTHUHAI - TRÌNH (prod. by Kewtiie) [7kO_ALcwNAw].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "tung": {
+      "songId": "tung",
+      "objectKey": "audio/tung.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Từng",
+      "artist": "Lyly, Lâm Bảo Ngọc, Liu Grace, Han Sara, DANMY",
+      "sourceFile": "TỪNG - LyLy, Lâm Bảo Ngọc, Liu Grace, Danmy, Han Sara ｜ Em Xinh Say Hi [Performance] [3YL5J-UOIPs].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
+    },
+    "he": {
+      "songId": "he",
+      "objectKey": "audio/he.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Hề",
+      "artist": "Phương Mỹ Chi, Phương Ly, Pháo, Chi Xê, WEAN",
+      "sourceFile": "HỀ - Phương Mỹ Chi, Phương Ly, Pháo, Chi Xê, WEAN ｜ Em Xinh Say Hi [Performance] [Jh6Xz1WD3C0].mp3",
+      "matchMethod": "exact-title-and-catalog-artist"
     }
   }
 }
