@@ -994,7 +994,7 @@ app.get('/api/karaoke/metadata/:songId', async (request, response) => {
     const entry = manifest.entries?.[song.songId];
     const sourceLabel = String(entry?.sourceFile || '').replace(/\s*\[[^\]]+\]\.(mp3|m4a|wav|flac|ogg)$/i, '');
     const sourceTitle = String(entry?.title || song.title);
-    const split = sourceLabel.split(/\s+[—–-]\s+/).filter(Boolean);
+    const split = sourceLabel.split(/\s+[—–|｜-]\s+/).filter(Boolean);
     const filenameArtist = split.length > 1 && normalizeMusicText(split[0]) !== normalizeMusicText(sourceTitle) ? split[0] : '';
     const sourceArtist = String(entry?.artist || filenameArtist || song.artist || song.composer || '').trim();
     let metadata = { songId: song.songId, title: sourceTitle, artist: sourceArtist, album: '', year: '', durationSeconds: null, coverUrl: '', artistImageUrl: '', artistImageSourceUrl: '', artistUrl: '', artworkCredit: '', artistImageCredit: '' };

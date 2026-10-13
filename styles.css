@@ -915,7 +915,7 @@ body.karaoke-modal-open { overflow: hidden; }
 .lyrics-line { padding: 3px 7px; color: inherit; text-align: left; transition: color .18s ease; }
 .karaoke-lyrics-text:not(.is-left) .lyrics-line { text-align: left; }
 .lyrics-line-row.is-current { transform: translateX(3px); border-radius: 10px; background: rgba(101,147,255,.17); box-shadow: inset 3px 0 #8cb4ff; }
-.lyrics-line-row.is-current .lyrics-line { color: #fff; }
+.lyrics-line-row.is-current .lyrics-line { color: #fff; font-weight: 800; text-shadow: 0 0 22px rgba(130,174,255,.65); }
 .karaoke-word { display: inline-block; border-radius: 5px; transition: color .12s linear, text-shadow .12s linear, background .12s linear; }
 .karaoke-word.is-word-current { background: linear-gradient(100deg, #ffd46e, #ff7db7); background-clip: text; color: transparent; text-shadow: 0 0 20px rgba(255,130,192,.25); }
 .karaoke-artist-card { position: sticky; top: 16px; grid-column: 2; display: grid; grid-template-columns: 64px minmax(0,1fr); align-items: center; gap: 12px; margin-top: 28px; padding: 15px; border: 1px solid rgba(255,255,255,.08); border-radius: 18px; background: rgba(255,255,255,.055); }
@@ -929,6 +929,7 @@ body.karaoke-modal-open { overflow: hidden; }
 .karaoke-artist-credit { grid-column: 1 / -1; color: #8e9ab8; font-size: 9px; }
 .karaoke-artist-image-credit { grid-column: 1 / -1; color: #8e9ab8; font-size: 9px; text-decoration: underline; text-underline-offset: 2px; }
 .karaoke-study-tools, .karaoke-lyrics-editor { grid-column: 1 / -1; }
+.karaoke-study-tools[hidden], .karaoke-lyrics-editor[hidden] { display: none !important; }
 .karaoke-lyrics-empty { grid-column: 1 / -1; }
 .karaoke-lyrics-help { margin: 13px 30px 20px; }
 .karaoke-audio-panel { margin-inline: 30px; border-radius: 20px; background: linear-gradient(120deg,rgba(39,60,112,.7),rgba(78,36,82,.55)); }
@@ -939,7 +940,7 @@ body.karaoke-modal-open { overflow: hidden; }
   .karaoke-lyrics-topbar h3 { font-size: clamp(23px, 7vw, 34px); }
   .karaoke-lyrics-body { grid-template-columns: minmax(0,1fr); gap: 12px; padding-inline: 16px; }
   .karaoke-lyrics-text { grid-column: 1; min-height: 190px; margin-top: 12px; padding: 16px 11px; }
-  .karaoke-artist-card { position: static; grid-column: 1; grid-row: 1; width: 100%; margin-top: 12px; }
+  .karaoke-artist-card { position: static; grid-column: 1; grid-row: auto; width: 100%; margin-top: 12px; }
   .karaoke-study-tools, .karaoke-lyrics-editor, .karaoke-lyrics-empty { grid-column: 1; }
   .karaoke-audio-panel, .karaoke-lyrics-mode-row { margin-inline: 16px; }
   .karaoke-lyrics-help { margin-inline: 16px; }

@@ -916,7 +916,7 @@ function renderKaraokeLyricsModal() {
   view.hidden = session.loading || !hasLyrics || session.editing;
   empty.hidden = session.loading || hasLyrics || session.editing;
   editor.hidden = !session.editing;
-  studyTools.hidden = session.loading || !hasLyrics;
+  studyTools.hidden = session.loading || !hasLyrics || !session.studyMode;
   if (session.editing && document.activeElement !== textarea) textarea.value = session.text;
   if (session.editing && hasLyrics) view.hidden = false;
   const lyricsMode = $('#karaokeLyricsMode');
