@@ -2,7 +2,8 @@ import express from 'express';
 import cron from 'node-cron';
 import pg from 'pg';
 import webpush from 'web-push';
-import { createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
+import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
@@ -15,6 +16,7 @@ const { Pool } = pg;
 const app = express();
 const port = Number(process.env.PORT || 4173);
 const distRoot = resolve(fileURLToPath(new URL('./dist', import.meta.url)));
+const audioManifestPath = resolve(fileURLToPath(new URL('./public/audio-manifest.json', import.meta.url)));
 const databaseUrl = process.env.DATABASE_URL;
 const pool = databaseUrl ? new Pool({ connectionString: databaseUrl, ssl: databaseUrl.includes('localhost') ? false : { rejectUnauthorized: false } }) : null;
 const supabaseUrl = process.env.SUPABASE_URL?.trim().replace(/\/$/, '');
@@ -48,6 +50,14 @@ const lyricsProviderConfigured = lyricsProvider === 'link' || lyricsProvider ===
 const adminUsername = process.env.ADMIN_USERNAME || 'anh';
 const adminPassword = process.env.ADMIN_PASSWORD || '261004';
 const adminSessionSecret = process.env.ADMIN_SESSION_SECRET || adminPassword;
+const vyUsername = (process.env.VY_USERNAME || 'phanthithaovy').trim();
+const vyPassword = process.env.VY_PASSWORD ?? '261004';
+const r2AccountId = process.env.R2_ACCOUNT_ID?.trim();
+const r2BucketName = process.env.R2_BUCKET_NAME?.trim();
+const r2AccessKeyId = process.env.R2_ACCESS_KEY_ID?.trim();
+const r2SecretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
+const r2UrlTtlSeconds = Math.min(604800, Math.max(60, Number(process.env.R2_URL_TTL_SECONDS || 900)));
+const r2Configured = Boolean(r2AccountId && r2BucketName && r2AccessKeyId && r2SecretAccessKey);
 const adminSessionTtlMs = 30 * 24 * 60 * 60 * 1000;
 const memoryFoodRequests = [];
 let memoryFoodRequestId = 0;
@@ -726,7 +736,7 @@ async function sendToRole(role, payload) {
   }));
 }
 
-function isAdminRequest(request) {
+function isSignedRoleRequest(request, role) {
   const token = request.headers.authorization?.replace(/^Bearer\s+/i, '');
   if (!token) return false;
   const [payload, signature] = token.split('.');
@@ -737,19 +747,55 @@ function isAdminRequest(request) {
     const expectedBytes = Buffer.from(expectedSignature);
     if (providedBytes.length !== expectedBytes.length || !timingSafeEqual(providedBytes, expectedBytes)) return false;
     const session = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'));
-    return session.role === 'admin' && Number(session.exp) > Date.now();
+    return session.role === role && Number(session.exp) > Date.now();
   } catch {
     return false;
   }
 }
 
-function createAdminSessionToken() {
+function createSessionToken(role) {
   const payload = Buffer.from(JSON.stringify({
-    role: 'admin',
+    role,
     exp: Date.now() + adminSessionTtlMs
   })).toString('base64url');
   const signature = createHmac('sha256', adminSessionSecret).update(payload).digest('base64url');
   return `${payload}.${signature}`;
+}
+
+function isAdminRequest(request) {
+  return isSignedRoleRequest(request, 'admin');
+}
+
+function isVyRequest(request) {
+  return isSignedRoleRequest(request, 'vy');
+}
+
+function awsEncode(value) {
+  return encodeURIComponent(value).replace(/[!'()*]/g, (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`);
+}
+
+function signR2GetUrl(objectKey, expiresInSeconds = r2UrlTtlSeconds) {
+  if (!r2Configured) throw new Error('R2 chÆ°a Ä‘Æ°á»£c cáº¥u hÃ¬nh trÃªn server.');
+  const host = `${r2AccountId}.r2.cloudflarestorage.com`;
+  const path = `/${awsEncode(r2BucketName)}/${objectKey.split('/').map(awsEncode).join('/')}`;
+  const now = new Date();
+  const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, '');
+  const dateStamp = amzDate.slice(0, 8);
+  const scope = `${dateStamp}/auto/s3/aws4_request`;
+  const query = [
+    ['X-Amz-Algorithm', 'AWS4-HMAC-SHA256'],
+    ['X-Amz-Credential', `${r2AccessKeyId}/${scope}`],
+    ['X-Amz-Date', amzDate],
+    ['X-Amz-Expires', String(expiresInSeconds)],
+    ['X-Amz-SignedHeaders', 'host']
+  ].map(([key, value]) => [awsEncode(key), awsEncode(value)]).sort(([a], [b]) => a.localeCompare(b));
+  const canonicalQuery = query.map(([key, value]) => `${key}=${value}`).join('&');
+  const canonicalRequest = ['GET', path, canonicalQuery, `host:${host}\n`, 'host', 'UNSIGNED-PAYLOAD'].join('\n');
+  const stringToSign = ['AWS4-HMAC-SHA256', amzDate, scope, createHash('sha256').update(canonicalRequest).digest('hex')].join('\n');
+  const hmac = (key, value) => createHmac('sha256', key).update(value).digest();
+  const signingKey = hmac(hmac(hmac(hmac(`AWS4${r2SecretAccessKey}`, dateStamp), 'auto'), 's3'), 'aws4_request');
+  const signature = createHmac('sha256', signingKey).update(stringToSign).digest('hex');
+  return `https://${host}${path}?${canonicalQuery}&X-Amz-Signature=${signature}`;
 }
 
 const fallbackMessages = {
@@ -845,6 +891,41 @@ app.get('/api/health', (_request, response) => response.json({
   lyricsLinkFallback: true
 }));
 
+app.get('/api/audio/url/:songId', async (request, response) => {
+  response.set('Cache-Control', 'no-store');
+  if (!isAdminRequest(request) && !isVyRequest(request)) {
+    return response.status(401).json({ code: 'AUDIO_AUTH_REQUIRED', error: 'Phiên đăng nhập không hợp lệ để nghe audio riêng tư.' });
+  }
+  const song = karaokeSongById(request.params.songId);
+  if (!song) return response.status(404).json({ code: 'SONG_NOT_FOUND', error: 'Không tìm thấy bài karaoke này.' });
+  try {
+    const manifest = JSON.parse(await readFile(audioManifestPath, 'utf8'));
+    const entry = manifest?.schemaVersion === 1 ? manifest.entries?.[song.songId] : null;
+    if (!entry) {
+      return response.status(404).json({ code: 'AUDIO_NOT_FOUND', error: 'Chưa có audio được ghép với bài này trong manifest.' });
+    }
+    const expectedPrefix = `audio/${song.songId}.`;
+    if (entry.songId && entry.songId !== song.songId || typeof entry.objectKey !== 'string'
+      || !entry.objectKey.startsWith(expectedPrefix) || entry.objectKey.includes('..')
+      || typeof entry.mimeType !== 'string' || !entry.mimeType.startsWith('audio/')) {
+      return response.status(503).json({ code: 'AUDIO_MANIFEST_INVALID', error: 'Manifest audio không khớp songId hoặc MIME type; đã chặn phát nhầm bài.' });
+    }
+    if (!r2Configured) return response.status(503).json({
+      code: 'PRIVATE_AUDIO_NOT_CONFIGURED',
+      error: 'Audio chưa sẵn sàng: server thiếu các biến R2 riêng tư.'
+    });
+    return response.json({
+      songId: song.songId,
+      audioUrl: signR2GetUrl(entry.objectKey),
+      mimeType: entry.mimeType,
+      expiresInSeconds: r2UrlTtlSeconds
+    });
+  } catch (error) {
+    console.error('Không đọc được audio manifest:', error.message);
+    return response.status(503).json({ code: 'AUDIO_MANIFEST_UNAVAILABLE', error: 'Chưa đọc được manifest audio riêng tư.' });
+  }
+});
+
 app.get('/api/lyrics/source/:songId', (request, response) => {
   const song = karaokeSongById(request.params.songId);
   if (!song) return response.status(404).json({ error: 'Không tìm thấy bài hát.' });
@@ -911,8 +992,16 @@ app.post('/api/admin/login', (request, response) => {
   if (username !== adminUsername || password !== adminPassword) {
     return response.status(401).json({ error: 'Sai tài khoản hoặc mật khẩu.' });
   }
-  const token = createAdminSessionToken();
+  const token = createSessionToken('admin');
   return response.json({ ok: true, token });
+});
+
+app.post('/api/user/login', (request, response) => {
+  const { username, password } = request.body || {};
+  if (username !== vyUsername || password !== vyPassword) {
+    return response.status(401).json({ error: 'Sai tài khoản hoặc mật khẩu.' });
+  }
+  return response.json({ ok: true, token: createSessionToken('vy') });
 });
 
 app.post('/api/livekit/token', async (request, response) => {

@@ -507,6 +507,25 @@
           <button class="lyrics-tool-button" id="toggleLyricsStudy" type="button" aria-pressed="false">🧠 Học thuộc</button>
           <button class="lyrics-tool-button" id="toggleLyricsFullscreen" type="button" aria-pressed="false">⛶ Toàn màn hình</button>
         </div>
+        <section class="karaoke-audio-panel" aria-label="Trình phát nhạc karaoke">
+          <audio id="karaokeAudioElement" preload="none" playsinline aria-hidden="true"></audio>
+          <div class="karaoke-audio-topline">
+            <strong>Phát nhạc nền</strong>
+            <span class="karaoke-audio-status" id="karaokeAudioStatus" role="status" aria-live="polite">Đang kiểm tra audio…</span>
+          </div>
+          <div class="karaoke-audio-controls">
+            <button class="karaoke-audio-play" id="karaokeAudioPlay" type="button" aria-label="Phát nhạc" disabled>▶</button>
+            <div class="karaoke-audio-timeline">
+              <input id="karaokeAudioSeek" type="range" min="0" max="0" step="0.1" value="0" aria-label="Tua nhạc" disabled />
+              <div class="karaoke-audio-times"><span id="karaokeAudioCurrentTime">0:00</span><span id="karaokeAudioDuration">0:00</span></div>
+            </div>
+            <label class="karaoke-audio-volume" for="karaokeAudioVolume"><span aria-hidden="true">◖))</span><input id="karaokeAudioVolume" type="range" min="0" max="1" step="0.01" value="0.8" aria-label="Âm lượng" /></label>
+          </div>
+        </section>
+        <div class="karaoke-lyrics-mode-row">
+          <span class="karaoke-lyrics-mode" id="karaokeLyricsMode">Chỉ có lời văn bản</span>
+          <span id="karaokeLyricsModeDetail">Lời không đồng bộ theo nhạc</span>
+        </div>
         <div class="karaoke-lyrics-status" id="karaokeLyricsStatus" role="status" aria-live="polite">Đang tìm lời bài hát…</div>
         <div class="karaoke-lyrics-body">
           <div class="karaoke-lyrics-empty" id="karaokeLyricsEmpty" hidden>

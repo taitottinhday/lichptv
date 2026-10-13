@@ -1,0 +1,1879 @@
+{
+  "schemaVersion": 1,
+  "storage": "cloudflare-r2-private",
+  "bucket": "my-music",
+  "entries": {
+    "minh-yeu-nhau-tu-kiep-nao": {
+      "songId": "minh-yeu-nhau-tu-kiep-nao",
+      "objectKey": "audio/minh-yeu-nhau-tu-kiep-nao.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Mình yêu nhau từ kiếp nào",
+      "artist": "",
+      "sourceFile": "Mình Yêu Nhau Từ Kiếp Nào？ [cover] ｜ Quang Trung ｜ Official Music Video 4k [jqvmZMg4huo].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "hanh-phuc-moi": {
+      "songId": "hanh-phuc-moi",
+      "objectKey": "audio/hanh-phuc-moi.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Hạnh phúc mới",
+      "artist": "",
+      "sourceFile": "HẠNH PHÚC MỚI - CA SĨ GIẤU MẶT ｜ ＂Ngày Hôm Nao Chia Tay Em Nói Như Lời Trăn Trối Anh Đừng U Sầu＂ [957bmU1tfss].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "suy-nghi-trong-anh": {
+      "songId": "suy-nghi-trong-anh",
+      "objectKey": "audio/suy-nghi-trong-anh.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Suy nghĩ trong anh",
+      "artist": "Khắc Việt",
+      "sourceFile": "Suy Nghĩ Trong Anh - Khắc Việt ｜ Version Phòng Thu Mới Nhất [LJtBPTs8EIo].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "hen-uoc-tu-hu-vo": {
+      "songId": "hen-uoc-tu-hu-vo",
+      "objectKey": "audio/hen-uoc-tu-hu-vo.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Hẹn ước từ hư vô",
+      "artist": "",
+      "sourceFile": "MỸ TÂM - HẸN ƯỚC TỪ HƯ VÔ (LIVE) ｜ MY SOUL 1981 [W4P8gl4dnrg].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "du-cho-tan-the": {
+      "songId": "du-cho-tan-the",
+      "objectKey": "audio/du-cho-tan-the.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Dù cho tận thế",
+      "artist": "",
+      "sourceFile": "ERIK - 'Dù cho tận thế (vẫn yêu em)' ｜ Official MV ｜ Valentine 2025 [js6JBdLzNn4].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "tinh-yeu-mau-nang": {
+      "songId": "tinh-yeu-mau-nang",
+      "objectKey": "audio/tinh-yeu-mau-nang.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Tình yêu màu nắng",
+      "artist": "",
+      "sourceFile": "Đoàn Thúy Trang - Tình Yêu Màu Nắng (feat. Big Daddy) (Official Music Video) [D-6JDufCJ1Y].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "muon-ruou-to-tinh": {
+      "songId": "muon-ruou-to-tinh",
+      "objectKey": "audio/muon-ruou-to-tinh.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Mượn rượu tỏ tình",
+      "artist": "",
+      "sourceFile": "BIGDADDY x EMILY - MƯỢN RƯỢU TỎ TÌNH (Official M⧸V) [aGUQsb31TEw].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "noi-nay-co-anh": {
+      "songId": "noi-nay-co-anh",
+      "objectKey": "audio/noi-nay-co-anh.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Nơi này có anh",
+      "artist": "Sơn Tùng M-TP",
+      "sourceFile": "NƠI NÀY CÓ ANH ｜ OFFICIAL MUSIC VIDEO ｜ SƠN TÙNG M-TP [FN7ALfpGxiI].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "bat-tinh-yeu-len": {
+      "songId": "bat-tinh-yeu-len",
+      "objectKey": "audio/bat-tinh-yeu-len.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Bật tình yêu lên",
+      "artist": "",
+      "sourceFile": "Bật Tình Yêu Lên - Hòa Minzy x Tăng Duy Tân ｜ MV Lyrics [VHjMJeLsI0o].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "cham-khe-tim-anh-mot-chut-thoi": {
+      "songId": "cham-khe-tim-anh-mot-chut-thoi",
+      "objectKey": "audio/cham-khe-tim-anh-mot-chut-thoi.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Chạm khẽ tim anh một chút thôi",
+      "artist": "",
+      "sourceFile": "Chạm Khẽ Tim Anh Một Chút Thôi ｜ Noo Phước Thịnh ｜ LYRIC VIDEO [Rzm_kltwHbg].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "khong-sao-ma-em-day-roi": {
+      "songId": "khong-sao-ma-em-day-roi",
+      "objectKey": "audio/khong-sao-ma-em-day-roi.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Không sao mà, em đây rồi",
+      "artist": "",
+      "sourceFile": "KHÔNG SAO MÀ EM ĐÂY RỒI ｜ SUNI HẠ LINH ft. Lou Hoàng ｜ Official M⧸V [AiD1a2fFFLw].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "mat-troi-cua-em": {
+      "songId": "mat-troi-cua-em",
+      "objectKey": "audio/mat-troi-cua-em.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Mặt trời của em",
+      "artist": "",
+      "sourceFile": "Mặt Trời Của Em - Official MV ｜ Phương Ly ft JustaTee [t0WFOnwp3MM].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "yeu-mot-nguoi-vo-tam": {
+      "songId": "yeu-mot-nguoi-vo-tam",
+      "objectKey": "audio/yeu-mot-nguoi-vo-tam.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Yêu một người vô tâm",
+      "artist": "",
+      "sourceFile": "Yêu Một Người Vô Tâm - Bảo Anh (Official Audio) [GLGocEtfgk8].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "goi-ten-em-trong-dem": {
+      "songId": "goi-ten-em-trong-dem",
+      "objectKey": "audio/goi-ten-em-trong-dem.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Gọi tên em trong đêm",
+      "artist": "",
+      "sourceFile": "Gọi Tên Em Trong Đêm ｜ The Men ｜ Official Music Video [sIFJxUoHv-4].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "co-khong-giu-mat-dung-tim": {
+      "songId": "co-khong-giu-mat-dung-tim",
+      "objectKey": "audio/co-khong-giu-mat-dung-tim.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Có không giữ mất đừng tìm",
+      "artist": "",
+      "sourceFile": "Trúc Nhân ｜ Có Không Giữ Mất Đừng Tìm ｜ Official MV ｜ special guest Miu Lê [kdVeYgGtO3Q].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "con-mua-tinh-yeu": {
+      "songId": "con-mua-tinh-yeu",
+      "objectKey": "audio/con-mua-tinh-yeu.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Cơn mưa tình yêu",
+      "artist": "",
+      "sourceFile": "Hà Anh Tuấn x Phương Linh ｜ Cơn Mưa Tình Yêu [RfG-BP3HCv4].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "bon-chu-lam": {
+      "songId": "bon-chu-lam",
+      "objectKey": "audio/bon-chu-lam.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Bốn chữ lắm",
+      "artist": "",
+      "sourceFile": "BỐN CHỮ LẮM (MV) - TRÚC NHÂN - TRƯƠNG THẢO NHI [ Chất Lượng 4k] [i724lraI93s].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "yeu-la-tha-thu": {
+      "songId": "yeu-la-tha-thu",
+      "objectKey": "audio/yeu-la-tha-thu.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Yêu là tha thu",
+      "artist": "",
+      "sourceFile": "Yêu Là ＂Tha Thu＂ ｜ Only C ｜ Em Chưa 18 OST ｜ Official Music Video [-nnWBhKZeg0].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "dung-nguoi-dung-thoi-diem": {
+      "songId": "dung-nguoi-dung-thoi-diem",
+      "objectKey": "audio/dung-nguoi-dung-thoi-diem.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Đúng người đúng thời điểm",
+      "artist": "",
+      "sourceFile": "Đúng Người Đúng Thời Điểm  ｜ Official MV ｜ Thanh Hưng x Huy Cung x Mỹ Linh [KFmQUJ2dj3k].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "tan-cung-noi-nho": {
+      "songId": "tan-cung-noi-nho",
+      "objectKey": "audio/tan-cung-noi-nho.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Tận cùng nỗi nhớ",
+      "artist": "",
+      "sourceFile": "Tận Cùng Nỗi Nhớ (TCNN) ｜ Will x Han Sara ｜ Official Music Video [UOpE-hRFPCo].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "tim-lai-bau-troi": {
+      "songId": "tim-lai-bau-troi",
+      "objectKey": "audio/tim-lai-bau-troi.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Tìm lại bầu trời",
+      "artist": "",
+      "sourceFile": "Tìm Lại Bầu Trời - Tuấn Hưng [Q8kohtX2PC4].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "anh-chua-thuong-em-den-vay-dau": {
+      "songId": "anh-chua-thuong-em-den-vay-dau",
+      "objectKey": "audio/anh-chua-thuong-em-den-vay-dau.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Anh chưa thương em đến vậy đâu",
+      "artist": "",
+      "sourceFile": "Anh Chưa Thương Em Đến Vậy Đâu - Lady Mây ｜ The Masked Singer Vietnam [Audio Lyrics] [CMOMeBjSRaI].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "roi-em-se-gap-mot-chang-trai-khac": {
+      "songId": "roi-em-se-gap-mot-chang-trai-khac",
+      "objectKey": "audio/roi-em-se-gap-mot-chang-trai-khac.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Rồi em sẽ gặp một chàng trai khác",
+      "artist": "",
+      "sourceFile": "Rồi Em Sẽ Gặp Một Chàng Trai Khác - HippoHappy ｜ The Masked Singer Vietnam 2023 [Audio Lyric] [5viCJm5lS-M].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "gap-em-luc-tan-vo": {
+      "songId": "gap-em-luc-tan-vo",
+      "objectKey": "audio/gap-em-luc-tan-vo.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Gặp em lúc tan vỡ",
+      "artist": "",
+      "sourceFile": "GẶP EM LÚC TAN VỠ l TRUNG QUÂN x BÙI CÔNG NAM ｜ OFFICIAL MUSIC VIDEO ｜ #GELTV [TSVRctG_UPU].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "chua-quen-nguoi-yeu-cu": {
+      "songId": "chua-quen-nguoi-yeu-cu",
+      "objectKey": "audio/chua-quen-nguoi-yeu-cu.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Chưa quên người yêu cũ",
+      "artist": "",
+      "sourceFile": "CHƯA QUÊN NGƯỜI YÊU CŨ ｜ HÀ NHI x HỨA KIM TUYỀN ｜ Official Live Performance [6fIj4UwdSYo].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "ai-chung-tinh-duoc-mai": {
+      "songId": "ai-chung-tinh-duoc-mai",
+      "objectKey": "audio/ai-chung-tinh-duoc-mai.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Ai chung tình được mãi",
+      "artist": "",
+      "sourceFile": "AI CHUNG TÌNH ĐƯỢC MÃI - ĐINH TÙNG HUY ｜ OFFICIAL MUSIC VIDEO [eZpJdO22jZ0].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "vi-me-anh-bat-chia-tay": {
+      "songId": "vi-me-anh-bat-chia-tay",
+      "objectKey": "audio/vi-me-anh-bat-chia-tay.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Vì mẹ anh bắt chia tay",
+      "artist": "",
+      "sourceFile": "VÌ MẸ ANH BẮT CHIA TAY ｜ MIU LÊ x KARIK x CHÂU ĐĂNG KHOA ｜ Official MV [S7ElVoYZN0g].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "thay-toi-yeu-co-ay": {
+      "songId": "thay-toi-yeu-co-ay",
+      "objectKey": "audio/thay-toi-yeu-co-ay.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Thay tôi yêu cô ấy",
+      "artist": "",
+      "sourceFile": "Thay Tôi Yêu Cô Ấy (ĐNSTĐ) - Thanh Hưng ｜ Official Lyrics Video [kSYhR8vnzBg].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "dau-de-truong-thanh": {
+      "songId": "dau-de-truong-thanh",
+      "objectKey": "audio/dau-de-truong-thanh.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Đau để trưởng thành",
+      "artist": "",
+      "sourceFile": "ĐAU ĐỂ TRƯỞNG THÀNH ｜ ONLYC ｜ OFFICIAL MV [eoJecvGMR6E].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "khong-the-cung-nhau-suot-kiep": {
+      "songId": "khong-the-cung-nhau-suot-kiep",
+      "objectKey": "audio/khong-the-cung-nhau-suot-kiep.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Không thể cùng nhau suốt kiếp",
+      "artist": "",
+      "sourceFile": "KHÔNG THỂ CÙNG NHAU SUỐT KIẾP - HOÀ MINZY (ft. MR. SIRO) ｜ OFFICIAL MUSIC VIDEO [ayJY9ieBuEU].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "khoc-cung-em": {
+      "songId": "khoc-cung-em",
+      "objectKey": "audio/khoc-cung-em.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Khóc cùng em",
+      "artist": "",
+      "sourceFile": "KHÓC CÙNG EM ｜ Mr. Siro x Gray x Wind (Official Music Video) [rS_Lkxtkc1c].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "bui-bay-vao-mat": {
+      "songId": "bui-bay-vao-mat",
+      "objectKey": "audio/bui-bay-vao-mat.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Bụi bay vào mắt",
+      "artist": "",
+      "sourceFile": "[Phạm Quỳnh Anh] Bụi bay vào mắt [iJZya1Nhxr8].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "cuoc-song-em-on-khong": {
+      "songId": "cuoc-song-em-on-khong",
+      "objectKey": "audio/cuoc-song-em-on-khong.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Cuộc sống em ổn không",
+      "artist": "",
+      "sourceFile": "CUỘC SỐNG EM ỔN KHÔNG ｜ ANH TÚ ｜ OFFICIAL MUSIC VIDEO [DWYwmTdXpqw].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "anh-muon-em-song-sao": {
+      "songId": "anh-muon-em-song-sao",
+      "objectKey": "audio/anh-muon-em-song-sao.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Anh muốn em sống sao",
+      "artist": "",
+      "sourceFile": "Anh Muốn Em Sống Sao ｜ Bảo Anh ｜ Official MV [ZBT0Chsef0k].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "con-la-gi-cua-nhau": {
+      "songId": "con-la-gi-cua-nhau",
+      "objectKey": "audio/con-la-gi-cua-nhau.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Còn là gì của nhau",
+      "artist": "",
+      "sourceFile": "Còn Là Gì Của Nhau ｜ Châu Khải Phong ｜ Official Music Video [DYDtPi8W_5w].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "co-don-tren-sofa": {
+      "songId": "co-don-tren-sofa",
+      "objectKey": "audio/co-don-tren-sofa.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Cô đơn trên sofa",
+      "artist": "",
+      "sourceFile": "CÔ ĐƠN TRÊN SOFA ｜ Hồ Ngọc Hà x Tăng Duy Tân ｜ Trung Quân live cover at Soul of The Forest [u7ScW1kCgS0].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "xin-dung-lang-im": {
+      "songId": "xin-dung-lang-im",
+      "objectKey": "audio/xin-dung-lang-im.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Xin đừng lặng im",
+      "artist": "",
+      "sourceFile": "Xin Đừng Lặng Im [_w2PR0Sko8g].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "ngay-mai-em-di": {
+      "songId": "ngay-mai-em-di",
+      "objectKey": "audio/ngay-mai-em-di.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Ngày mai em đi",
+      "artist": "",
+      "sourceFile": "TOULIVER X LÊ HIẾU X SOOBIN HOÀNG SƠN - NGÀY MAI EM ĐI 2017 ｜ OFFICIAL LYRIC VIDEO [z5Jc7KiTLbs].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "buon-thi-cu-khoc-di": {
+      "songId": "buon-thi-cu-khoc-di",
+      "objectKey": "audio/buon-thi-cu-khoc-di.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Buồn thì cứ khóc đi",
+      "artist": "",
+      "sourceFile": "Buồn Thì Cứ Khóc Đi - Lynk Lee ｜ Official MV [X-GCJwz4PnY].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "mai-mai-la-bao-xa": {
+      "songId": "mai-mai-la-bao-xa",
+      "objectKey": "audio/mai-mai-la-bao-xa.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Mãi mãi là bao xa",
+      "artist": "",
+      "sourceFile": "Nói Em Nghe Mãi Mãi Là Bao Xa - Thủy Tiên [ Official MV ] ｜ Nhạc Hay 2018 [WNTmna9gOug].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "anh-khong-doi-qua": {
+      "songId": "anh-khong-doi-qua",
+      "objectKey": "audio/anh-khong-doi-qua.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Anh không đòi quà",
+      "artist": "",
+      "sourceFile": "Anh Không Đòi Quà - OnlyC ft Karik ｜ Official Music Video [BurYzEr9CpA].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "em-khong-la-duy-nhat": {
+      "songId": "em-khong-la-duy-nhat",
+      "objectKey": "audio/em-khong-la-duy-nhat.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Em không là duy nhất",
+      "artist": "",
+      "sourceFile": "Tóc Tiên - Em Không Là Duy Nhất ｜ Official Music Video [BkBqYlLjIeA].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "hom-nay-toi-buon": {
+      "songId": "hom-nay-toi-buon",
+      "objectKey": "audio/hom-nay-toi-buon.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Hôm nay tôi buồn",
+      "artist": "",
+      "sourceFile": "Phùng Khánh Linh - Hôm Nay Tôi Buồn (Official Music Video) [HsMFcQlxwKs].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "chuyen-nhu-chua-bat-dau": {
+      "songId": "chuyen-nhu-chua-bat-dau",
+      "objectKey": "audio/chuyen-nhu-chua-bat-dau.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Chuyện như chưa bắt đầu",
+      "artist": "",
+      "sourceFile": "Mỹ Tâm - Chuyện Như Chưa Bắt Đầu (PRETEND WE HAD NO START) M⧸V [tHTyWBD47Ck].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "em-cua-ngay-hom-qua": {
+      "songId": "em-cua-ngay-hom-qua",
+      "objectKey": "audio/em-cua-ngay-hom-qua.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Em của ngày hôm qua",
+      "artist": "",
+      "sourceFile": "Em Của Ngày Hôm Qua - Sơn Tùng MTP [OFFICIAL MV] [Vt4kAu-ziRY].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "hoa-no-khong-mau": {
+      "songId": "hoa-no-khong-mau",
+      "objectKey": "audio/hoa-no-khong-mau.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Hoa nở không màu",
+      "artist": "",
+      "sourceFile": "Hoa Nở Không Màu ｜ Hoài Lâm ｜ Acoustic Version [y_6aSG2yfe8].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "sau-lung-anh-co-ai-kia": {
+      "songId": "sau-lung-anh-co-ai-kia",
+      "objectKey": "audio/sau-lung-anh-co-ai-kia.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Sau lưng anh có ai kìa",
+      "artist": "",
+      "sourceFile": "SAU LƯNG ANH CÓ AI KÌA ｜ THIỀU BẢO TRÂM x NGUYỄN PHÚC THIỆN ｜ Official MV [1jx-BcAu5i4].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "dung-nhu-thoi-quen": {
+      "songId": "dung-nhu-thoi-quen",
+      "objectKey": "audio/dung-nhu-thoi-quen.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Đừng như thói quen",
+      "artist": "",
+      "sourceFile": "MV ĐỪNG NHƯ THÓI QUEN ｜ JAYKII & SARA ｜ QUAY Ở THÁI LAN (DEMO) [90Y_gWG4sZY].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "nguoi-la-oi": {
+      "songId": "nguoi-la-oi",
+      "objectKey": "audio/nguoi-la-oi.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Người lạ ơi",
+      "artist": "",
+      "sourceFile": "Người Lạ Ơi ! Official MV ｜ Châu Đăng Khoa x Karik x Orange [g20t_K9dlhU].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "khoa-ly-biet": {
+      "songId": "khoa-ly-biet",
+      "objectKey": "audio/khoa-ly-biet.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Khóa ly biệt",
+      "artist": "",
+      "sourceFile": "Khóa Ly Biệt ｜ Anh Tú ｜ Thà là Ô Thước xin đừng cách biệt âm dương [wEPX3V5T63M].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "nang-am-xa-dan": {
+      "songId": "nang-am-xa-dan",
+      "objectKey": "audio/nang-am-xa-dan.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Nắng ấm xa dần",
+      "artist": "",
+      "sourceFile": "Nắng Ấm Xa Dần - Sơn Tùng M-TP [488ceQWoGGw].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "co-dai-va-hoa-danh-danh": {
+      "songId": "co-dai-va-hoa-danh-danh",
+      "objectKey": "audio/co-dai-va-hoa-danh-danh.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Cỏ dại và hoa dành dành",
+      "artist": "",
+      "sourceFile": "CỎ DẠI VÀ HOA DÀNH DÀNH - VICKY NHUNG x CHU THÚY QUỲNH ｜ OFFICIAL VIETNAMESE VERSION [jJugIk3CAYQ].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "khong-thoi-gian": {
+      "songId": "khong-thoi-gian",
+      "objectKey": "audio/khong-thoi-gian.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Không thời gian",
+      "artist": "",
+      "sourceFile": "Không Thời Gian - Dương Domic (Official Visualizer) [QGa6FL98h-c].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "thuy-trieu": {
+      "songId": "thuy-trieu",
+      "objectKey": "audio/thuy-trieu.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Thủy triều",
+      "artist": "",
+      "sourceFile": "Quang Hùng MasterD - ‘Thuỷ Triều’ - Official Visualizer [7ig2lXjozdw].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "nuoc-mat-ca-sau": {
+      "songId": "nuoc-mat-ca-sau",
+      "objectKey": "audio/nuoc-mat-ca-sau.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Nước mắt cá sấu",
+      "artist": "",
+      "sourceFile": "HIEUTHUHAI - Nước Mắt Cá Sấu (prod. by Kewtiie) l Official Music Video [zaYS8tiD0Og].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "chac-ai-do-se-ve": {
+      "songId": "chac-ai-do-se-ve",
+      "objectKey": "audio/chac-ai-do-se-ve.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Chắc ai đó sẽ về",
+      "artist": "",
+      "sourceFile": "Sơn Tùng M-TP - Chắc Ai Đó Sẽ Về [PdbsnGuduvo].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "phia-sau-mot-co-gai": {
+      "songId": "phia-sau-mot-co-gai",
+      "objectKey": "audio/phia-sau-mot-co-gai.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Phía sau một cô gái",
+      "artist": "",
+      "sourceFile": "Phía Sau Một Cô Gái - Soobin Hoàng Sơn (Official Music Video 4K) [vCIc1g_4JWM].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "cau-vong-khuyet": {
+      "songId": "cau-vong-khuyet",
+      "objectKey": "audio/cau-vong-khuyet.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Cầu vồng khuyết",
+      "artist": "",
+      "sourceFile": "Cầu Vòng Khuyết - Tuấn Hưng [v2luYYn_aAQ].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "mat-ket-noi": {
+      "songId": "mat-ket-noi",
+      "objectKey": "audio/mat-ket-noi.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Mất kết nối",
+      "artist": "",
+      "sourceFile": "Dương Domic - Mất Kết Nối ｜ EP 'Dữ Liệu Quý' [lRsaDQtYqAo].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "vui-oi-la-vui": {
+      "songId": "vui-oi-la-vui",
+      "objectKey": "audio/vui-oi-la-vui.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Vui ơi là vui",
+      "artist": "",
+      "sourceFile": "VUI ƠI LÀ VUI - Tập 9 -Khởi My,Huy Khánh,Hòa Minzy [4_fkO43mhEk].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "roi-toi-luon": {
+      "songId": "roi-toi-luon",
+      "objectKey": "audio/roi-toi-luon.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Rồi tới luôn",
+      "artist": "",
+      "sourceFile": "Rồi Tới Luôn - Nal (MV Audio Lyric Official ) [HZi4eJXWZU0].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "co-hen-voi-thanh-xuan": {
+      "songId": "co-hen-voi-thanh-xuan",
+      "objectKey": "audio/co-hen-voi-thanh-xuan.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Có hẹn với thanh xuân",
+      "artist": "",
+      "sourceFile": "có hẹn với thanh xuân - MONSTAR ｜ official music video [vpRi8S6uXAg].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "cong-chua-bong-bong": {
+      "songId": "cong-chua-bong-bong",
+      "objectKey": "audio/cong-chua-bong-bong.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Công chúa bong bóng",
+      "artist": "",
+      "sourceFile": "Công Chúa Bong Bóng - Bảo Thy ft 2B ｜ Bảo Thy Official [Ucgzxh0maF8].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "tinh-ban-dieu-ky": {
+      "songId": "tinh-ban-dieu-ky",
+      "objectKey": "audio/tinh-ban-dieu-ky.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Tình bạn diệu kỳ",
+      "artist": "",
+      "sourceFile": "TÌNH BẠN DIỆU KỲ - AMEE x RICKY STAR x LĂNG LD ｜ Special M⧸V (Official) [TpmVzBcP70U].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "ben-tren-tang-lau": {
+      "songId": "ben-tren-tang-lau",
+      "objectKey": "audio/ben-tren-tang-lau.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Bên trên tầng lầu",
+      "artist": "",
+      "sourceFile": "[BAE] Tăng Duy Tân - Bên Trên Tầng Lầu ｜ Official Lyric Video [LaxkmhiECfM].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "cat-doi-noi-sau": {
+      "songId": "cat-doi-noi-sau",
+      "objectKey": "audio/cat-doi-noi-sau.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Cắt đôi nỗi sầu",
+      "artist": "",
+      "sourceFile": "TĂNG DUY TÂN - CẮT ĐÔI NỖI SẦU (ft DRUM7) ｜ OFFICIAL MUSIC VIDEO [GpmOn4RyzZI].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "di-du-dua-di": {
+      "songId": "di-du-dua-di",
+      "objectKey": "audio/di-du-dua-di.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Đi đu đưa đi",
+      "artist": "",
+      "sourceFile": "BÍCH PHƯƠNG - Đi Đu Đưa Đi (Official M⧸V) [ZF3b1nK-TjM].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "gui-anh-xa-nho": {
+      "songId": "gui-anh-xa-nho",
+      "objectKey": "audio/gui-anh-xa-nho.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Gửi anh xa nhớ",
+      "artist": "",
+      "sourceFile": "BÍCH PHƯƠNG - Gửi Anh Xa Nhớ [OFFICIAL M⧸V] [sbfks7HdRoE].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "luu-so-em-di": {
+      "songId": "luu-so-em-di",
+      "objectKey": "audio/luu-so-em-di.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Lưu số em đi",
+      "artist": "",
+      "sourceFile": "Lưu Số Em Đi ( HUVA Remix ) - Huỳnh Văn x Vũ Phụng Tiên ｜ Nhạc Trẻ Remix Hot TikTok Hay Nhất 2021 [hiBsdIXThQM].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "tran-bo-nho": {
+      "songId": "tran-bo-nho",
+      "objectKey": "audio/tran-bo-nho.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Tràn bộ nhớ",
+      "artist": "",
+      "sourceFile": "Tràn Bộ Nhớ - Dương Domic ｜ Lyrics Video [qRuSS93OEfw].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "tup-leu-ly-tuong": {
+      "songId": "tup-leu-ly-tuong",
+      "objectKey": "audio/tup-leu-ly-tuong.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Túp lều lý tưởng",
+      "artist": "",
+      "sourceFile": "TÚP LỀU LÝ TƯỞNG phiên bản live Siêu mới lạ và Đầy quyến rũ của Bảo Anh #Lululola [pDQM9ZLVoqY].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "mat-nai-cha-cha-cha": {
+      "songId": "mat-nai-cha-cha-cha",
+      "objectKey": "audio/mat-nai-cha-cha-cha.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Mắt nai cha cha cha",
+      "artist": "",
+      "sourceFile": "Big Hit Một Thời Của Ca Sĩ Hồng Ngọc ｜ Mắt Nai Cha Cha Cha ｜ Sỹ Luân [C6tkfp8-4gw].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "con-buom-xuan": {
+      "songId": "con-buom-xuan",
+      "objectKey": "audio/con-buom-xuan.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Con bướm xuân",
+      "artist": "",
+      "sourceFile": "Con Bướm Xuân ｜ Hồ Quang Hiếu ｜ Official MV [-41E5B85rTI].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "banh-mi-khong": {
+      "songId": "banh-mi-khong",
+      "objectKey": "audio/banh-mi-khong.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Bánh mì không",
+      "artist": "",
+      "sourceFile": "Bánh Mì Không - ĐạtG x DuUyên ｜｜ OFFICIAL MV [Ztrj8UIDMQY].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "waiting-for-you": {
+      "songId": "waiting-for-you",
+      "objectKey": "audio/waiting-for-you.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Waiting for you",
+      "artist": "",
+      "sourceFile": "MONO - Waiting For You (Album 22 - Track No.10) [CHw1b_1LVBA].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "vu-dieu-cong-chieng": {
+      "songId": "vu-dieu-cong-chieng",
+      "objectKey": "audio/vu-dieu-cong-chieng.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Vũ điệu cồng chiêng",
+      "artist": "",
+      "sourceFile": "TÓC TIÊN - VŨ ĐIỆU CỒNG CHIÊNG ft.TeamV (OFFICIAL MV) [Rz4FbACtfd0].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "di-giua-troi-ruc-ro": {
+      "songId": "di-giua-troi-ruc-ro",
+      "objectKey": "audio/di-giua-troi-ruc-ro.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Đi giữa trời rực rỡ",
+      "artist": "",
+      "sourceFile": "Nhạc phim Đi Giữa Trời Rực Rỡ - Ngô Lan Hương (MV Lyrics) [pjm2aXT3A2M].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "toi-yeu-viet-nam": {
+      "songId": "toi-yeu-viet-nam",
+      "objectKey": "audio/toi-yeu-viet-nam.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Tôi yêu Việt Nam",
+      "artist": "",
+      "sourceFile": "TÔI YÊU VIỆT NAM ｜ VIETNAM KUN ｜ OFFICIAL MUSIC VIDEO [K6p8ARa9A3A].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "viet-tiep-cau-chuyen-hoa-binh": {
+      "songId": "viet-tiep-cau-chuyen-hoa-binh",
+      "objectKey": "audio/viet-tiep-cau-chuyen-hoa-binh.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Viết tiếp câu chuyện hòa bình",
+      "artist": "",
+      "sourceFile": "VIẾT TIẾP CÂU CHUYỆN HÒA BÌNH - Tùng Dương x Nguyễn Văn Chung ｜ Official Music Video [4cSTibyaG8A].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "noi-dau-giua-hoa-binh": {
+      "songId": "noi-dau-giua-hoa-binh",
+      "objectKey": "audio/noi-dau-giua-hoa-binh.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Nỗi đau giữa hòa bình",
+      "artist": "",
+      "sourceFile": "NỖI ĐAU GIỮA HÒA BÌNH - HÒA MINZY x NGUYỄN VĂN CHUNG ｜ OFFICIAL MUSIC VIDEO [yHikkFeIHNA].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "viet-nam-trong-toi-la": {
+      "songId": "viet-nam-trong-toi-la",
+      "objectKey": "audio/viet-nam-trong-toi-la.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Việt Nam trong tôi là",
+      "artist": "",
+      "sourceFile": "VIỆT NAM TRONG TÔI LÀ - YẾN LÊ ｜｜ Official Lyric Video [Fak4b2xRkRc].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "noi-ay-con-tim-ve": {
+      "songId": "noi-ay-con-tim-ve",
+      "objectKey": "audio/noi-ay-con-tim-ve.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Nơi ấy con tim về",
+      "artist": "",
+      "sourceFile": "Nơi Ấy Con Tìm Về ｜ Hồ Quang Hiếu ｜ Official MV [uvIgpYPAcaQ].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "hat-mai-khuc-quan-hanh": {
+      "songId": "hat-mai-khuc-quan-hanh",
+      "objectKey": "audio/hat-mai-khuc-quan-hanh.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Hát mãi khúc quân hành",
+      "artist": "",
+      "sourceFile": "Hát mãi khúc quân hành [enGXkl1gIN4].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "hao-khi-viet-nam": {
+      "songId": "hao-khi-viet-nam",
+      "objectKey": "audio/hao-khi-viet-nam.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Hào khí Việt Nam",
+      "artist": "",
+      "sourceFile": "HÀO KHÍ VIỆT NAM - ĐÔNG HÙNG ｜ ST： HOLY THẮNG ｜ CÙNG NHAU GIỮ NƯỚC 2024 [2BnTKQJOKV0].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "dat-nuoc-tron-niem-vui": {
+      "songId": "dat-nuoc-tron-niem-vui",
+      "objectKey": "audio/dat-nuoc-tron-niem-vui.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Đất nước trọn niềm vui",
+      "artist": "",
+      "sourceFile": "Đất Nước Trọn Niềm Vui - NSƯT Tạ Minh Tâm [Official MV] [6KXKVhqQ2l4].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "nhu-co-bac-ho-trong-ngay-vui-dai-thang": {
+      "songId": "nhu-co-bac-ho-trong-ngay-vui-dai-thang",
+      "objectKey": "audio/nhu-co-bac-ho-trong-ngay-vui-dai-thang.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Như có Bác Hồ trong ngày vui đại thắng",
+      "artist": "",
+      "sourceFile": "Như Có Bác Hồ Trong Ngày Vui Đại Thắng - Tốp Ca Nhạc Viện TP HCM - Việt Nam Hồ Chí Minh [KdW-JHLHpQQ].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "co-gai-mo-duong": {
+      "songId": "co-gai-mo-duong",
+      "objectKey": "audio/co-gai-mo-duong.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Cô gái mở đường",
+      "artist": "",
+      "sourceFile": "Cô Gái Mở Đường Remix - Trịnh Thảo Anh x Domino Remix ｜ Nhạc Cách Mạng Remix Cực Hay [4dxkE75TPFQ].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "truong-son-dong-truong-son-tay": {
+      "songId": "truong-son-dong-truong-son-tay",
+      "objectKey": "audio/truong-son-dong-truong-son-tay.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Trường Sơn Đông Trường Sơn Tây",
+      "artist": "",
+      "sourceFile": "Hương Ly 'Nhạc Cách Mạng' - TRƯỜNG SƠN ĐÔNG, TRƯỜNG SƠN TÂY - Hào Khí Con Đường Huyền Thoại [7BnwNm4fGFw].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "bai-ca-khong-quen": {
+      "songId": "bai-ca-khong-quen",
+      "objectKey": "audio/bai-ca-khong-quen.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Bài ca không quên",
+      "artist": "",
+      "sourceFile": "Bài Ca Không Quên - Trọng Tấn [Official Audio] [7BXNex-VjBk].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "to-quoc-goi-ten-minh": {
+      "songId": "to-quoc-goi-ten-minh",
+      "objectKey": "audio/to-quoc-goi-ten-minh.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Tổ quốc gọi tên mình",
+      "artist": "",
+      "sourceFile": "Tổ Quốc Gọi Tên Mình - Trọng Tấn [Official Audio] [atwQLrznr70].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "chao-em-co-gai-lam-hong": {
+      "songId": "chao-em-co-gai-lam-hong",
+      "objectKey": "audio/chao-em-co-gai-lam-hong.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Chào em cô gái Lam Hồng",
+      "artist": "",
+      "sourceFile": "Chào Em Cô Gái Lam Hồng - NSND Trung Đức ｜ Siêu Phẩm Tết Vạn Lộc 2025 ｜ Cả Khán Phòng Vỗ Tay [G7MUODdBovg].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "dong-mau-lac-hong": {
+      "songId": "dong-mau-lac-hong",
+      "objectKey": "audio/dong-mau-lac-hong.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Dòng máu Lạc Hồng",
+      "artist": "",
+      "sourceFile": "DÒNG MÁU LẠC HỒNG ｜｜ ĐAN TRƯỜNG ｜ GIỔ TỔ HÙNG VƯƠNG 21⧸04⧸2021 [1W5agiFpz1I].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "nam-anh-em-tren-mot-chiec-xe-tang": {
+      "songId": "nam-anh-em-tren-mot-chiec-xe-tang",
+      "objectKey": "audio/nam-anh-em-tren-mot-chiec-xe-tang.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Năm anh em trên một chiếc xe tăng",
+      "artist": "",
+      "sourceFile": "Năm Anh Em Trên Một Chiếc Xe Tăng - Nhiều Ca Sĩ [Lyrics MV] [68x1nIQYbjE].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "sau-tim-thiep-hong": {
+      "songId": "sau-tim-thiep-hong",
+      "objectKey": "audio/sau-tim-thiep-hong.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Sầu tím thiệp hồng",
+      "artist": "",
+      "sourceFile": "Sầu Tím Thiệp Hồng - Quang Lê & Lệ Quyên ｜ Song Ca Bolero Hay Nhất ｜ Live Show Hát Trên Quê Hương 1 [RVP5N4QXHeQ].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "lau-dai-tinh-ai": {
+      "songId": "lau-dai-tinh-ai",
+      "objectKey": "audio/lau-dai-tinh-ai.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Lâu đài tình ái",
+      "artist": "",
+      "sourceFile": "LÂU ĐÀI TÌNH ÁI - ĐÀM VĨNH HƯNG FT LỆ QUYÊN [Wk3OydH3jZQ].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "khong-gio-roi": {
+      "songId": "khong-gio-roi",
+      "objectKey": "audio/khong-gio-roi.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Không giờ rồi",
+      "artist": "",
+      "sourceFile": "PBN 60 ｜ Như Quỳnh & Trường Vũ - Không Giờ Rồi [H7GXXeZYpSg].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "dung-roi-xa-nhau": {
+      "songId": "dung-roi-xa-nhau",
+      "objectKey": "audio/dung-roi-xa-nhau.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Đừng rời xa nhau",
+      "artist": "",
+      "sourceFile": "ĐỪNG RỜI XA NHAU - QUỐC THIÊN x NGUYỄN MINH CƯỜNG ｜ OFFICIAL MV [UpgRUaKjM5Q].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "duong-ve-hai-thon": {
+      "songId": "duong-ve-hai-thon",
+      "objectKey": "audio/duong-ve-hai-thon.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Đường về hai thôn",
+      "artist": "",
+      "sourceFile": "ĐƯỜNG VỀ HAI THÔN - Văn Mẫn ｜ Acoustic Version (Official MV 4K) [7MQLBjX8Jbc].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "duong-tinh-doi-nga": {
+      "songId": "duong-tinh-doi-nga",
+      "objectKey": "audio/duong-tinh-doi-nga.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Đường tình đôi ngả",
+      "artist": "",
+      "sourceFile": "Dương Ngọc Thái ft, Giáng Tiên - Đường tình đôi ngã [ML9l23my1io].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "doi-thong-hai-mo": {
+      "songId": "doi-thong-hai-mo",
+      "objectKey": "audio/doi-thong-hai-mo.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Đồi thông hai mộ",
+      "artist": "",
+      "sourceFile": "Đồi Thông Hai Mộ - Lệ Quyên [s8MwxIkdxF4].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "hoa-no-ve-dem": {
+      "songId": "hoa-no-ve-dem",
+      "objectKey": "audio/hoa-no-ve-dem.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Hoa nở về đêm",
+      "artist": "",
+      "sourceFile": "Hoa Nở Về Đêm (ST Mạnh Phát) ｜ Nhạc Bolero Remake Mới 2026 ｜ Bản Phối Say Đắm [I3J0eWbErPU].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "chuyen-gian-thien-ly": {
+      "songId": "chuyen-gian-thien-ly",
+      "objectKey": "audio/chuyen-gian-thien-ly.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Chuyện giàn thiên lý",
+      "artist": "",
+      "sourceFile": "Chuyện Giàn Thiên Lý - Chuyện Hoa Sim ｜ Ca sĩ： Mạnh Đình & Đan Nguyên ｜ Nhạc sĩ： Anh Bằng (ASIA 62) [EzqLOSbdCFk].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "ve-dau-mai-toc-nguoi-thuong": {
+      "songId": "ve-dau-mai-toc-nguoi-thuong",
+      "objectKey": "audio/ve-dau-mai-toc-nguoi-thuong.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Về đâu mái tóc người thương",
+      "artist": "",
+      "sourceFile": "Về Đâu Mái Tóc Người Thương - Quang Lê ｜ Official MV ｜ Hồn Lỡ Sa Vào Đôi Mắt Em [B2w0-cw-6Uw].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "ao-em-chua-mac-mot-lan": {
+      "songId": "ao-em-chua-mac-mot-lan",
+      "objectKey": "audio/ao-em-chua-mac-mot-lan.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Áo em chưa mặc một lần",
+      "artist": "",
+      "sourceFile": "Áo Em Chưa Mặc Một Lần - Thu Hường (Official MV) [QQtbq_HkKr8].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "duoc-tin-em-lay-chong": {
+      "songId": "duoc-tin-em-lay-chong",
+      "objectKey": "audio/duoc-tin-em-lay-chong.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Được tin em lấy chồng",
+      "artist": "",
+      "sourceFile": "Được Tin Em Lấy Chồng - Quang Lê ｜ Bản Chuẩn Nghe Hoài Không Chán ｜ Official MV [rDLfV1TaOpU].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "dap-vo-cay-dan": {
+      "songId": "dap-vo-cay-dan",
+      "objectKey": "audio/dap-vo-cay-dan.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Đắp vỡ cây đàn",
+      "artist": "",
+      "sourceFile": "Quang Lê - Đập Vỡ Cây Đàn (Hoa Linh Bảo) PBN 82 [zeZKyTiBiSQ].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "cho-vua-long-em": {
+      "songId": "cho-vua-long-em",
+      "objectKey": "audio/cho-vua-long-em.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Cho vừa lòng em",
+      "artist": "",
+      "sourceFile": "Cho Vừa Lòng Em - Song Ca Lệ Quyên, Quang Lê ｜ Live HTQT 2 [Q4y5yMg-jZM].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "no-far-no-star": {
+      "songId": "no-far-no-star",
+      "objectKey": "audio/no-far-no-star.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "No Far No Star",
+      "artist": "",
+      "sourceFile": "No Far No Star - Song Luân kết hợp cùng dàn em trai rapper toả sáng ｜ Anh Trai Say Hi [Performance] [uOnslZhe_lo].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "song-vo-vo-bo": {
+      "songId": "song-vo-vo-bo",
+      "objectKey": "audio/song-vo-vo-bo.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Sóng Vỗ Vỡ Bờ",
+      "artist": "",
+      "sourceFile": "SÓNG VỖ VỠ BỜ - Anh Tú x Erik x JSOL x Dương Domic x Phạm Anh Duy ｜ ANH TRAI SAY HI 2024 [zdsfngOs2Lc].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "noi-dau-ngay-dai": {
+      "songId": "noi-dau-ngay-dai",
+      "objectKey": "audio/noi-dau-ngay-dai.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Nỗi Đau Ngây Dại",
+      "artist": "",
+      "sourceFile": "Nỗi Đau Ngây Dại - Đức Phúc, HIEUTHUHAI, Công Dương bùng nổ cảm xúc ｜ Anh Trai Say Hi [Performance] [gZwfL-2hslU].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "catch-me-if-you-can": {
+      "songId": "catch-me-if-you-can",
+      "objectKey": "audio/catch-me-if-you-can.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Catch Me If You Can",
+      "artist": "",
+      "sourceFile": "CATCH ME IF YOU CAN - Negav, Quang Hùng MasterD, Nicky, Công Dương ｜ Anh Trai Say Hi [Performance] [j9bX4Nvtk9M].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "you-had-me-at-hello": {
+      "songId": "you-had-me-at-hello",
+      "objectKey": "audio/you-had-me-at-hello.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "You Had Me At Hello",
+      "artist": "",
+      "sourceFile": "＂You Had Me at Hello＂ ｜ Jerry Maguire [cR9FMrck4gw].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "dau-doi-sung": {
+      "songId": "dau-doi-sung",
+      "objectKey": "audio/dau-doi-sung.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Đầu Đội Sừng",
+      "artist": "",
+      "sourceFile": "ĐẦU ĐỘI SỪNG - Quân A.P, HURRYKNG, Hùng Huỳnh đừng vội sầu ｜ Anh Trai Say Hi [Performance] [pEjlCBhaj4s].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "nguoi-tinh-cua-nang": {
+      "songId": "nguoi-tinh-cua-nang",
+      "objectKey": "audio/nguoi-tinh-cua-nang.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Người Tình Của Nắng",
+      "artist": "",
+      "sourceFile": "NGƯỜI TÌNH CỦA NẮNG - Lyly, Anh Tú, Hải Đăng Doo, Vũ Thịnh, Captain ｜ Anh Trai Say Hi [Performance] [IyGg5MnZKKg].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "i-m-thinking-about-you": {
+      "songId": "i-m-thinking-about-you",
+      "objectKey": "audio/i-m-thinking-about-you.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "I'm Thinking About You",
+      "artist": "",
+      "sourceFile": "I'M THINKING ABOUT YOU - Tlinh, Rhyder, WEAN, Đức Phúc, Hùng Huỳnh ｜ Anh Trai Say Hi [Performance] [o7X2VnPcufU].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "anh-trai-nuoc-viet": {
+      "songId": "anh-trai-nuoc-viet",
+      "objectKey": "audio/anh-trai-nuoc-viet.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Anh Trai Nước Việt",
+      "artist": "",
+      "sourceFile": "ANH TRAI NƯỚC VIỆT - Erik, Đức Phúc, Hùng Huỳnh, Quân A.P, Jsol ｜ Anh Trai Say Hi [Performance] [aUPBNLo1Vv0].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "bao-loi-con-chua-noi": {
+      "songId": "bao-loi-con-chua-noi",
+      "objectKey": "audio/bao-loi-con-chua-noi.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Bao Lời Con Chưa Nói",
+      "artist": "",
+      "sourceFile": "BAO LỜI CON CHƯA NÓI - Anh Tú x Song Luân x Atus x Dương Domic x Quang Trung ｜ ANH TRAI SAY HI 2024 [5IbiHYCOUK4].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "chan-thanh": {
+      "songId": "chan-thanh",
+      "objectKey": "audio/chan-thanh.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Chân Thành",
+      "artist": "",
+      "sourceFile": "CHÂN THÀNH - WEAN, Rhyder, Quang Hùng MasterD, Ali Hoàng Dương, Captain ｜ ATSH [Performance] [NHEst6ZzlMk].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "sau-dem-nay": {
+      "songId": "sau-dem-nay",
+      "objectKey": "audio/sau-dem-nay.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Sau Đêm Nay",
+      "artist": "",
+      "sourceFile": "SEANPOET ｜ SAU ĐÊM NAY ft. TWENY x SSHINE ｜ OFFICIAL MUSIC VIDEO [cIZvQaSSHWs].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "deu-la-cua-em": {
+      "songId": "deu-la-cua-em",
+      "objectKey": "audio/deu-la-cua-em.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Đều Là Của Em",
+      "artist": "",
+      "sourceFile": "ĐỀU LÀ CỦA EM - Atus, Song Luân, Quang Trung, Anh Tú, Dương Domic ｜ ATSH [Performance] [3dmrlCRj8Co].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "tinh-dau-qua-chen": {
+      "songId": "tinh-dau-qua-chen",
+      "objectKey": "audio/tinh-dau-qua-chen.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Tình Đầu Quá Chén",
+      "artist": "",
+      "sourceFile": "TÌNH ĐẦU QUÁ CHÉN - Pháp Kiều bùng nổ khi kết hợp Quang Hùng MasterD, Negav, Erik ｜ Anh Trai Say Hi [zqv13S_zuRs].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "anh-em-goi-la-co-mat-ngay": {
+      "songId": "anh-em-goi-la-co-mat-ngay",
+      "objectKey": "audio/anh-em-goi-la-co-mat-ngay.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Anh Em Gọi Là Có Mặt Ngay",
+      "artist": "",
+      "sourceFile": "ANH EM GỌI LÀ CÓ MẶT NGAY - JustaTee, Đức Phúc, Quân A.P, Captain, Anh Tú ｜ ATSH [Performance] [Sif_hpfAdD0].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "anh-biet-roi": {
+      "songId": "anh-biet-roi",
+      "objectKey": "audio/anh-biet-roi.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Anh Biết Rồi",
+      "artist": "",
+      "sourceFile": "ANH BIẾT RỒI - RHYDER làm nhạc ngay trên sân khấu bùng nổ cảm xúc ｜ Anh Trai Say Hi [Performance] [nHP2y3EeshQ].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "cu-moi-sang-anh-lai": {
+      "songId": "cu-moi-sang-anh-lai",
+      "objectKey": "audio/cu-moi-sang-anh-lai.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Cứ Mỗi Sáng Anh Lại...",
+      "artist": "",
+      "sourceFile": "CỨ MỖI SÁNG ANH LẠI- Quân A.P hoá hoàng tử làm bao trái tim rung động ｜Anh Trai Say Hi [Performance] [jtqbXCnRTm0].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "kim-tu-thap": {
+      "songId": "kim-tu-thap",
+      "objectKey": "audio/kim-tu-thap.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Kim Tự Tháp",
+      "artist": "",
+      "sourceFile": "[FULL] Những Phát Hiện Khó Tin Giải Mã Bí Mật Ngàn Năm Của Kim Tự Tháp Ai Cập ｜ Vũ Trụ Nguyên Thủy [YSiTcLPcwx0].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "lau-khong-gap": {
+      "songId": "lau-khong-gap",
+      "objectKey": "audio/lau-khong-gap.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Lâu Không Gặp",
+      "artist": "",
+      "sourceFile": "LÂU KHÔNG GẶP - SONG LUÂN ft. TAGE ＂túy quyền＂ trên sân khấu Chung kết ｜ ANH TRAI SAY HI [fQI8XM-Kz9s].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "quay-di-quay-lai": {
+      "songId": "quay-di-quay-lai",
+      "objectKey": "audio/quay-di-quay-lai.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Quay Đi Quay Lại",
+      "artist": "",
+      "sourceFile": "QUAY ĐI QUAY LẠI- HIEUTHUHAI kể câu chuyện tình cùng vũ đạo siêu cháy ｜Anh Trai Say Hi [Performance] [8ynXETD5fLo].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "chang-kho-thuy-cung": {
+      "songId": "chang-kho-thuy-cung",
+      "objectKey": "audio/chang-kho-thuy-cung.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Chàng Khờ Thủy Cung",
+      "artist": "",
+      "sourceFile": "CHÀNG KHỜ THỦY CUNG - NEGAV ft. GREY D ｜ ANH TRAI SAY HI [4AR7rJzTJzQ].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "doa-phu-dung-cuoi-cung": {
+      "songId": "doa-phu-dung-cuoi-cung",
+      "objectKey": "audio/doa-phu-dung-cuoi-cung.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Đóa Phù Dung Cuối Cùng",
+      "artist": "",
+      "sourceFile": "[Lyric] ĐOÁ PHÙ DUNG CUỐI CÙNG - ĐỨC PHÚC · Anh Trai Say Hi ｜ Nhạc Ballad buồn nhẹ nhàng ｜ Sắc Tấm [1xTP5P5SPgo].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "tinh-cuoi-cung": {
+      "songId": "tinh-cuoi-cung",
+      "objectKey": "audio/tinh-cuoi-cung.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Tình Cuối Cùng",
+      "artist": "",
+      "sourceFile": "TÌNH CUỐI CÙNG - Jsol bứt phá với khả năng trình diễn tuyệt đỉnh ｜ Anh Trai Say Hi [Performance] [Jv-jR7w8Dm4].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "doa-hong-choi-voi": {
+      "songId": "doa-hong-choi-voi",
+      "objectKey": "audio/doa-hong-choi-voi.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Đóa Hồng Chơi Vơi",
+      "artist": "",
+      "sourceFile": "ĐOÁ HỒNG CHƠI VƠI - Anh Tú trở lại với sở trường ballad cực da diết ｜ Anh Trai Say Hi [Performance] [0H7mg-DklbU].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "airplane-mode": {
+      "songId": "airplane-mode",
+      "objectKey": "audio/airplane-mode.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Airplane Mode",
+      "artist": "",
+      "sourceFile": "Airplane Mode - Limbo (Lyrics) [lOaxSlJzn08].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "the-spectre": {
+      "songId": "the-spectre",
+      "objectKey": "audio/the-spectre.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "The Spectre",
+      "artist": "",
+      "sourceFile": "Alan Walker - The Spectre [wJnBTPUQS5A].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "chill-guys-ngon-zai": {
+      "songId": "chill-guys-ngon-zai",
+      "objectKey": "audio/chill-guys-ngon-zai.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Chill Guys Ngon Zai",
+      "artist": "",
+      "sourceFile": "CHILL GUYS NGON ZAI - Liên Quân 1 ｜ Anh Trai ＂Say Hi＂ 2025 [Performance] [EcT7ajdBI3Y].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "doc-nhat-vo-nhi": {
+      "songId": "doc-nhat-vo-nhi",
+      "objectKey": "audio/doc-nhat-vo-nhi.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Độc Nhất Vô Nhị",
+      "artist": "",
+      "sourceFile": "ĐỘC NHẤT VÔ NHỊ - Liên Quân 2 ｜ Anh Trai ＂Say Hi＂ 2025 [Performance] [H1i1VJQCCuU].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "nguoi-yeu-chua-sinh-ra": {
+      "songId": "nguoi-yeu-chua-sinh-ra",
+      "objectKey": "audio/nguoi-yeu-chua-sinh-ra.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Người Yêu Chưa Sinh Ra",
+      "artist": "",
+      "sourceFile": "NGƯỜI YÊU CHƯA SINH RA -OgeNus, BigDaddy, HUSTLANG Robber, Dillan Hoàng Phan, Phúc Du｜ [Performance] [YOlhp9ZKrOg].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "thieu-than": {
+      "songId": "thieu-than",
+      "objectKey": "audio/thieu-than.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Thiêu Thân",
+      "artist": "",
+      "sourceFile": "B RAY x SOFIA & CHÂU ĐĂNG KHOA ｜ THIÊU THÂN ｜ OFFICIAL MV [cfbNtHNCMBo].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "nguoi-nhu-anh-xung-dang-co-don": {
+      "songId": "nguoi-nhu-anh-xung-dang-co-don",
+      "objectKey": "audio/nguoi-nhu-anh-xung-dang-co-don.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Người Như Anh Xứng Đáng Cô Đơn",
+      "artist": "",
+      "sourceFile": "NGƯỜI NHƯ ANH XỨNG ĐÁNG CÔ ĐƠN - Vũ Cát Tường, Ngô Kiến Huy, NEGAV, Jey B, Karik ｜[Performance] [w-Ele0UMXr0].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "dau-co-den-dau": {
+      "songId": "dau-co-den-dau",
+      "objectKey": "audio/dau-co-den-dau.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Dẫu Có Đến Đâu",
+      "artist": "",
+      "sourceFile": "DẪU CÓ ĐẾN ĐÂU - CONGB, Lohan, Nhâm Phương Nam, Vương Bình ｜ Anh Trai ＂Say Hi＂ 2025 [Performance] [U5ycRi9AoPw].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "like-a-horse": {
+      "songId": "like-a-horse",
+      "objectKey": "audio/like-a-horse.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Like A Horse",
+      "artist": "",
+      "sourceFile": "LIKE A HORSE - Sơn.K, HUSTLANG Robber, KHOI VU, Đỗ Nam Sơn ｜ Anh Trai ＂Say Hi＂ 2025 [Performance] [6mUZN9YArv8].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "thoat-ra-khoi-em": {
+      "songId": "thoat-ra-khoi-em",
+      "objectKey": "audio/thoat-ra-khoi-em.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Thoát Ra Khỏi Em",
+      "artist": "",
+      "sourceFile": "THOÁT RA KHỎI EM - RIO, Phúc Du, Thái Ngân, Jey B ｜ Anh Trai ＂Say Hi＂ 2025 [Performance] [7PH4PalhtQs].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "vo-so-lan-tinh-co": {
+      "songId": "vo-so-lan-tinh-co",
+      "objectKey": "audio/vo-so-lan-tinh-co.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Vô Số Lần Tình Cờ",
+      "artist": "",
+      "sourceFile": "VÔ SỐ LẦN TÌNH CỜ -CONGB, Ngô Kiến Huy, OgeNus, RIO, Dillan Hoàng Phan｜Anh Trai Say Hi [Performance] [yVOkTTs4xi4].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "dem-giang-sinh-mua-ha": {
+      "songId": "dem-giang-sinh-mua-ha",
+      "objectKey": "audio/dem-giang-sinh-mua-ha.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Đêm Giáng Sinh Mùa Hạ",
+      "artist": "",
+      "sourceFile": "ĐÊM GIÁNG SINH MÙA HẠ - buitruonglinh, BigDaddy, Vương Bình, Phúc Du, Đỗ Nam Sơn ｜ATSH [Performance] [AcQCMoLIM4M].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "can-i-get-your-love": {
+      "songId": "can-i-get-your-love",
+      "objectKey": "audio/can-i-get-your-love.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Can I Get Your Love?",
+      "artist": "",
+      "sourceFile": "CAN I GET YOUR LOVE - Negav, Sơn.K, Hải Nam, Jaysonlei, Lohan ｜ Anh Trai Say Hi [Performance] [5gHXxiq8CgI].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "cung-may-la-e": {
+      "songId": "cung-may-la-e",
+      "objectKey": "audio/cung-may-la-e.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Cũng May Là Ế",
+      "artist": "",
+      "sourceFile": "CŨNG MAY LÀ Ế - B Ray, Karik, Cody Nam Võ, Ryn Lee, GILL ｜ Anh Trai Say Hi [Performance] [ZY7YAbAFlfs].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "o-day-ai-cung-thuong-con": {
+      "songId": "o-day-ai-cung-thuong-con",
+      "objectKey": "audio/o-day-ai-cung-thuong-con.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Ở Đây Ai Cũng Thương Con",
+      "artist": "",
+      "sourceFile": "Ở ĐÂY AI CŨNG THƯƠNG CON - CONGB, OgeNus, Ngô Kiến Huy, RIO, Dillan Hoàng Phan ｜ ATSH [Performance] [1cRrO2aLuUw].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "no-long-dong-y": {
+      "songId": "no-long-dong-y",
+      "objectKey": "audio/no-long-dong-y.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Nỡ Lòng Đồng Ý",
+      "artist": "",
+      "sourceFile": "NỠ LÒNG ĐỒNG Ý - B Ray, Karik, Cody Nam Võ, Ryn Lee, GILL ｜ Anh Trai ＂Say Hi＂ 2025 [Performance] [xX3xfjoBh58].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "dung-bien-mat-hom-nay": {
+      "songId": "dung-bien-mat-hom-nay",
+      "objectKey": "audio/dung-bien-mat-hom-nay.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Đừng Biến Mất Hôm Nay",
+      "artist": "",
+      "sourceFile": "ĐỪNG BIẾN MẤT HÔM NAY - Phạm Đình Thái Ngân ｜ Anh Trai ＂Say Hi＂ 2025 [Performance] [PrFBJrRcJ9w].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "anh-khong-den-de-roi-di": {
+      "songId": "anh-khong-den-de-roi-di",
+      "objectKey": "audio/anh-khong-den-de-roi-di.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Anh Không Đến Để Rời Đi",
+      "artist": "",
+      "sourceFile": "ANH KHÔNG ĐẾN ĐỂ RỜI ĐI - OgeNus ｜ Anh Trai ＂Say Hi＂ 2025 [Performance] [5sWU491Z8cs].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "tro-thanh-nguoi-em-muon": {
+      "songId": "tro-thanh-nguoi-em-muon",
+      "objectKey": "audio/tro-thanh-nguoi-em-muon.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Trở Thành Người Em Muốn?!",
+      "artist": "",
+      "sourceFile": "TRỞ THÀNH NGƯỜI EM MUỐN？! - Jey B ｜ Anh Trai ＂Say Hi＂ 2025 [Performance] [gje9Ewmkn-8].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "mot-tam-hon-binh-than": {
+      "songId": "mot-tam-hon-binh-than",
+      "objectKey": "audio/mot-tam-hon-binh-than.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Một Tâm Hồn Bình Thản",
+      "artist": "",
+      "sourceFile": "MỘT TÂM HỒN BÌNH THẢN - HUSTLANG Robber ｜ Anh Trai ＂Say Hi＂ 2025 [Performance] [vQiINKj0UT0].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "nhin-ve-phia-anh": {
+      "songId": "nhin-ve-phia-anh",
+      "objectKey": "audio/nhin-ve-phia-anh.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Nhìn Về Phía Anh",
+      "artist": "",
+      "sourceFile": "NHÌN VỀ PHÍA ANH - Ngô Kiến Huy ｜ Anh Trai ＂Say Hi＂ 2025 [Performance] [E104Sgw_i6s].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "duong-chan-troi": {
+      "songId": "duong-chan-troi",
+      "objectKey": "audio/duong-chan-troi.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Đường Chân Trời",
+      "artist": "",
+      "sourceFile": "ĐƯỜNG CHÂN TRỜI - buitruonglinh ｜ Anh Trai ＂Say Hi＂ 2025 [Performance] [lOgGZoUX-P0].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "it-s-gon-be-alright": {
+      "songId": "it-s-gon-be-alright",
+      "objectKey": "audio/it-s-gon-be-alright.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "It's Gon' Be Alright",
+      "artist": "",
+      "sourceFile": "IT'S GON' BE ALRIGHT - Negav ft. Văn Mai Hương ｜ Anh Trai ＂Say Hi＂ 2025 [Performance] [43XdrvzmSj0].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "van-ly-doc-hanh": {
+      "songId": "van-ly-doc-hanh",
+      "objectKey": "audio/van-ly-doc-hanh.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Vạn Lý Độc Hành",
+      "artist": "",
+      "sourceFile": "VẠN LÝ ĐỘC HÀNH - Karik ｜ Anh Trai ＂Say Hi＂ 2025 [Performance] [p2sfr4ZXPPA].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "ngoi-sao-hy-vong": {
+      "songId": "ngoi-sao-hy-vong",
+      "objectKey": "audio/ngoi-sao-hy-vong.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Ngôi Sao Hy Vọng",
+      "artist": "",
+      "sourceFile": "NGÔI SAO HY VỌNG - CONGB ｜ Anh Trai ＂Say Hi＂ 2025 [Performance] [LSmMs7jQT2w].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "anh-cam-giac-minh-sap-chia-tay": {
+      "songId": "anh-cam-giac-minh-sap-chia-tay",
+      "objectKey": "audio/anh-cam-giac-minh-sap-chia-tay.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Anh Cảm Giác Mình Sắp Chia Tay",
+      "artist": "",
+      "sourceFile": "ANH CẢM GIÁC MÌNH SẮP CHIA TAY - Hải Nam ｜ Anh Trai ＂Say Hi＂ 2025 [Performance] [Yq0YcvezOYs].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "yeu-yeu-yeu-thuong-thuong-thuong": {
+      "songId": "yeu-yeu-yeu-thuong-thuong-thuong",
+      "objectKey": "audio/yeu-yeu-yeu-thuong-thuong-thuong.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Yêu Yêu Yêu, Thương Thương Thương",
+      "artist": "",
+      "sourceFile": "YÊU YÊU YÊU, THƯƠNG THƯƠNG THƯƠNG - Sơn.K ｜ Anh Trai ＂Say Hi＂ 2025 [Performance] [XreHZ1IauNs].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "tiec-vui-co-ban-hien": {
+      "songId": "tiec-vui-co-ban-hien",
+      "objectKey": "audio/tiec-vui-co-ban-hien.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Tiệc Vui Có Bạn Hiền",
+      "artist": "",
+      "sourceFile": "TIỆC VUI CÓ BẠN HIỀN - BigDaddy ｜ Anh Trai ＂Say Hi＂ 2025 [Performance] [1xwzfayabEg].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "khong-biet-phai-noi-gi-khong-biet-phai-lam-sao": {
+      "songId": "khong-biet-phai-noi-gi-khong-biet-phai-lam-sao",
+      "objectKey": "audio/khong-biet-phai-noi-gi-khong-biet-phai-lam-sao.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Không Biết Phải Nói Gì, Không Biết Phải Làm Sao",
+      "artist": "",
+      "sourceFile": "VƯƠNG BÌNH & LÂM BẢO NGỌC - Không biết phải nói gì không biết phải làm sao ｜ ‘ANH BỜ VAI’ Ấn Bản KIM [lwoki8adMSM].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "moi-doan-minh-len-san": {
+      "songId": "moi-doan-minh-len-san",
+      "objectKey": "audio/moi-doan-minh-len-san.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Mời Đoàn Mình Lên Sàn",
+      "artist": "",
+      "sourceFile": "MỜI ĐOÀN MÌNH LÊN SÀN - GILL ｜ Anh Trai ＂Say Hi＂ 2025 [Performance] [-uYAOMj8Yls].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "ai-yeu-anh-nhat": {
+      "songId": "ai-yeu-anh-nhat",
+      "objectKey": "audio/ai-yeu-anh-nhat.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Ai Yêu Anh Nhất?",
+      "artist": "",
+      "sourceFile": "AI YÊU ANH NHẤT - B Ray, Negav, GILL, Vương Bình ｜ Anh Trai ＂Say Hi＂ 2025 [Performance] [EFBdDNyP6r8].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "ngat-ngay-con-ga-tay": {
+      "songId": "ngat-ngay-con-ga-tay",
+      "objectKey": "audio/ngat-ngay-con-ga-tay.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Ngất Ngây Con Gà Tây",
+      "artist": "",
+      "sourceFile": "NGẤT NGÂY CON GÀ TÂY - Sơn.K, BigDaddy, Mason Nguyễn, CONGB ｜ Anh Trai ＂Say Hi＂ 2025 [Performance] [kEwx09hEfiI].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "sau-con-suy-kiet-tac": {
+      "songId": "sau-con-suy-kiet-tac",
+      "objectKey": "audio/sau-con-suy-kiet-tac.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Sau Cơn Suy & Kiệt Tác",
+      "artist": "",
+      "sourceFile": "RHYDER - Mashup： Sau Cơn Suy - Kiệt Tác ｜ Anh Trai ＂Say Hi＂ 2025 [tcfqvncsfJo].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "doan-kich-cam": {
+      "songId": "doan-kich-cam",
+      "objectKey": "audio/doan-kich-cam.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Đoạn Kịch Câm",
+      "artist": "",
+      "sourceFile": "ĐOẠN KỊCH CÂM - CONGB, B Ray, Cody Nam Võ, Negav, Thái Ngân, Mỹ Mỹ ｜ Anh Trai ＂Say Hi＂ [Performance] [cBWg5r0F-cc].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "forever-say-hi": {
+      "songId": "forever-say-hi",
+      "objectKey": "audio/forever-say-hi.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Forever Say Hi",
+      "artist": "",
+      "sourceFile": "FOREVER SAY HI - 30 ANH TRAI ｜ Anh Trai ＂Say Hi＂ 2025 [Performance] [WWxriTbTSXw].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "som-muon-thi": {
+      "songId": "som-muon-thi",
+      "objectKey": "audio/som-muon-thi.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Sớm Muộn Thì",
+      "artist": "",
+      "sourceFile": "SỚM MUỘN THÌ-HUSTLANG Robber, Nhâm Phương Nam, Mason Nguyễn, KHOI VU, Jaysonlei, Lamoon[Performance] [XQkze4rQMsU].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "together-we-shine": {
+      "songId": "together-we-shine",
+      "objectKey": "audio/together-we-shine.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Together We Shine",
+      "artist": "",
+      "sourceFile": "TOGETHER WE SHINE - OFFICIAL MV THEME SONG ｜ TINH HÀ ＂SAY HI＂ [inHZZpCro5o].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "50-cuoc-goi-nho": {
+      "songId": "50-cuoc-goi-nho",
+      "objectKey": "audio/50-cuoc-goi-nho.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "50 Cuộc Gọi Nhỡ",
+      "artist": "",
+      "sourceFile": "Quang Hùng MasterD - ‘50 Cuộc Gọi Nhỡ’ (ft. CoolKid, Cody Nam Võ, Jaysonlei) ⧸ TINH HÀ SAY HI [pbAc78KfJNA].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "dancin-my-way": {
+      "songId": "dancin-my-way",
+      "objectKey": "audio/dancin-my-way.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Dancin' My Way",
+      "artist": "",
+      "sourceFile": "DANCIN' MY WAY - buitruonglinh, Sơn.K, Song Luân, HYO ｜ TINH HÀ SAY HI [PERFORMANCE] [J9q8UIrEBE8].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "co-don-anh-cung-vui": {
+      "songId": "co-don-anh-cung-vui",
+      "objectKey": "audio/co-don-anh-cung-vui.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Cô Đơn Anh Cũng Vui",
+      "artist": "",
+      "sourceFile": "CÔ ĐƠN ANH CŨNG VUI - Xuân Định KY, WEAN, DILLAN, KIMLONG ｜ TINH HÀ SAY HI [_l1A-4UFy40].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "co-gi-dau-ma-cay": {
+      "songId": "co-gi-dau-ma-cay",
+      "objectKey": "audio/co-gi-dau-ma-cay.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Có Gì Đâu Mà Cay",
+      "artist": "",
+      "sourceFile": "CÓ GÌ ĐÂU MÀ CAY - CAPTAIN BOY, CoolKid, IVAN, XUÂN ĐỊNH KY, LEONSASH ｜ TINH HÀ SAY HI [PERFORMANCE] [JQg0YvSqXO4].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "mong-duyen": {
+      "songId": "mong-duyen",
+      "objectKey": "audio/mong-duyen.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Mộng Duyên",
+      "artist": "",
+      "sourceFile": "MỘNG DUYÊN - Quang Hùng MasterD x Song Luân x JSOL x Sơn.K x Emil Vergo ｜ Tinh Hà Say Hi Livestage 2 [3RZ1IuHf31Y].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "the-gioi-cua-anh": {
+      "songId": "the-gioi-cua-anh",
+      "objectKey": "audio/the-gioi-cua-anh.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Thế Giới Của Anh",
+      "artist": "",
+      "sourceFile": "THẾ GIỚI CỦA ANH - Dương Domic, buitruonglinh, CONGB, WEAN, Vận Toàn ｜ TINH HÀ SAY HI [PERFORMANCE] [l_uzEREOKfo].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "di-dao-interlude": {
+      "songId": "di-dao-interlude",
+      "objectKey": "audio/di-dao-interlude.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Đi Dạo - Interlude",
+      "artist": "",
+      "sourceFile": "ĐI DẠO (INTERLUDE) [Feat. Wren Evans] [QvDe7eSinT8].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "noi-em-nghe-interlude": {
+      "songId": "noi-em-nghe-interlude",
+      "objectKey": "audio/noi-em-nghe-interlude.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Nói Em Nghe... - Interlude",
+      "artist": "",
+      "sourceFile": "NÓI EM NGHE... (INTERLUDE) [Feat. Wren Evans] [b6lhfVAEbIM].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "cua-anh-outro": {
+      "songId": "cua-anh-outro",
+      "objectKey": "audio/cua-anh-outro.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Của Anh - Outro",
+      "artist": "",
+      "sourceFile": "CỦA ANH (OUTRO) [Feat. Wren Evans] [JHWVKM6g_VE].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "mot-nguoi-nhu-the": {
+      "songId": "mot-nguoi-nhu-the",
+      "objectKey": "audio/mot-nguoi-nhu-the.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Một Người Như Thế",
+      "artist": "",
+      "sourceFile": "MAIQUINN - Một Người Như Thế (ft. KIMLONG) ｜ OFFICIAL VISUALIZED BEAUTY [J_3erPuRnnM].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "nguoi-tren-day": {
+      "songId": "nguoi-tren-day",
+      "objectKey": "audio/nguoi-tren-day.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Người Trên Dây",
+      "artist": "",
+      "sourceFile": "người trên dây - Dương Domic, JSOL, Thể Thiên, VƯƠNG BÌNH ｜ TINH HÀ SAY HI [PERFORMANCE] [HSEgeNSQiFk].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "happy-outro": {
+      "songId": "happy-outro",
+      "objectKey": "audio/happy-outro.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Happy! - Outro",
+      "artist": "",
+      "sourceFile": "HAPPY OUTRO [nh6qKYVeAMM].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "bong-phu-hoa": {
+      "songId": "bong-phu-hoa",
+      "objectKey": "audio/bong-phu-hoa.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Bóng Phù Hoa",
+      "artist": "",
+      "sourceFile": "Phương Mỹ Chi x DTAP - Bóng Phù Hoa ｜ Live Performance ｜ Sing!Asia [BmrdGQ0LRRo].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "i-ll-be-there": {
+      "songId": "i-ll-be-there",
+      "objectKey": "audio/i-ll-be-there.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "I'll Be There",
+      "artist": "",
+      "sourceFile": "I'LL BE THERE - Orange, Phương Mỹ Chi, Lamoon, Han Sara ｜ Em Xinh Say Hi [Performance] [eKkP6XJadbM].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "buoc-qua-nhau": {
+      "songId": "buoc-qua-nhau",
+      "objectKey": "audio/buoc-qua-nhau.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Bước Qua Nhau",
+      "artist": "",
+      "sourceFile": "BƯỚC QUA NHAU ⧸ Vũ. (Official MV) [ixdSsW5n2rI].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "dieu-em-luon-mong-muon": {
+      "songId": "dieu-em-luon-mong-muon",
+      "objectKey": "audio/dieu-em-luon-mong-muon.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Điều Em Luôn Mong Muốn",
+      "artist": "",
+      "sourceFile": "ĐIỀU EM LUÔN MONG MUỐN - Tiên Tiên, Đào Tử A1J, Vũ Thảo My, Hùng Huỳnh ｜Em Xinh Say Hi [Performance] [4XAlNjktQZU].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "loi-that-long-khi-say": {
+      "songId": "loi-that-long-khi-say",
+      "objectKey": "audio/loi-that-long-khi-say.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Lời Thật Lòng Khi Say",
+      "artist": "",
+      "sourceFile": "LỜI THẬT LÒNG KHI SAY ｜ Em Xinh Say Hi [Performance] [i6gVxEhVvXQ].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "em-khong-co-ua": {
+      "songId": "em-khong-co-ua",
+      "objectKey": "audio/em-khong-co-ua.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Em Không Có Ưa",
+      "artist": "",
+      "sourceFile": "EM KHÔNG CÓ ƯA - Tiên Tiên, Bảo Anh, Saabirose, Ánh Sáng AZA ｜ Em Xinh Say Hi [Performance] [fmMlYM0NuhY].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "tin-hieu-yeu": {
+      "songId": "tin-hieu-yeu",
+      "objectKey": "audio/tin-hieu-yeu.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Tín Hiệu Yêu",
+      "artist": "",
+      "sourceFile": "TÍN HIỆU YÊU ｜ Em Xinh Say Hi [Performance] [KBtsCAxEdMk].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "cu-do-tai-con-mua": {
+      "songId": "cu-do-tai-con-mua",
+      "objectKey": "audio/cu-do-tai-con-mua.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Cứ Đổ Tại Cơn Mưa",
+      "artist": "",
+      "sourceFile": "CỨ ĐỔ TẠI CƠN MƯA - Phương Ly, Vũ Thảo My, Orange, 52Hz, Châu Bùi ｜ Em Xinh Say Hi [Performance] [9868dxgVzcU].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "ech-ngoai-day-gieng": {
+      "songId": "ech-ngoai-day-gieng",
+      "objectKey": "audio/ech-ngoai-day-gieng.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Ếch Ngoài Đáy Giếng",
+      "artist": "",
+      "sourceFile": "ẾCH NGOÀI ĐÁY GIẾNG - Phương Mỹ Chi hoá thân thành em ếch xinh ｜ Em Xinh Say Hi [Performance] [sZrIbpwjTwk].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "duong-gian": {
+      "songId": "duong-gian",
+      "objectKey": "audio/duong-gian.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Dương Gian",
+      "artist": "",
+      "sourceFile": "DƯƠNG GIAN - Lamoon phát huy thế mạnh văn học trên nền nhạc âm hưởng dân gian ｜ EXSH [Performance] [ciqCRp8Qhsw].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "thao-tung-tam-ly": {
+      "songId": "thao-tung-tam-ly",
+      "objectKey": "audio/thao-tung-tam-ly.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Thao Túng Tâm Lý",
+      "artist": "",
+      "sourceFile": "THAO TÚNG TÂM LÝ - MAIQUINN hoang dã bung hết skill cháy rực sân khấu ｜Em Xinh Say Hi [Performance] [sspTzY7HAHM].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "nguoi-dau-tien": {
+      "songId": "nguoi-dau-tien",
+      "objectKey": "audio/nguoi-dau-tien.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Người Đầu Tiên",
+      "artist": "",
+      "sourceFile": "Người Đầu Tiên - Juky San feat. buitruonglinh [i54avTdUqwU].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "co-ay-khong-yeu-anh": {
+      "songId": "co-ay-khong-yeu-anh",
+      "objectKey": "audio/co-ay-khong-yeu-anh.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Cô Ấy Không Yêu Anh",
+      "artist": "",
+      "sourceFile": "CÔ ẤY KHÔNG YÊU ANH - Bảo Anh cùng anh trai Phúc Du phá đảo sân khấu ｜Em Xinh Say Hi [Performance] [1NuNN85TuvU].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "dan-ban-tay": {
+      "songId": "dan-ban-tay",
+      "objectKey": "audio/dan-ban-tay.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Đan Bàn Tay",
+      "artist": "",
+      "sourceFile": "ĐAN BÀN TAY - Châu Bùi hoá công chúa lan toả hạnh phúc trong tình yêu ｜ Em Xinh Say Hi [Performance] [WzDtsBAJdDc].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "loi-nguoc-dong": {
+      "songId": "loi-nguoc-dong",
+      "objectKey": "audio/loi-nguoc-dong.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Lội Ngược Dòng",
+      "artist": "",
+      "sourceFile": "LỘI NGƯỢC DÒNG - Orange show nội lực cùng sở trường nhạc ballad ｜ Em Xinh Say Hi [Performance] [Tc-OJGznUso].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "live-my-way": {
+      "songId": "live-my-way",
+      "objectKey": "audio/live-my-way.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Live My Way",
+      "artist": "",
+      "sourceFile": "LIVE MY WAY - Tiên Tiên mang năng lượng tươi sáng cùng khách mời Ánh Sáng AZA ｜ EXSH [Performance] [GjMnIWFDB_g].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "em-thich-la-duoc": {
+      "songId": "em-thich-la-duoc",
+      "objectKey": "audio/em-thich-la-duoc.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Em Thích Là Được",
+      "artist": "",
+      "sourceFile": "EM THÍCH LÀ ĐƯỢC (Feat. EM XINH ＂SAY HI＂, Miu Lê, CoolKid) [TFvIQElTIbM].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "dau-meo-duoi-chuot": {
+      "songId": "dau-meo-duoi-chuot",
+      "objectKey": "audio/dau-meo-duoi-chuot.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Đầu Mèo Đuôi Chuột",
+      "artist": "",
+      "sourceFile": "ĐẦU MÈO ĐUÔI CHUỘT ｜ Em Xinh Say Hi [Performance] [Sx4ukcD8zAc].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "hourglass": {
+      "songId": "hourglass",
+      "objectKey": "audio/hourglass.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Hourglass",
+      "artist": "",
+      "sourceFile": "HOURGLASS - LyHan, Juky San, Châu Bùi, Saabirose ｜ Em Xinh Say Hi [Performance] [d-XLNRV0pVg].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "the-real-aura": {
+      "songId": "the-real-aura",
+      "objectKey": "audio/the-real-aura.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "The Real Aura",
+      "artist": "",
+      "sourceFile": "THE REAL AURA -  Official MV Theme Song ｜ Em Xinh ＂Say Hi＂ [ya31HMyeHX0].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "starlight": {
+      "songId": "starlight",
+      "objectKey": "audio/starlight.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Starlight",
+      "artist": "",
+      "sourceFile": "JENNIE - Starlight (Official Lyric Video) [Su84kZAEepM].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "lan-uu-tien": {
+      "songId": "lan-uu-tien",
+      "objectKey": "audio/lan-uu-tien.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Làn Ưu Tiên",
+      "artist": "",
+      "sourceFile": "MOPIUS - LÀN ƯU TIÊN ｜ OFFICIAL MUSIC VIDEO [X64sa-qrQzA].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "ban-thiet-ke": {
+      "songId": "ban-thiet-ke",
+      "objectKey": "audio/ban-thiet-ke.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Bản Thiết Kế",
+      "artist": "",
+      "sourceFile": "MOPIUS - BẢN THIẾT KẾ ｜ Live Performance at Em Xinh ＂Say Hi＂ Concert [0rpcOmozYS4].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "khong-can-phai-hoan-hao": {
+      "songId": "khong-can-phai-hoan-hao",
+      "objectKey": "audio/khong-can-phai-hoan-hao.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Không Cần Phải Hoàn Hảo",
+      "artist": "",
+      "sourceFile": "Em không cần phải hoàn hảo - Mr Simple ｜ Part 1 ｜　All rights reserved [f7F6m3dE6kI].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "nguoi-den-sau": {
+      "songId": "nguoi-den-sau",
+      "objectKey": "audio/nguoi-den-sau.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Người Đến Sau",
+      "artist": "",
+      "sourceFile": "NGƯỜI ĐẾN SAU - Hoài Lâm ｜ Live at #Lululolashow [VmlmAzec4DI].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "lan-dau-tien": {
+      "songId": "lan-dau-tien",
+      "objectKey": "audio/lan-dau-tien.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Lần Đầu Tiên",
+      "artist": "",
+      "sourceFile": "Lần Đầu Tiên - Emcee L ft Muộii (Official Audio) [c8LHB6n_LPY].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "nhay-duoi-anh-trang": {
+      "songId": "nhay-duoi-anh-trang",
+      "objectKey": "audio/nhay-duoi-anh-trang.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Nhảy Dưới Ánh Trăng",
+      "artist": "",
+      "sourceFile": "Nhảy Cùng Hướng - Nhạc Chậm⧸ Cùng Nhảy Dưới Ánh Trăng⧸ Bấm👆để xem bài liên quan [BBSWKZlhJEA].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    },
+    "loi-thi-tham": {
+      "songId": "loi-thi-tham",
+      "objectKey": "audio/loi-thi-tham.mp3",
+      "mimeType": "audio/mpeg",
+      "title": "Lời Thì Thầm",
+      "artist": "",
+      "sourceFile": "Những tuyệt chiêu nâng tầm bản lĩnh đàn ông [Lời Thì Thầm - JoyFM] [zePuwx7tQx4].mp3",
+      "matchMethod": "unique-normalized-title-substring"
+    }
+  }
+}
