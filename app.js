@@ -1,6 +1,7 @@
 import { defaultSchedule } from './schedule-data.js';
 import { AVATAR_IMAGE_URL } from './avatar-config.js';
 import { KARAOKE_CATEGORIES, UNIQUE_KARAOKE_SONGS } from './karaoke-data.js';
+import { activeLyricIndex, parseSyncedKaraokeLyrics, wordPlaybackState } from './karaoke-timing.js';
 import { LocalAudioTrack, LocalVideoTrack, Room, RoomEvent, Track, VideoPresets } from 'livekit-client';
 
 const STORAGE_KEY = 'lich-cua-vy-schedule-v2';
@@ -407,22 +408,6 @@ function currentKaraokeLyricsSong() {
   return UNIQUE_KARAOKE_SONGS.find((song) => song.songId === state.karaokeLyricsModal.songId);
 }
 
-function parseSyncedKaraokeLyrics(value) {
-  const parsed = [];
-  for (const rawLine of String(value || '').replace(/\r\n?/g, '\n').split('\n')) {
-    const timestamps = [...rawLine.matchAll(/\[(\d{1,3}):(\d{2})(?:\.(\d{1,3}))?\]/g)];
-    const text = rawLine.replace(/\[\d{1,3}:\d{2}(?:\.\d{1,3})?\]/g, '').trim();
-    if (!text || !timestamps.length) continue;
-    for (const timestamp of timestamps) {
-      const fraction = timestamp[3] || '';
-      const fractionSeconds = fraction ? Number(`0.${fraction}`) : 0;
-      const seconds = Number(timestamp[1]) * 60 + Number(timestamp[2]) + fractionSeconds;
-      if (Number.isFinite(seconds)) parsed.push({ seconds, text });
-    }
-  }
-  return parsed.length >= 2 ? parsed.sort((a, b) => a.seconds - b.seconds) : [];
-}
-
 function formatKaraokeTime(value) {
   if (!Number.isFinite(value) || value < 0) return '0:00';
   const seconds = Math.floor(value);
@@ -588,11 +573,7 @@ function updateKaraokeSyncedLyrics() {
     $('#karaokeLyricsText')?.querySelectorAll('.is-word-current').forEach((word) => word.classList.remove('is-word-current'));
     return;
   }
-  let activeIndex = -1;
-  for (let index = 0; index < lines.length; index += 1) {
-    if (lines[index].seconds > audio.currentTime) break;
-    activeIndex = index;
-  }
+  const activeIndex = activeLyricIndex(lines, audio.currentTime);
   const changedLine = activeIndex !== audioState.activeLineIndex;
   audioState.activeLineIndex = activeIndex;
   const rows = $('#karaokeLyricsText')?.querySelectorAll('[data-synced-lyric-index]') || [];
@@ -602,12 +583,17 @@ function updateKaraokeSyncedLyrics() {
     row.classList.toggle('is-current', isCurrent);
     if (needsScroll) row.scrollIntoView({ block: 'center', behavior: audio.seeking || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
   });
-  const wordRows = $('#karaokeLyricsText')?.querySelectorAll('[data-word-sync-line]') || [];
-  wordRows.forEach((row) => row.querySelectorAll('[data-word-start]').forEach((element) => {
-    const start = Number(element.dataset.wordStart);
-    const end = Number(element.dataset.wordEnd);
-    element.classList.toggle('is-word-current', audio.currentTime * 1000 >= start && audio.currentTime * 1000 < end);
-  }));
+  const words = $('#karaokeLyricsText')?.querySelectorAll('[data-word-start]') || [];
+  const currentTimeMs = audio.currentTime * 1000;
+  words.forEach((element) => {
+    const playback = wordPlaybackState({ startMs: element.dataset.wordStart, endMs: element.dataset.wordEnd }, currentTimeMs);
+    const current = playback.state === 'current';
+    element.classList.toggle('is-word-sung', playback.state === 'sung');
+    element.classList.toggle('is-word-current', current);
+    element.classList.toggle('is-word-upcoming', playback.state === 'upcoming');
+    if (current) element.style.setProperty('--word-progress', `${(playback.progress * 100).toFixed(1)}%`);
+    else element.style.removeProperty('--word-progress');
+  });
 }
 
 function cacheKaraokeLyrics(song, data) {
@@ -929,14 +915,20 @@ function renderKaraokeLyricsModal() {
   modal.classList.toggle('is-fullscreen', session.fullscreen);
   modal.style.setProperty('--lyrics-font-size', `${session.fontSize}px`);
   view.classList.toggle('is-left', session.align === 'left');
-  fontSizeValue.textContent = `${session.fontSize}px`;
-  alignToggle.textContent = session.align === 'left' ? 'Căn giữa' : 'Căn trái';
-  alignToggle.setAttribute('aria-label', session.align === 'left' ? 'Căn giữa lời bài hát' : 'Căn trái lời bài hát');
-  studyToggle.classList.toggle('is-active', session.studyMode);
-  studyToggle.setAttribute('aria-pressed', String(session.studyMode));
-  studyToggle.textContent = session.studyMode ? '🧠 Đang học thuộc' : '🧠 Học thuộc';
-  fullscreenToggle.textContent = session.fullscreen ? '↙ Thu nhỏ' : '⛶ Toàn màn hình';
-  fullscreenToggle.setAttribute('aria-pressed', String(session.fullscreen));
+  if (fontSizeValue) fontSizeValue.textContent = `${session.fontSize}px`;
+  if (alignToggle) {
+    alignToggle.textContent = session.align === 'left' ? 'Căn giữa' : 'Căn trái';
+    alignToggle.setAttribute('aria-label', session.align === 'left' ? 'Căn giữa lời bài hát' : 'Căn trái lời bài hát');
+  }
+  if (studyToggle) {
+    studyToggle.classList.toggle('is-active', session.studyMode);
+    studyToggle.setAttribute('aria-pressed', String(session.studyMode));
+    studyToggle.textContent = session.studyMode ? '🧠 Đang học thuộc' : '🧠 Học thuộc';
+  }
+  if (fullscreenToggle) {
+    fullscreenToggle.textContent = session.fullscreen ? '↙ Thu nhỏ' : '⛶ Toàn màn hình';
+    fullscreenToggle.setAttribute('aria-pressed', String(session.fullscreen));
+  }
 
   if (session.loading) status.textContent = 'Đang tải lời bài hát…';
   else if (session.error) status.textContent = 'Không đọc được file lời bài hát';
