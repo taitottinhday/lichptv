@@ -854,6 +854,7 @@ function renderKaraoke() {
         <button class="karaoke-song-check-button" type="button" data-select-karaoke="${escapeHtml(song.title)}" aria-label="${selected ? 'Bỏ chọn' : 'Chọn'} ${escapeHtml(song.title)}" aria-pressed="${selected}">
           <span class="karaoke-song-check" aria-hidden="true">${selected ? '✓' : ''}</span>
         </button>
+        <span class="karaoke-artwork" aria-hidden="true">♫</span>
         <span class="karaoke-song-copy"><strong>${escapeHtml(song.title)}</strong><small>${escapeHtml(state.karaokeShowSelected ? karaokeSongFilterLabel(song) : categoryLabel)}</small></span>
         <span class="karaoke-song-action">Xem lời ↗</span>
       </article>
