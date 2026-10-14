@@ -2,10 +2,11 @@
 
 Bản dùng thử PWA cho lịch làm việc của Phan Thị Thảo Vy.
 
-## Đăng nhập demo
+## Cấu hình đăng nhập
 
-- Tài khoản: `phanthithaovy`
-- Mật khẩu: `261004`
+Ứng dụng không còn có tài khoản mặc định. Hãy sao chép `.env.example` thành `.env`, rồi đặt `VY_USERNAME`, `VY_PASSWORD`, `ADMIN_USERNAME`, `ADMIN_PASSWORD` và `ADMIN_SESSION_SECRET`. Mỗi mật khẩu cần ít nhất 12 ký tự; secret cần ít nhất 32 byte. Tạo secret ngẫu nhiên bằng lệnh ghi trong `.env.example`. Không commit hoặc chia sẻ `.env`.
+
+Trên Railway, thêm các biến này trong **service → Variables**. Production cũng bắt buộc có `DATABASE_URL`; ứng dụng sẽ dừng với thông báo nêu tên biến còn thiếu thay vì khởi động bằng tài khoản mặc định hoặc kho lưu trữ tạm.
 
 ## Chạy trên máy tính
 
@@ -41,15 +42,11 @@ Sau khi bấm **Bật nhắc**, app sẽ gửi ngay một thông báo chào mừ
 
 Sau khi Vy đăng nhập, phần **Hôm nay em muốn anh mua gì?** có các nhóm nước uống, món ăn, bánh và ăn vặt. Vy có thể chọn món trong danh sách hoặc ghi chú món chưa có rồi bấm gửi. Request được lưu vào PostgreSQL và gửi Web Push riêng cho tài khoản của anh.
 
-Để đăng nhập góc nhận request, mặc định dùng:
-
-- Tài khoản: `anh`
-- Mật khẩu: `261004`
-
-Nên đặt riêng hai biến trên Railway để đổi thông tin đăng nhập:
+Đăng nhập góc nhận request dùng tài khoản quản trị riêng, đặt qua các biến:
 
 - `ADMIN_USERNAME`
 - `ADMIN_PASSWORD`
+- `ADMIN_SESSION_SECRET`
 
 Sau khi vào góc nhận request, anh bấm **Bật thông báo nhận request** một lần. Khi Vy gửi món, thông báo sẽ hiện trên màn hình khóa của anh; trong góc này anh cũng có thể đánh dấu **Đang chờ mua**, **Anh mua rồi** hoặc **Đã gửi Vy**.
 
@@ -100,7 +97,7 @@ create table if not exists public.schedule_entries (
 alter table public.schedule_entries enable row level security;
 ```
 
-Lịch của Vy được đồng bộ lên server mỗi khi Vy lưu ca mới. Trong góc của anh có thêm mục **Anh xem lịch của Vy** ở chế độ chỉ xem. Railway tự tạo bảng `schedule_entries` khi dùng PostgreSQL; nếu dùng Supabase, chạy thêm SQL ở trên một lần. Railway cần có hai biến `SUPABASE_URL` và `SUPABASE_SERVICE_ROLE_KEY` để app lưu lịch sử chat và lịch dùng chung vào Supabase. Nếu chưa có hai biến này, app sẽ dùng PostgreSQL Railway; nếu cũng không có PostgreSQL thì chỉ dùng bộ nhớ tạm trong lúc chơi thử.
+Lịch của Vy được đồng bộ lên server mỗi khi Vy lưu ca mới. Trong góc của anh có thêm mục **Anh xem lịch của Vy** ở chế độ chỉ xem. Railway tự tạo bảng `schedule_entries` khi dùng PostgreSQL. Khi database chưa có dòng lịch, ứng dụng chỉ hiển thị lịch mẫu và không tự ghi lịch mẫu lên database. Nếu database tạm thời lỗi, lịch sẽ hiện trạng thái lỗi cùng nút tải lại, không hiển thị dữ liệu cũ như lịch mới nhất. PostgreSQL là bắt buộc cho production; môi trường local không có database chỉ lưu tạm trong bộ nhớ.
 
 ## Tính năng yêu thương
 
@@ -165,4 +162,4 @@ Sau khi bấm nút **Bật nhắc** trong app, app sẽ lập thông báo cục 
 - 12:00: lời chúc buổi trưa và nhắc Vy giữ sức.
 - 20:00: lời chúc buổi tối và lịch ngày mai của Vy.
 
-> Lưu ý: tài khoản demo đang được kiểm tra ở phía giao diện để dùng thử. Khi đưa lên Internet hoặc dùng thật, cần chuyển xác thực sang máy chủ và lưu mật khẩu dạng hash.
+> Mỗi API riêng tư yêu cầu bearer session do server ký. Cờ đăng nhập trong trình duyệt không cấp quyền truy cập.

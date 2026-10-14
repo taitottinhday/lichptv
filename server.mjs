@@ -3,7 +3,7 @@ import cron from 'node-cron';
 import pg from 'pg';
 import webpush from 'web-push';
 import { readFile } from 'node:fs/promises';
-import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Readable } from 'node:stream';
@@ -17,10 +17,11 @@ import { karaokeLyricsTextSimilarity } from './karaoke-timing.js';
 const { Pool } = pg;
 const app = express();
 const port = Number(process.env.PORT || 4173);
+const isProduction = process.env.NODE_ENV === 'production' || Boolean(process.env.RAILWAY_ENVIRONMENT);
 const distRoot = resolve(fileURLToPath(new URL('./dist', import.meta.url)));
 const audioManifestPath = resolve(fileURLToPath(new URL('./public/audio-manifest.json', import.meta.url)));
 const databaseUrl = process.env.DATABASE_URL;
-const pool = databaseUrl ? new Pool({ connectionString: databaseUrl, ssl: databaseUrl.includes('localhost') ? false : { rejectUnauthorized: false } }) : null;
+const pool = databaseUrl ? new Pool({ connectionString: databaseUrl, ssl: databaseUrl.includes('localhost') ? false : { rejectUnauthorized: false }, connectionTimeoutMillis: 5000, idleTimeoutMillis: 30000, query_timeout: 12000, statement_timeout: 10000, max: 8 }) : null;
 const supabaseUrl = process.env.SUPABASE_URL?.trim().replace(/\/$/, '');
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || process.env.SUPABASE_SECRET_KEY?.trim();
 const supabaseConfigured = Boolean(supabaseUrl && supabaseServiceKey);
@@ -49,11 +50,22 @@ const lyricsCacheAllowed = lyricsPersistenceAllowed && (lyricsProvider !== 'lrcl
 const lyricsPublicLookupEnabled = process.env.LYRICS_PUBLIC_LOOKUP_ENABLED !== 'false';
 const lyricsProviderConfigured = lyricsProvider === 'link' || lyricsProvider === 'lrclib'
   || (lyricsProvider === 'musixmatch' && Boolean(musixmatchApiKey));
-const adminUsername = process.env.ADMIN_USERNAME || 'anh';
-const adminPassword = process.env.ADMIN_PASSWORD || '261004';
-const adminSessionSecret = process.env.ADMIN_SESSION_SECRET || adminPassword;
-const vyUsername = (process.env.VY_USERNAME || 'phanthithaovy').trim();
-const vyPassword = process.env.VY_PASSWORD ?? '261004';
+const adminUsername = process.env.ADMIN_USERNAME?.trim() || '';
+const adminPassword = process.env.ADMIN_PASSWORD || '';
+const adminSessionSecret = process.env.ADMIN_SESSION_SECRET || (isProduction ? '' : randomBytes(32).toString('base64url'));
+const vyUsername = process.env.VY_USERNAME?.trim() || '';
+const vyPassword = process.env.VY_PASSWORD || '';
+const credentialConfigError = [
+  !adminUsername && 'ADMIN_USERNAME', (!adminPassword || adminPassword.length < 12) && 'ADMIN_PASSWORD (ít nhất 12 ký tự)',
+  !vyUsername && 'VY_USERNAME', (!vyPassword || vyPassword.length < 12) && 'VY_PASSWORD (ít nhất 12 ký tự)',
+  (!adminSessionSecret || Buffer.byteLength(adminSessionSecret) < 32) && 'ADMIN_SESSION_SECRET (ít nhất 32 byte)'
+].filter(Boolean);
+if (credentialConfigError.length && isProduction) {
+  throw new Error(`Thiếu cấu hình xác thực production: ${credentialConfigError.join(', ')}.`);
+}
+if (isProduction && !databaseUrl) {
+  throw new Error('Thiếu cấu hình production: DATABASE_URL bắt buộc để tránh mất lịch, chat và request sau khi dịch vụ khởi động lại.');
+}
 const r2AccountId = process.env.R2_ACCOUNT_ID?.trim();
 const r2BucketName = process.env.R2_BUCKET_NAME?.trim();
 const r2AccessKeyId = process.env.R2_ACCESS_KEY_ID?.trim();
@@ -75,6 +87,9 @@ const CHAT_IMAGE_PREFIX = '__lich_chat_image__:';
 const CHAT_STORAGE_BUCKET = 'chat-images';
 const CHAT_IMAGE_MAX_BYTES = 6 * 1024 * 1024;
 let chatStorageReadyPromise;
+const loginAttempts = new Map();
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+const LOGIN_MAX_ATTEMPTS = 8;
 
 if (vapidPublicKey && vapidPrivateKey) {
   try {
@@ -157,10 +172,17 @@ const databaseReady = pool
     ON CONFLICT (song_id) DO NOTHING;`)
   : Promise.resolve();
 
+// Observe schema startup failures so the process stays alive long enough for
+// API handlers to return a clear error instead of exiting on an unhandled promise.
+if (pool) databaseReady.catch((error) => {
+  console.error('PostgreSQL schema initialization failed:', error.code || error.name || 'unknown database error');
+});
+
 async function supabaseRequest(path, options = {}) {
   if (!supabaseConfigured) throw new Error('Supabase chưa được cấu hình.');
   const response = await fetch(`${supabaseUrl}/rest/v1/${path}`, {
     ...options,
+    signal: options.signal || AbortSignal.timeout(8000),
     headers: {
       apikey: supabaseServiceKey,
       Authorization: `Bearer ${supabaseServiceKey}`,
@@ -778,7 +800,7 @@ async function readSharedSchedule() {
     hasStoredEntries = Object.keys(memorySchedule).length > 0;
     updatedAt = memoryScheduleUpdatedAt;
   }
-  return { schedule, hasStoredEntries, updatedAt };
+  return { schedule, hasStoredEntries, updatedAt, storageMode: pool || supabaseConfigured ? 'persistent' : 'memory' };
 }
 
 async function writeSharedSchedule(schedule) {
@@ -918,6 +940,67 @@ function isVyRequest(request) {
   return isSignedRoleRequest(request, 'vy');
 }
 
+function sessionRole(request) {
+  if (isAdminRequest(request)) return 'admin';
+  if (isVyRequest(request)) return 'vy';
+  return null;
+}
+
+function requireSession(request, response, expectedRole = null) {
+  const role = sessionRole(request);
+  if (!role) {
+    response.status(401).json({ code: 'SESSION_REQUIRED', error: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.' });
+    return null;
+  }
+  if (expectedRole && role !== expectedRole) {
+    response.status(403).json({ code: 'ROLE_FORBIDDEN', error: 'Tài khoản này không có quyền thực hiện thao tác.' });
+    return null;
+  }
+  return role;
+}
+
+function loginIsLimited(username) {
+  const key = String(username || '').trim().toLocaleLowerCase('vi-VN').slice(0, 120);
+  const now = Date.now();
+  if (loginAttempts.size > 1000) {
+    for (const [attemptKey, attempt] of loginAttempts) {
+      if (now - attempt.startedAt >= LOGIN_WINDOW_MS) loginAttempts.delete(attemptKey);
+    }
+  }
+  const entry = loginAttempts.get(key);
+  if (!entry || now - entry.startedAt >= LOGIN_WINDOW_MS) {
+    loginAttempts.set(key, { startedAt: now, count: 0 });
+    return false;
+  }
+  return entry.count >= LOGIN_MAX_ATTEMPTS;
+}
+
+function recordLoginFailure(username) {
+  const key = String(username || '').trim().toLocaleLowerCase('vi-VN').slice(0, 120);
+  const current = loginAttempts.get(key) || { startedAt: Date.now(), count: 0 };
+  if (Date.now() - current.startedAt >= LOGIN_WINDOW_MS) {
+    loginAttempts.set(key, { startedAt: Date.now(), count: 1 });
+  } else {
+    current.count += 1;
+    loginAttempts.set(key, current);
+  }
+}
+
+function clearLoginFailures(username) {
+  loginAttempts.delete(String(username || '').trim().toLocaleLowerCase('vi-VN').slice(0, 120));
+}
+
+function loginIsConfigured(role) {
+  return credentialConfigError.length === 0 && (role === 'admin' ? Boolean(adminUsername && adminPassword) : Boolean(vyUsername && vyPassword));
+}
+
+function credentialsMatch(provided, expected) {
+  if (!expected) return false;
+  const a = Buffer.from(String(provided ?? ''));
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
 function awsEncode(value) {
   return encodeURIComponent(value).replace(/[!'()*]/g, (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`);
 }
@@ -1006,7 +1089,9 @@ async function dispatchDailyReminder(moment) {
   if (!pushConfigured) return;
   const today = vietnamDateKey();
   const dateKey = moment === 'evening' ? addDays(today, 1) : today;
-  const code = defaultSchedule[dateKey];
+  let code;
+  try { code = (await readSharedSchedule()).schedule[dateKey]; }
+  catch (error) { console.error('Không đọc được lịch để gửi nhắc:', error.message); }
   const description = shiftDescription(code) || 'chưa có dữ liệu lịch';
   const dateText = prettyDate(dateKey);
   const greeting = await generateCuteMessage(moment, dateText, description);
@@ -1027,6 +1112,7 @@ app.get('/api/health', (_request, response) => response.json({
   ok: true,
   pushConfigured,
   database: Boolean(pool),
+  scheduleStorage: pool || supabaseConfigured ? 'persistent' : 'memory',
   supabaseConfigured,
   livekitConfigured,
   geminiConfigured: Boolean(geminiApiKey),
@@ -1251,27 +1337,39 @@ app.post('/api/lyrics/sync-one', async (request, response) => {
 
 app.post('/api/admin/login', (request, response) => {
   const { username, password } = request.body || {};
-  if (username !== adminUsername || password !== adminPassword) {
+  if (!loginIsConfigured('admin')) return response.status(503).json({ code: 'AUTH_CONFIG_MISSING', error: 'Máy chủ chưa cấu hình tài khoản quản trị. Hãy thêm ADMIN_USERNAME, ADMIN_PASSWORD và ADMIN_SESSION_SECRET.' });
+  if (loginIsLimited(username)) return response.status(429).json({ code: 'LOGIN_RATE_LIMITED', error: 'Bạn đã thử quá nhiều lần. Hãy đợi 15 phút rồi thử lại.' });
+  if (username !== adminUsername || !credentialsMatch(password, adminPassword)) {
+    recordLoginFailure(username);
     return response.status(401).json({ error: 'Sai tài khoản hoặc mật khẩu.' });
   }
+  clearLoginFailures(username);
   const token = createSessionToken('admin');
-  return response.json({ ok: true, token });
+  return response.set('Cache-Control', 'no-store').json({ ok: true, token, role: 'admin' });
 });
 
 app.post('/api/user/login', (request, response) => {
   const { username, password } = request.body || {};
-  if (username !== vyUsername || password !== vyPassword) {
+  if (!loginIsConfigured('vy')) return response.status(503).json({ code: 'AUTH_CONFIG_MISSING', error: 'Máy chủ chưa cấu hình tài khoản Vy. Hãy thêm VY_USERNAME, VY_PASSWORD và ADMIN_SESSION_SECRET.' });
+  if (loginIsLimited(username)) return response.status(429).json({ code: 'LOGIN_RATE_LIMITED', error: 'Bạn đã thử quá nhiều lần. Hãy đợi 15 phút rồi thử lại.' });
+  if (username !== vyUsername || !credentialsMatch(password, vyPassword)) {
+    recordLoginFailure(username);
     return response.status(401).json({ error: 'Sai tài khoản hoặc mật khẩu.' });
   }
-  return response.json({ ok: true, token: createSessionToken('vy') });
+  clearLoginFailures(username);
+  return response.set('Cache-Control', 'no-store').json({ ok: true, token: createSessionToken('vy'), role: 'vy' });
+});
+
+app.get('/api/session', (request, response) => {
+  const role = sessionRole(request);
+  if (!role) return response.status(401).json({ code: 'SESSION_REQUIRED', error: 'Phiên đăng nhập đã hết hạn.' });
+  return response.set('Cache-Control', 'no-store').json({ ok: true, role });
 });
 
 app.post('/api/livekit/token', async (request, response) => {
-  const role = request.body?.role === 'admin' ? 'admin' : 'vy';
+  const role = requireSession(request, response);
+  if (!role) return;
   const callType = request.body?.callType === 'voice' ? 'voice' : 'video';
-  if (role === 'admin' && !isAdminRequest(request)) {
-    return response.status(401).json({ error: 'Cần đăng nhập góc của anh trước khi gọi.' });
-  }
   if (!livekitConfigured) {
     return response.status(503).json({ error: 'LiveKit chưa được cấu hình trên Railway.' });
   }
@@ -1324,18 +1422,19 @@ app.get('/api/livekit/check', async (request, response) => {
 });
 
 app.get('/api/schedule', async (request, response) => {
-  if (request.query.role === 'admin' && !isAdminRequest(request)) {
-    return response.status(401).json({ error: 'Cần đăng nhập góc của anh trước khi xem lịch.' });
-  }
+  const role = requireSession(request, response);
+  if (!role) return;
+  if (request.query.role && request.query.role !== role) return response.status(403).json({ code: 'ROLE_FORBIDDEN', error: 'Tài khoản này không có quyền xem lịch quản trị.' });
   try {
-    return response.json(await readSharedSchedule());
+    return response.set('Cache-Control', 'no-store').json(await readSharedSchedule());
   } catch (error) {
-    console.error('Không đọc được lịch dùng chung:', error.message);
+    console.error('Không đọc được lịch dùng chung:', error.code || 'PostgreSQL/Supabase query failed');
     return response.status(500).json({ error: 'Chưa đọc được lịch của Vy.' });
   }
 });
 
 app.put('/api/schedule', async (request, response) => {
+  if (!requireSession(request, response)) return;
   try {
     await writeSharedSchedule(request.body?.schedule);
     return response.json({ ok: true, updatedAt: new Date().toISOString() });
@@ -1370,10 +1469,9 @@ async function attachChatReactionsSafe(messages) {
 }
 
 app.get('/api/chat/messages', async (request, response) => {
-  const viewerRole = request.query.role === 'admin' ? 'admin' : 'vy';
-  if (viewerRole === 'admin' && !isAdminRequest(request)) {
-    return response.status(401).json({ error: 'Cần đăng nhập góc chat của anh.' });
-  }
+  const viewerRole = requireSession(request, response);
+  if (!viewerRole) return;
+  if (request.query.role && request.query.role !== viewerRole) return response.status(403).json({ code: 'ROLE_FORBIDDEN', error: 'Tài khoản này không có quyền xem vai trò chat đó.' });
   try {
     if (supabaseConfigured) {
       const rows = await supabaseRequest('chat_messages?select=id,sender_role,content,created_at&order=id.desc&limit=100');
@@ -1397,10 +1495,9 @@ app.get('/api/chat/messages', async (request, response) => {
 });
 
 app.post('/api/chat/messages', async (request, response) => {
-  const senderRole = request.body?.senderRole === 'admin' ? 'admin' : 'vy';
-  if (senderRole === 'admin' && !isAdminRequest(request)) {
-    return response.status(401).json({ error: 'Cần đăng nhập góc chat của anh.' });
-  }
+  const senderRole = requireSession(request, response);
+  if (!senderRole) return;
+  if (request.body?.senderRole && request.body.senderRole !== senderRole) return response.status(403).json({ code: 'ROLE_FORBIDDEN', error: 'Không thể gửi tin nhắn thay cho tài khoản khác.' });
   const content = String(request.body?.content || '').trim().slice(0, 2000);
   const imageDataUrl = String(request.body?.imageDataUrl || '');
   if (!content && !imageDataUrl) return response.status(400).json({ error: 'Tin nhắn chưa có nội dung hoặc ảnh.' });
@@ -1461,8 +1558,9 @@ app.post('/api/chat/messages', async (request, response) => {
 });
 
 app.post('/api/chat/messages/:messageId/reaction', async (request, response) => {
-  const role = request.body?.role === 'admin' ? 'admin' : 'vy';
-  if (role === 'admin' && !isAdminRequest(request)) return response.status(401).json({ error: 'Cần đăng nhập góc chat của anh.' });
+  const role = requireSession(request, response);
+  if (!role) return;
+  if (request.body?.role && request.body.role !== role) return response.status(403).json({ code: 'ROLE_FORBIDDEN', error: 'Không thể thả reaction thay cho tài khoản khác.' });
   const reaction = ['💗', '😂', '😮', '✨', '🥰'].includes(request.body?.reaction) ? request.body.reaction : '💗';
   try {
     if (supabaseConfigured) {
@@ -1511,11 +1609,10 @@ app.get('/api/push/public-key', (_request, response) => {
 });
 
 app.post('/api/push/subscribe', async (request, response) => {
-  const role = request.body?.role === 'admin' ? 'admin' : 'vy';
+  const role = requireSession(request, response);
+  if (!role) return;
+  if (request.body?.role && request.body.role !== role) return response.status(403).json({ code: 'ROLE_FORBIDDEN', error: 'Không thể đăng ký thông báo cho tài khoản khác.' });
   const subscription = request.body?.subscription || request.body;
-  if (role === 'admin' && !isAdminRequest(request)) {
-    return response.status(401).json({ error: 'Cần đăng nhập tài khoản nhận request.' });
-  }
   if (!pushConfigured) return response.status(503).json({ error: 'Push notifications are not configured.' });
   if (!subscription?.endpoint || !subscription?.keys?.p256dh || !subscription?.keys?.auth) {
     return response.status(400).json({ error: 'Invalid push subscription.' });
@@ -1536,6 +1633,7 @@ app.post('/api/push/subscribe', async (request, response) => {
 });
 
 app.post('/api/food-requests', async (request, response) => {
+  if (!requireSession(request, response, 'vy')) return;
   const category = String(request.body?.category || '').trim().slice(0, 80);
   const item = String(request.body?.item || '').trim().slice(0, 160);
   const note = String(request.body?.note || '').trim().slice(0, 500);
@@ -1650,7 +1748,9 @@ cron.schedule('0 6 * * *', () => dispatchDailyReminder('morning'), { timezone: '
 cron.schedule('0 12 * * *', () => dispatchDailyReminder('noon'), { timezone: 'Asia/Ho_Chi_Minh' });
 cron.schedule('0 20 * * *', () => dispatchDailyReminder('evening'), { timezone: 'Asia/Ho_Chi_Minh' });
 
-app.listen(port, '0.0.0.0', () => {
+const server = app.listen(port, '0.0.0.0', () => {
   console.log(`Lịch của Vy đang chạy tại cổng ${port}. Push: ${pushConfigured ? 'đã cấu hình' : 'chưa cấu hình'}.`);
   if (!pool) console.warn('DATABASE_URL chưa có: đăng ký nhận nhắc sẽ mất khi Railway restart.');
 });
+
+export { app, server };

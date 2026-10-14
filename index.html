@@ -104,6 +104,10 @@
             </div>
             <div class="calendar-grid" id="calendarGrid"></div>
           </div>
+          <div class="schedule-sync-status" role="status" aria-live="polite">
+            <span id="scheduleSyncStatus"></span>
+            <button class="text-button" id="retryScheduleLoad" type="button" hidden>Thử tải lại</button>
+          </div>
           <p class="calendar-hint">Chạm vào một ngày để xem chi tiết · Vuốt trái/phải để đổi tháng.</p>
         </section>
 
@@ -493,7 +497,7 @@
         <div class="karaoke-lyrics-topbar">
           <div class="karaoke-cover-wrap" aria-hidden="true"><img class="karaoke-cover-art" id="karaokeCoverArt" alt="" hidden /></div>
           <div class="karaoke-lyrics-heading">
-            <p class="section-kicker">GÓC HÁT CỦA ANH & VY</p>
+            <p class="section-kicker">SONG · GÓC HÁT CỦA ANH & VY</p>
             <h3 id="karaokeLyricsTitle">Lời bài hát</h3>
             <span id="karaokeLyricsArtist">Chưa có thông tin ca sĩ / nhạc sĩ</span>
             <small id="karaokeLyricsCategory">Karaoke</small>
@@ -501,13 +505,18 @@
           </div>
           <button class="karaoke-lyrics-close" id="closeKaraokeLyrics" type="button" aria-label="Đóng lời bài hát">×</button>
         </div>
-        <section class="karaoke-judge" id="karaokeJudge" aria-label="Bắt đầu karaoke">
-          <div class="karaoke-judge-head">
-            <div><span class="karaoke-judge-kicker">KARAOKE 🎤</span><h4>Hát cùng beat</h4></div>
-          </div>
-          <p class="karaoke-judge-caption" id="karaokeJudgeCaption">Nhấn bắt đầu để mở nhạc nền đã giảm giọng ca sĩ và chạy lời theo nhạc.</p>
-          <div class="karaoke-judge-actions"><button class="karaoke-judge-button" id="karaokeJudgeButton" type="button">🎙️ Bắt đầu hát karaoke</button><span id="karaokeJudgeTimer" aria-live="polite"></span></div>
-        </section>
+        <div class="karaoke-track-toolbar" role="toolbar" aria-label="Điều khiển bài hát">
+          <button class="karaoke-audio-play" id="karaokeAudioPlay" type="button" aria-label="Phát nhạc" title="Phát hoặc tạm dừng" disabled>▶</button>
+          <button class="karaoke-judge-button" id="karaokeJudgeButton" type="button" title="Bắt đầu chế độ hát karaoke">🎙️ Bắt đầu hát karaoke</button>
+          <button class="lyrics-tool-button karaoke-exit-mode" id="exitKaraokeMode" type="button" hidden>Thoát karaoke</button>
+          <span class="karaoke-judge-timer" id="karaokeJudgeTimer" aria-live="polite"></span>
+          <span class="karaoke-toolbar-spacer"></span>
+          <button class="lyrics-tool-button" id="editKaraokeLyrics" type="button" title="Thêm hoặc chỉnh sửa lời">✎ <span>Sửa lời</span></button>
+          <button class="lyrics-tool-button" id="toggleLyricsStudy" type="button" aria-pressed="false" title="Bật chế độ học thuộc">🧠 <span>Học lời</span></button>
+          <button class="lyrics-tool-button" id="toggleLyricsAlign" type="button" title="Đổi căn lề">☷ <span>Căn giữa</span></button>
+          <button class="lyrics-tool-button" id="toggleLyricsFullscreen" type="button" aria-pressed="false" title="Bật toàn màn hình">⛶ <span>Toàn màn hình</span></button>
+        </div>
+        <p class="karaoke-judge-caption" id="karaokeJudgeCaption" hidden>Nhấn bắt đầu để mở nhạc nền đã giảm giọng ca sĩ và chạy lời theo nhạc.</p>
         <section class="karaoke-audio-panel" id="karaokeAudioPanel" aria-label="Trình phát nhạc karaoke" hidden>
           <audio id="karaokeAudioElement" preload="none" playsinline aria-hidden="true"></audio>
           <div class="karaoke-audio-topline">
@@ -516,7 +525,6 @@
           </div>
           <small class="karaoke-vocal-status" id="karaokeVocalStatus" role="status" aria-live="polite">Beat karaoke đã giảm giọng ca sĩ</small>
           <div class="karaoke-audio-controls">
-            <button class="karaoke-audio-play" id="karaokeAudioPlay" type="button" aria-label="Phát nhạc" disabled>▶</button>
             <div class="karaoke-audio-timeline">
               <input id="karaokeAudioSeek" type="range" min="0" max="0" step="0.1" value="0" aria-label="Tua nhạc" disabled />
               <div class="karaoke-audio-times"><span id="karaokeAudioCurrentTime">0:00</span><span id="karaokeAudioDuration">0:00</span></div>
@@ -525,6 +533,7 @@
           </div>
         </section>
         <div class="karaoke-lyrics-body" id="karaokeLyricsBody" hidden>
+          <div class="karaoke-lyrics-title-row"><h4>Lyrics</h4><span id="lyricsFontSizeValue" aria-live="polite">20px</span></div>
           <div class="karaoke-lyrics-status" id="karaokeLyricsStatus" role="status" aria-live="polite">Đang tìm lời bài hát…</div>
           <div class="karaoke-lyrics-empty" id="karaokeLyricsEmpty" hidden>
             <div class="karaoke-lyrics-empty-icon" aria-hidden="true">♪</div>
@@ -567,7 +576,7 @@
         <button class="modal-close" id="closeModal" type="button" aria-label="Đóng">×</button>
         <p class="section-kicker" id="modalDate">NGÀY</p>
         <h2 id="modalTitle">Chỉnh lịch</h2>
-        <p class="modal-subtitle">Chọn ca của Vy cho ngày này</p>
+        <p class="modal-subtitle" id="modalSubtitle">Chọn ca của Vy cho ngày này</p>
         <div class="shift-picker" id="shiftPicker">
           <button type="button" data-code="D"><b>D</b><span>12h ban ngày</span></button>
           <button type="button" data-code="N"><b>N</b><span>12h ban đêm</span></button>
@@ -576,7 +585,7 @@
           <button type="button" data-code="eAD"><b>eAD</b><span>Điều chỉnh</span></button>
         </div>
         <button class="button button-primary full-width" id="saveShift" type="button">Lưu lịch cho Vy</button>
-        <p class="modal-footnote">Lịch sửa sẽ được lưu trên thiết bị này.</p>
+        <p class="modal-footnote">Chỉ lịch đã xác nhận mới được lưu lên máy chủ.</p>
       </div>
     </div>
 

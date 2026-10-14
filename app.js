@@ -1,13 +1,9 @@
-import { defaultSchedule } from './schedule-data.js';
 import { AVATAR_IMAGE_URL } from './avatar-config.js';
 import { KARAOKE_CATEGORIES, UNIQUE_KARAOKE_SONGS } from './karaoke-data.js';
 import { activeLyricIndex, karaokeLyricsTextSimilarity, parseSyncedKaraokeLyrics, wordPlaybackState } from './karaoke-timing.js';
-import { LocalAudioTrack, LocalVideoTrack, Room, RoomEvent, Track, VideoPresets } from 'livekit-client';
 
-const STORAGE_KEY = 'lich-cua-vy-schedule-v2';
-const AUTH_KEY = 'lich-cua-vy-authenticated-v1';
 const ADMIN_TOKEN_KEY = 'lich-cua-vy-admin-token-v1';
-const VY_AUDIO_TOKEN_KEY = 'lich-cua-vy-audio-session-v1';
+const VY_TOKEN_KEY = 'lich-cua-vy-audio-session-v1';
 const ADMIN_PUSH_ENABLED_KEY = 'lich-cua-vy-admin-push-enabled-v1';
 const CHAT_IMAGE_PREFIX = '__lich_chat_image__:';
 const CHAT_CALL_PREFIX = '__lich_call__:';
@@ -20,10 +16,6 @@ const CHAT_TIME_ZONE = 'Asia/Ho_Chi_Minh';
 const LOVE_START_DATE = new Date(2022, 10, 3, 0, 0, 0);
 const FACE_LANDMARKER_MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
 const FACE_LANDMARKER_WASM_URL = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm';
-const DEMO_USERNAME = 'phanthithaovy';
-const DEMO_PASSWORD = '261004';
-const START_DATE = '2026-09-26';
-const END_DATE = '2026-10-25';
 
 const FOOD_MENU = [
   { category: 'Nước uống', emoji: '🥤', items: ['Trà sữa truyền thống', 'Trà sữa cốm', 'Trà sữa khoai môn', 'Trà sữa matcha', 'Trà sữa socola', 'Trà sữa ô long', 'Trà đào cam sả', 'Trà vải', 'Trà dâu', 'Trà chanh', 'Nước sen dừa', 'Nước dừa tắc', 'Nước cam', 'Nước ép dưa hấu', 'Nước ép táo', 'Sữa tươi trân châu đường đen', 'Cacao đá', 'Matcha latte', 'Cà phê sữa', 'Nước suối'] },
@@ -38,7 +30,8 @@ const QUICK_RESPONSES = {
 };
 
 const state = {
-  schedule: loadSchedule(),
+  authenticatedRole: null,
+  schedule: {},
   visibleMonth: new Date(),
   selectedDate: null,
   selectedCode: null,
@@ -60,10 +53,21 @@ const state = {
   loveCounterTimer: null,
   selectedMood: 'loved',
   adminVisibleMonth: new Date(),
-  adminSchedule: { ...defaultSchedule }
+  adminSchedule: {}
 };
 
+function sessionToken(role = 'vy') {
+  return localStorage.getItem(role === 'admin' ? ADMIN_TOKEN_KEY : VY_TOKEN_KEY) || '';
+}
+
+function sessionHeaders(role = 'vy', extra = {}) {
+  const token = sessionToken(role);
+  return { ...extra, ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+}
+
 let nativeNotificationsPromise;
+let liveKitSDK;
+let liveKitSDKPromise;
 let livekitRoom;
 let activeCallRole;
 let activeCallType = 'video';
@@ -78,6 +82,8 @@ let karaokeJudgeRequestId = 0;
 let karaokeNextTrackTimer = 0;
 let karaokeVocalGraph;
 let karaokeVocalProcessing = false;
+let karaokeLyricsAutoFollowPausedUntil = 0;
+let karaokeLyricsProgrammaticScrollUntil = 0;
 const callUiStates = new Map();
 
 const CALL_BACKGROUND_PRESETS = [
@@ -189,28 +195,6 @@ async function loadMood(role = 'vy') {
     $$('.mood-picker [data-mood]').forEach((button) => button.classList.toggle('active', button.dataset.mood === state.selectedMood));
     $('#moodStatus').textContent = `Đã lưu trên máy này: ${localMood.emoji || ''} ${localMood.label || ''}`;
   }
-  return;
-  const token = role === 'admin' ? localStorage.getItem(ADMIN_TOKEN_KEY) : '';
-  if (role === 'admin' && !token) return;
-  const headers = token ? { Authorization: `Bearer ${token}` } : {};
-  try {
-    const response = await fetch(`/api/moods?role=${role}`, { headers });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || 'Chưa tải được mood.');
-    const mood = data.mood;
-    if (role === 'admin') {
-      const display = $('#adminMoodDisplay');
-      if (display) display.innerHTML = mood ? `${escapeHtml(mood.emoji || '💗')} <b>${escapeHtml(mood.label || 'Mood của Vy')}</b>${mood.note ? ` · ${escapeHtml(mood.note)}` : ''}<small> · ${escapeHtml(mood.date_key || '')}</small>` : 'Chưa có check-in hôm nay của Vy.';
-    } else if (mood) {
-      state.selectedMood = mood.mood || state.selectedMood;
-      $('#moodNote').value = mood.note || '';
-      $$('.mood-picker [data-mood]').forEach((button) => button.classList.toggle('active', button.dataset.mood === state.selectedMood));
-      $('#moodStatus').textContent = `Đã lưu: ${mood.emoji || ''} ${mood.label || ''}`;
-    }
-  } catch (error) {
-    const target = role === 'admin' ? $('#adminMoodDisplay') : $('#moodStatus');
-    if (target) target.textContent = error.message;
-  }
 }
 
 async function saveMood() {
@@ -219,38 +203,17 @@ async function saveMood() {
   const moodMeta = { happy: ['😊', 'Vui'], loved: ['🥰', 'Được yêu'], tired: ['😴', 'Hơi mệt'], sad: ['🥺', 'Buồn'], excited: ['✨', 'Háo hức'] }[state.selectedMood] || ['💗', 'Được yêu'];
   localStorage.setItem('lich-cua-vy-mood-v1', JSON.stringify({ mood: state.selectedMood, note, emoji: moodMeta[0], label: moodMeta[1], savedAt: new Date().toISOString() }));
   status.textContent = 'Đã lưu mood riêng trên thiết bị này 💗';
-  return;
-  try {
-    const response = await fetch('/api/moods', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ role: 'vy', mood: state.selectedMood, note }) });
-    const data = await response.json().catch(() => ({}));
-    if (!response.ok) throw new Error(data.error || 'Chưa lưu được mood.');
-    status.textContent = 'Anh đã nhận được mood của em rồi nha 💌';
-  } catch (error) { status.textContent = error.message; }
 }
 
-function loadSchedule() {
-  try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    return saved && typeof saved === 'object' ? { ...defaultSchedule, ...saved } : { ...defaultSchedule };
-  } catch {
-    return { ...defaultSchedule };
-  }
-}
-
-function saveSchedule() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state.schedule));
-  syncScheduleToServer().catch(() => {
-    showToast('Lịch đã lưu trên máy Vy, nhưng chưa đồng bộ được với máy anh.');
-  });
-}
-
-async function syncScheduleToServer() {
+async function syncScheduleToServer(schedule = state.schedule) {
   const response = await fetch('/api/schedule', {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ schedule: state.schedule })
+    headers: sessionHeaders('vy', { 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ schedule })
   });
-  if (!response.ok) throw new Error('Schedule sync failed');
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || 'Chưa đồng bộ được lịch của Vy.');
+  return data;
 }
 
 function renderFoodMenu() {
@@ -365,7 +328,7 @@ function loadKaraokeLyricsPrefs() {
     const saved = JSON.parse(localStorage.getItem(`${KARAOKE_LYRICS_UI_STORAGE_KEY}:prefs`) || '{}');
     return {
       fontSize: Math.min(34, Math.max(14, Number(saved.fontSize) || 20)),
-      align: saved.align === 'left' ? 'left' : 'center'
+      align: saved.align === 'center' ? 'center' : 'left'
     };
   } catch {
     return { fontSize: 20, align: 'center' };
@@ -706,6 +669,7 @@ async function finishKaraokeJudge({ failed = false } = {}) {
   const button = $('#karaokeJudgeButton');
   const timer = $('#karaokeJudgeTimer');
   const caption = $('#karaokeJudgeCaption');
+  caption.hidden = false;
   button.classList.remove('is-recording');
   button.textContent = '🎙️ Chấm lại';
   timer.textContent = '';
@@ -728,11 +692,13 @@ async function startKaraokeJudge() {
   const timer = $('#karaokeJudgeTimer');
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
   if (!navigator.mediaDevices?.getUserMedia || !AudioContextClass) {
+    caption.hidden = false;
     caption.textContent = 'Trình duyệt này chưa hỗ trợ chấm bằng mic. Thử mở app trên Safari hoặc Chrome nhé.';
     return;
   }
   const requestId = ++karaokeJudgeRequestId;
   button.disabled = true;
+  caption.hidden = false;
   caption.textContent = 'Chuẩn bị sân khấu… xin đừng hát vào mic khi chưa bật nhé!';
   let stream;
   let context;
@@ -805,6 +771,7 @@ async function beginKaraokeSession() {
   $('#karaokeLyricsBody').hidden = false;
   $('#karaokeJudgeButton').textContent = '🎙️ Bắt đầu hát';
   $('#karaokeJudgeCaption').textContent = 'Beat đã bật, lời sẽ chạy theo nhạc.';
+  $('#karaokeJudgeCaption').hidden = false;
   renderKaraokeLyricsModal();
   const audio = $('#karaokeAudioElement');
   if (audio && Number.isFinite(audio.duration)) audio.currentTime = 0;
@@ -844,47 +811,18 @@ function resetKaraokeAudio(message = '', status = 'idle') {
   });
 }
 
-async function refreshVyKaraokeAudioSession(signal) {
-  if (localStorage.getItem(AUTH_KEY) !== 'true') return '';
-  try {
-    const response = await fetch('/api/user/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: DEMO_USERNAME, password: DEMO_PASSWORD }),
-      cache: 'no-store',
-      signal
-    });
-    const session = await response.json().catch(() => ({}));
-    if (!response.ok || typeof session.token !== 'string') {
-      localStorage.removeItem(VY_AUDIO_TOKEN_KEY);
-      return '';
-    }
-    localStorage.setItem(VY_AUDIO_TOKEN_KEY, session.token);
-    return session.token;
-  } catch {
-    return '';
-  }
-}
-
 async function requestKaraokeAudioUrl(songId, signal) {
   const adminView = $('#adminScreen')?.hidden === false;
   const userView = !adminView;
-  let token = userView
-    ? localStorage.getItem(VY_AUDIO_TOKEN_KEY) || ''
-    : localStorage.getItem(ADMIN_TOKEN_KEY) || '';
-  if (userView && !token) token = await refreshVyKaraokeAudioSession(signal);
+  const token = sessionToken(userView ? 'vy' : 'admin');
+  if (!token) throw new Error('Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại để nghe nhạc riêng tư.');
 
   const sendRequest = () => fetch(`/api/audio/url/${encodeURIComponent(songId)}`, {
     cache: 'no-store',
     headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
     signal
   });
-  let response = await sendRequest();
-  if (response.status === 401 && userView) {
-    token = await refreshVyKaraokeAudioSession(signal);
-    if (token) response = await sendRequest();
-  }
-  return response;
+  return sendRequest();
 }
 
 async function prepareKaraokeAudio(songId, autoPlay = false) {
@@ -963,7 +901,10 @@ function updateKaraokeSyncedLyrics() {
     const isCurrent = Number(row.dataset.syncedLyricIndex) === activeIndex;
     const needsScroll = isCurrent && (changedLine || !row.classList.contains('is-current'));
     row.classList.toggle('is-current', isCurrent);
-    if (needsScroll) row.scrollIntoView({ block: 'center', behavior: audio.seeking || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    if (needsScroll && Date.now() >= karaokeLyricsAutoFollowPausedUntil) {
+      karaokeLyricsProgrammaticScrollUntil = Date.now() + 1200;
+      row.scrollIntoView({ block: 'center', behavior: audio.seeking || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    }
   });
   const words = $('#karaokeLyricsText')?.querySelectorAll('[data-word-start]') || [];
   const currentTimeMs = audio.currentTime * 1000;
@@ -1293,6 +1234,8 @@ function renderKaraokeLyricsModal() {
   const sourceLink = $('#openKaraokeLyricsSource');
 
   $('#karaokeLyricsTitle').textContent = song.title;
+  $('#karaokeLyricsTitle').classList.toggle('is-long-title', song.title.length > 38);
+  $('#exitKaraokeMode').hidden = !session.karaokeActive;
   const metadata = session.metadata || {};
   const artist = metadata.artist || song.artist || song.composer || 'Chưa có thông tin ca sĩ / nhạc sĩ';
   $('#karaokeLyricsArtist').textContent = artist;
@@ -1379,6 +1322,7 @@ async function openKaraokeLyrics(songId, { continueQueue = false } = {}) {
   if (karaokeJudgeSession) await finishKaraokeJudge();
   $('#karaokeScorePopup').hidden = true;
   $('#karaokeJudgeCaption').textContent = 'Nhấn bắt đầu để mở nhạc nền đã giảm giọng ca sĩ và chạy lời theo nhạc.';
+  $('#karaokeJudgeCaption').hidden = true;
   $('#karaokeJudgeButton').textContent = '🎙️ Bắt đầu hát karaoke';
   $('#karaokeJudgeTimer').textContent = '';
   const session = state.karaokeLyricsModal;
@@ -1795,11 +1739,23 @@ function bindKaraoke() {
     setKaraokeAudioVolume(event.target.value);
   });
   $('#closeKaraokeLyrics')?.addEventListener('click', closeKaraokeLyrics);
+  $('#exitKaraokeMode')?.addEventListener('click', async () => {
+    if (karaokeJudgeSession) await finishKaraokeJudge();
+    state.karaokeLyricsModal.karaokeActive = false;
+    if (karaokeVocalGraph) setKaraokeVocalMix(false);
+    $('#karaokeJudgeButton').textContent = '🎙️ Bắt đầu hát karaoke';
+    $('#karaokeJudgeCaption').hidden = true;
+    renderKaraokeLyricsModal();
+  });
   $('#closeKaraokeScorePopup')?.addEventListener('click', closeKaraokeScorePopup);
   $('#doneKaraokeScorePopup')?.addEventListener('click', closeKaraokeScorePopup);
   $('#karaokeScorePopup')?.addEventListener('click', (event) => {
     if (event.target.id === 'karaokeScorePopup') closeKaraokeScorePopup();
   });
+  $('#karaokeLyricsBody')?.addEventListener('scroll', () => {
+    if (Date.now() < karaokeLyricsProgrammaticScrollUntil) return;
+    karaokeLyricsAutoFollowPausedUntil = Date.now() + 3500;
+  }, { passive: true });
   const lyricsModal = $('#karaokeLyricsModal');
   lyricsModal?.addEventListener('click', (event) => {
     if (event.target.id === 'karaokeLyricsModal') {
@@ -1917,7 +1873,7 @@ async function submitFoodRequest() {
   try {
     const response = await fetch('/api/food-requests', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: sessionHeaders('vy', { 'Content-Type': 'application/json' }),
       body: JSON.stringify({
         category: [...new Set(state.selectedFoods.map((food) => food.category))].join(' · ') || 'Món em ghi chú',
         item: state.selectedFoods.map((food) => food.item).join(', ') || 'Món theo ghi chú',
@@ -2038,9 +1994,7 @@ function renderChatMessages(messages, selector, viewerRole) {
     tools.appendChild(button); bubble.appendChild(tools);
   });
   container.querySelectorAll('[data-chat-reaction]').forEach((button) => button.addEventListener('click', async () => {
-    const token = viewerRole === 'admin' ? localStorage.getItem(ADMIN_TOKEN_KEY) : '';
-    const headers = { 'Content-Type': 'application/json' };
-    if (token) headers.Authorization = `Bearer ${token}`;
+    const headers = sessionHeaders(viewerRole, { 'Content-Type': 'application/json' });
     button.disabled = true;
     try {
       const response = await fetch(`/api/chat/messages/${button.dataset.chatReaction}/reaction`, { method: 'POST', headers, body: JSON.stringify({ role: viewerRole, reaction: '💗' }) });
@@ -2060,6 +2014,7 @@ function renderChatMessages(messages, selector, viewerRole) {
 
 function handleAdminSessionExpired() {
   localStorage.removeItem(ADMIN_TOKEN_KEY);
+  state.authenticatedRole = null;
   stopChatPolling();
   $('#adminScreen').hidden = true;
   $('#appShell').hidden = true;
@@ -2072,12 +2027,12 @@ function handleAdminSessionExpired() {
 
 async function loadChatMessages(viewerRole = 'vy', silent = false) {
   if (state.chatLoading) return;
-  const token = viewerRole === 'admin' ? localStorage.getItem(ADMIN_TOKEN_KEY) : '';
-  if (viewerRole === 'admin' && !token) return;
+  const token = sessionToken(viewerRole);
+  if (!token) return;
   state.chatLoading = true;
   const status = viewerRole === 'admin' ? $('#adminChatStatus') : $('#chatStatus');
   try {
-    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const headers = sessionHeaders(viewerRole);
     const response = await fetch(`/api/chat/messages?role=${viewerRole}`, { headers });
     const data = await response.json().catch(() => ({}));
     if (response.status === 401 && viewerRole === 'admin') {
@@ -2106,13 +2061,12 @@ async function sendChatMessage(senderRole = 'vy') {
     input.focus();
     return;
   }
-  const token = senderRole === 'admin' ? localStorage.getItem(ADMIN_TOKEN_KEY) : '';
+    const token = sessionToken(senderRole);
   button.disabled = true;
   try {
     status.textContent = file ? 'Đang chuẩn bị ảnh để gửi nha…' : '';
     const imageDataUrl = file ? await prepareChatImage(file) : '';
-    const headers = { 'Content-Type': 'application/json' };
-    if (token) headers.Authorization = `Bearer ${token}`;
+    const headers = sessionHeaders(senderRole, { 'Content-Type': 'application/json' });
     const response = await fetch('/api/chat/messages', {
       method: 'POST',
       headers,
@@ -3249,6 +3203,8 @@ function renderFaceFilterFrame(pipeline, timestamp) {
 }
 
 async function startFaceFilterPipeline(role, options = {}) {
+  liveKitSDK ||= await (liveKitSDKPromise ||= import('livekit-client'));
+  const { LocalAudioTrack, LocalVideoTrack } = liveKitSDK;
   const elements = callElements(role);
   const sourceStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }, audio: true });
   const mediaPrefs = getCallMediaPrefs(role);
@@ -3344,7 +3300,7 @@ function attachCallTrack(role, track, participant) {
   tile.classList.toggle('is-local-preview', isLocal);
   tile.classList.toggle('is-selfie-preview', isLocal && (activeFilterPipeline?.facingMode || 'user') === 'user');
   callElements(role).videos.classList.toggle('has-remote', [...callElements(role).videos.querySelectorAll('.call-tile')].some((item) => !item.classList.contains('is-local-preview')));
-  if (track.kind === Track.Kind.Video) {
+  if (track.kind === liveKitSDK?.Track.Kind.Video) {
     tile.querySelectorAll('video').forEach((element) => element.remove());
     const video = track.attach();
     video.className = 'call-video';
@@ -3357,7 +3313,7 @@ function attachCallTrack(role, track, participant) {
     const startPlayback = () => { video.play().catch(() => {}); };
     video.addEventListener('loadedmetadata', startPlayback, { once: true });
     startPlayback();
-  } else if (track.kind === Track.Kind.Audio) {
+  } else if (track.kind === liveKitSDK?.Track.Kind.Audio) {
     tile.querySelectorAll('audio').forEach((element) => element.remove());
     const audio = track.attach();
     audio.autoplay = true;
@@ -3409,22 +3365,24 @@ async function joinLiveKitCall(role = 'vy', announce = false, callType = 'video'
   setCallStatus(role, callType === 'voice' ? 'Đang gọi thoại cho người thương…' : 'Đang gọi video cho người thương…');
   try {
     const headers = { 'Content-Type': 'application/json' };
-    if (role === 'admin') {
-      const token = localStorage.getItem(ADMIN_TOKEN_KEY);
-      if (!token) throw new Error('Anh cần đăng nhập góc của anh trước nha.');
-      headers.Authorization = `Bearer ${token}`;
-    }
+    const token = sessionToken(role);
+    if (!token) throw new Error('Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại trước khi gọi.');
+    headers.Authorization = `Bearer ${token}`;
     const tokenResponse = await fetch('/api/livekit/token', {
       method: 'POST',
       headers,
       body: JSON.stringify({ role, announce, callType })
     });
     const tokenData = await tokenResponse.json().catch(() => ({}));
-    if (tokenResponse.status === 401 && role === 'admin') {
-      handleAdminSessionExpired();
+    if (tokenResponse.status === 401) {
+      if (role === 'admin') handleAdminSessionExpired();
+      else { localStorage.removeItem(VY_TOKEN_KEY); setAuthenticated(false); }
       return;
     }
     if (!tokenResponse.ok) throw new Error(tokenData.error || 'Chưa mở được phòng video.');
+
+    liveKitSDK ||= await (liveKitSDKPromise ||= import('livekit-client'));
+    const { Room, RoomEvent, Track, VideoPresets } = liveKitSDK;
 
     const room = new Room({
       adaptiveStream: true,
@@ -3635,7 +3593,7 @@ async function switchCallCamera(role) {
 async function toggleCallScreenShare(role) {
   if (!livekitRoom || activeCallRole !== role || activeCallType === 'voice') return;
   const elements = callElements(role);
-  const publication = livekitRoom.localParticipant.getTrackPublication(Track.Source.ScreenShare);
+  const publication = livekitRoom.localParticipant.getTrackPublication(liveKitSDK?.Track.Source.ScreenShare);
   const sharing = Boolean(publication?.track && !publication.isMuted);
   try {
     await livekitRoom.localParticipant.setScreenShareEnabled(!sharing);
@@ -3679,8 +3637,7 @@ async function loadMiniCallMessages(role) {
   const container = elements.miniChat?.querySelector('[data-call-mini-messages]');
   if (!container) return;
   try {
-    const token = role === 'admin' ? localStorage.getItem(ADMIN_TOKEN_KEY) : '';
-    const response = await fetch(`/api/chat/messages?role=${role}`, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+    const response = await fetch(`/api/chat/messages?role=${role}`, { headers: sessionHeaders(role) });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.error || 'Chưa tải được tin nhắn.');
     const messages = (data.messages || []).slice(-5);
@@ -3696,11 +3653,10 @@ async function sendMiniCallMessage(role) {
   const input = elements.miniChat?.querySelector('input');
   const content = input?.value.trim();
   if (!content) return;
-  const token = role === 'admin' ? localStorage.getItem(ADMIN_TOKEN_KEY) : '';
   try {
     const response = await fetch('/api/chat/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      headers: sessionHeaders(role, { 'Content-Type': 'application/json' }),
       body: JSON.stringify({ senderRole: role, content, imageDataUrl: '' })
     });
     const data = await response.json().catch(() => ({}));
@@ -3726,11 +3682,10 @@ async function sendCallHistoryMessage(role, status = 'ended') {
   if (state.historySent) return;
   state.historySent = true;
   const duration = state.startedAt ? Math.floor((Date.now() - state.startedAt) / 1000) : 0;
-  const token = role === 'admin' ? localStorage.getItem(ADMIN_TOKEN_KEY) : '';
   try {
     await fetch('/api/chat/messages', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+      headers: sessionHeaders(role, { 'Content-Type': 'application/json' }),
       body: JSON.stringify({ senderRole: role, content: `${CHAT_CALL_PREFIX}${JSON.stringify({ callType: state.callType || activeCallType, duration, status })}`, imageDataUrl: '' })
     });
     loadChatMessages(role, true).catch(() => {});
@@ -3775,6 +3730,7 @@ function handleIncomingCallHint() {
   const params = new URLSearchParams(window.location.search);
   if (params.get('call') !== '1') return;
   const role = params.get('admin') === '1' ? 'admin' : 'vy';
+  if (state.authenticatedRole !== role) return;
   const action = params.get('callAction');
   showIncomingCall(role, params.get('kind') === 'voice' ? 'voice' : 'video');
   window.history.replaceState({}, document.title, window.location.pathname);
@@ -3826,7 +3782,7 @@ function handleNotificationNavigation(url) {
   const targetUrl = new URL(url || '/', window.location.origin);
   if (targetUrl.origin !== window.location.origin) return;
   window.history.replaceState({}, document.title, `${targetUrl.pathname}${targetUrl.search}`);
-  if (targetUrl.searchParams.get('admin') === '1' && localStorage.getItem(ADMIN_TOKEN_KEY) && $('#adminScreen').hidden) {
+  if (targetUrl.searchParams.get('admin') === '1' && state.authenticatedRole === 'admin' && $('#adminScreen').hidden) {
     showAdminScreen();
   }
   handleIncomingCallHint();
@@ -3839,13 +3795,50 @@ function bindNotificationNavigation() {
     if (event.data?.type === 'notification-navigation') handleNotificationNavigation(event.data.url);
     if (event.data?.type === 'incoming-call') {
       const role = event.data.role === 'admin' ? 'admin' : 'vy';
-      if (role === 'admin' && localStorage.getItem(ADMIN_TOKEN_KEY) && $('#adminScreen').hidden) showAdminScreen();
+      if (role !== state.authenticatedRole) return;
+      if (role === 'admin' && $('#adminScreen').hidden) showAdminScreen();
       showIncomingCall(role, event.data.callType === 'voice' ? 'voice' : 'video');
     }
   });
 }
 
+async function restoreAuthenticatedSession() {
+  const adminToken = sessionToken('admin');
+  if (adminToken) {
+    try {
+      const response = await fetch('/api/session', { headers: sessionHeaders('admin'), cache: 'no-store' });
+      const data = await response.json().catch(() => ({}));
+      if (response.ok && data.role === 'admin') {
+        state.authenticatedRole = 'admin';
+        showAdminScreen();
+        handleIncomingCallHint();
+        handleIncomingNotificationTarget();
+        return;
+      }
+    } catch { /* Keep the login screen visible while the server is unavailable. */ }
+    localStorage.removeItem(ADMIN_TOKEN_KEY);
+    state.authenticatedRole = null;
+  }
+  const vyToken = sessionToken('vy');
+  if (!vyToken) return;
+  try {
+    const response = await fetch('/api/session', { headers: sessionHeaders('vy'), cache: 'no-store' });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok || data.role !== 'vy') throw new Error('Phiên đăng nhập đã hết hạn.');
+    state.authenticatedRole = 'vy';
+    setAuthenticated(true);
+    await loadSharedSchedule();
+    handleIncomingCallHint();
+    handleIncomingNotificationTarget();
+  } catch {
+    localStorage.removeItem(VY_TOKEN_KEY);
+    state.authenticatedRole = null;
+    setAuthenticated(false);
+  }
+}
+
 function showAdminScreen() {
+  if (state.authenticatedRole !== 'admin') return;
   closeKaraokeLyrics();
   $('#loginScreen').hidden = true;
   $('#appShell').classList.remove('is-unlocked');
@@ -3863,6 +3856,7 @@ function leaveAdminScreen() {
   closeKaraokeLyrics();
   stopChatPolling();
   localStorage.removeItem(ADMIN_TOKEN_KEY);
+  state.authenticatedRole = null;
   $('#adminScreen').hidden = true;
   $('#appShell').hidden = false;
   $('#loginScreen').hidden = false;
@@ -3881,7 +3875,9 @@ async function handleAdminLogin(event) {
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Đăng nhập chưa thành công.');
+    if (data.role !== 'admin' || typeof data.token !== 'string') throw new Error('Máy chủ không trả về phiên quản trị hợp lệ.');
     localStorage.setItem(ADMIN_TOKEN_KEY, data.token);
+    state.authenticatedRole = 'admin';
     error.textContent = '';
     showAdminScreen();
     handleIncomingNotificationTarget();
@@ -3926,7 +3922,7 @@ async function loadFoodRequests() {
   const list = $('#foodRequestList');
   list.innerHTML = '<p class="empty-request">Đang tải các món Vy muốn ăn...</p>';
   try {
-    const response = await fetch('/api/food-requests', { headers: { Authorization: `Bearer ${token}` } });
+    const response = await fetch('/api/food-requests', { headers: sessionHeaders('admin') });
     const data = await response.json();
     if (response.status === 401) {
       handleAdminSessionExpired();
@@ -3982,20 +3978,33 @@ async function loadFoodRequests() {
 }
 
 async function loadSharedSchedule() {
+  const status = $('#scheduleSyncStatus');
+  const retry = $('#retryScheduleLoad');
+  if (status) status.textContent = 'Đang tải lịch từ máy chủ…';
+  if (retry) retry.hidden = true;
   try {
-    const response = await fetch('/api/schedule');
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'Chưa tải được lịch dùng chung.');
-    if (data.hasStoredEntries) {
-      state.schedule = { ...defaultSchedule, ...(data.schedule || {}) };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.schedule));
-      renderOverview();
-      renderCalendar();
-    } else {
-      await syncScheduleToServer();
+    const response = await fetch('/api/schedule', { headers: sessionHeaders('vy'), cache: 'no-store' });
+    const data = await response.json().catch(() => ({}));
+    if (response.status === 401) {
+      localStorage.removeItem(VY_TOKEN_KEY);
+      setAuthenticated(false);
+      throw new Error('Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.');
     }
+    if (!response.ok) throw new Error(data.error || 'Chưa tải được lịch dùng chung.');
+    state.schedule = { ...(data.schedule || {}) };
+    state.scheduleLoaded = true;
+    renderOverview();
+    renderCalendar();
+    if (status) status.textContent = data.hasStoredEntries ? '' : data.storageMode === 'memory'
+      ? 'Chưa có lịch lưu bền vững; lịch mới sẽ mất khi máy chủ khởi động lại.'
+      : 'Đang hiển thị lịch mẫu; lịch này chưa được lưu trong cơ sở dữ liệu.';
   } catch (error) {
-    console.warn('Không tải được lịch dùng chung:', error.message);
+    state.schedule = {};
+    state.scheduleLoaded = false;
+    renderOverview();
+    renderCalendar();
+    if (status) status.textContent = `Không tải được lịch: ${error.message}`;
+    if (retry) retry.hidden = false;
   }
 }
 
@@ -4010,7 +4019,7 @@ function renderAdminCalendar() {
   const offset = (firstDay.getDay() + 6) % 7;
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const todayKey = localDateKey(todayAtMidnight());
-  const schedule = state.adminSchedule || defaultSchedule;
+  const schedule = state.adminSchedule || {};
   for (let index = 0; index < offset; index += 1) {
     const cell = document.createElement('div');
     cell.className = 'day-cell empty';
@@ -4024,7 +4033,7 @@ function renderAdminCalendar() {
     const cell = document.createElement('div');
     cell.className = `day-cell${key === todayKey ? ' is-today' : ''}`;
     cell.setAttribute('aria-label', `${displayDate(date)}: ${info.title}`);
-    cell.innerHTML = `${key === todayKey ? '<span class="today-label">Hôm nay</span>' : ''}<span class="day-number">${day}</span>${code ? `<span class="shift-chip ${info.className}">${escapeHtml(code)}</span>` : ''}`;
+    cell.innerHTML = `${key === todayKey ? '<span class="today-label">Hôm nay</span>' : ''}<span class="day-number">${day}</span>${code ? `<span class="shift-chip ${info.className}">${escapeHtml(code)}</span>` : '<span class="day-unassigned">Chưa cập nhật</span>'}`;
     grid.appendChild(cell);
   }
   const totalCells = offset + daysInMonth;
@@ -4042,26 +4051,27 @@ async function loadAdminSchedule() {
   const status = $('#adminScheduleStatus');
   if (status) status.textContent = 'Đang tải lịch của Vy...';
   try {
-    const response = await fetch('/api/schedule?role=admin', { headers: { Authorization: `Bearer ${token}` } });
-    const data = await response.json();
+    const response = await fetch('/api/schedule?role=admin', { headers: sessionHeaders('admin'), cache: 'no-store' });
+    const data = await response.json().catch(() => ({}));
     if (response.status === 401) {
       handleAdminSessionExpired();
       return;
     }
     if (!response.ok) throw new Error(data.error || 'Chưa tải được lịch của Vy.');
-    state.adminSchedule = { ...defaultSchedule, ...(data.schedule || {}) };
+    state.adminSchedule = { ...(data.schedule || {}) };
     renderAdminCalendar();
-    if (status) status.textContent = data.updatedAt ? `Cập nhật lần cuối ${new Intl.DateTimeFormat('vi-VN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(data.updatedAt))}` : 'Lịch mặc định của Vy';
+    if (status) status.textContent = data.updatedAt ? `Cập nhật lần cuối ${new Intl.DateTimeFormat('vi-VN', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(data.updatedAt))}` : 'Chưa có lịch được lưu trên máy chủ.';
   } catch (error) {
+    state.adminSchedule = {};
+    renderAdminCalendar();
     if (status) status.textContent = error.message;
   }
 }
 
 async function updateFoodRequest(id, status) {
-  const token = localStorage.getItem(ADMIN_TOKEN_KEY);
   await fetch(`/api/food-requests/${id}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    headers: sessionHeaders('admin', { 'Content-Type': 'application/json' }),
     body: JSON.stringify({ status })
   });
   loadFoodRequests();
@@ -4072,11 +4082,10 @@ async function sendFoodResponse(id, responseText, status = 'pending') {
     showToast('Anh hãy ghi lời nhắn cho Vy trước nha 💕');
     return;
   }
-  const token = localStorage.getItem(ADMIN_TOKEN_KEY);
   try {
     const response = await fetch(`/api/food-requests/${id}/respond`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: sessionHeaders('admin', { 'Content-Type': 'application/json' }),
       body: JSON.stringify({ response: responseText, status })
     });
     const data = await response.json().catch(() => ({}));
@@ -4123,7 +4132,8 @@ function codeInfo(code) {
   if (code === 'N') return { title: 'Ca đêm · 12 tiếng', subtitle: '19:30 — 07:30 hôm sau', className: 'night', note: '🌙 Ca đêm cố lên, tan ca nhớ về nghỉ ngơi nhé!' };
   if (code === '18') return { title: 'Được nghỉ', subtitle: 'Một ngày để nạp lại năng lượng', className: 'off', note: '🧸 Hôm nay nàng được nghỉ rồi, ngủ thật ngon nha!' };
   if (code === '9') return { title: 'Được nghỉ', subtitle: 'Một ngày để nạp lại năng lượng', className: 'off', note: '🌷 Nghỉ ngơi vui vẻ nhé, Vy xứng đáng được yêu chiều!' };
-  return { title: 'Lịch điều chỉnh', subtitle: 'Kiểm tra lại với điều dưỡng trưởng', className: 'adjusted', note: '💌 Nhớ kiểm tra lại lịch chi tiết nha!' };
+  if (code === 'eAD') return { title: 'Lịch điều chỉnh', subtitle: 'Kiểm tra lại với điều dưỡng trưởng', className: 'adjusted', note: '💌 Nhớ kiểm tra lại lịch chi tiết nha!' };
+  return { title: 'Chưa cập nhật', subtitle: 'Chưa có dữ liệu cho ngày này', className: 'unassigned', note: '💌 Lịch ngày này chưa được cập nhật.' };
 }
 
 function shiftWindow(date, code) {
@@ -4203,8 +4213,8 @@ function renderOverview() {
   const today = todayAtMidnight();
   const tomorrow = new Date(today);
   tomorrow.setDate(today.getDate() + 1);
-  const todayCode = state.schedule[localDateKey(today)] || '—';
-  const tomorrowCode = state.schedule[localDateKey(tomorrow)] || '—';
+  const todayCode = state.schedule[localDateKey(today)] || '';
+  const tomorrowCode = state.schedule[localDateKey(tomorrow)] || '';
   renderShiftCard('today', today, todayCode);
   renderShiftCard('tomorrow', tomorrow, tomorrowCode);
 
@@ -4212,13 +4222,13 @@ function renderOverview() {
   const greeting = hour < 11 ? 'Chào buổi sáng, Vy yêu 🌤️' : hour < 18 ? 'Chào buổi chiều, Vy yêu 🌼' : 'Chào buổi tối, Vy yêu 🌙';
   $('#welcomeTitle').textContent = greeting;
   $('#currentGreeting').textContent = 'Phan Thị Thảo Vy · số 6';
-  $('#heroMessage').textContent = todayCode === 'D' || todayCode === 'N' ? 'Nàng nhớ giữ sức, làm việc vui vẻ và tan ca bình an để về với anh iu nhé.' : 'Hôm nay nàng có thể thong thả một chút, nhớ chăm sóc bản thân và nhớ anh iu nha.';
+  $('#heroMessage').textContent = !todayCode ? 'Lịch hôm nay chưa được cập nhật; mình kiểm tra lại sau nhé.' : todayCode === 'D' || todayCode === 'N' ? 'Nàng nhớ giữ sức, làm việc vui vẻ và tan ca bình an để về với anh iu nhé.' : 'Hôm nay nàng có thể thong thả một chút, nhớ chăm sóc bản thân và nhớ anh iu nha.';
 }
 
 function renderShiftCard(prefix, date, code) {
   const info = codeInfo(code);
   $(`#${prefix}DateLabel`).textContent = displayDate(date, { day: 'numeric', month: 'short' });
-  $(`#${prefix}Code`).textContent = code;
+  $(`#${prefix}Code`).textContent = code || '—';
   $(`#${prefix}Title`).textContent = info.title;
   $(`#${prefix}Subtitle`).textContent = info.subtitle;
   $(`#${prefix}Note`).textContent = info.note;
@@ -4251,7 +4261,7 @@ function renderCalendar() {
     cell.type = 'button';
     cell.className = `day-cell${key === todayKey ? ' is-today' : ''}${key === selectedKey ? ' is-selected' : ''}`;
     cell.setAttribute('aria-label', `${displayDate(date)}: ${info.title}`);
-    cell.innerHTML = `${key === todayKey ? '<span class="today-label">Hôm nay</span>' : ''}<span class="day-number">${day}</span>${code ? `<span class="shift-chip ${info.className}">${code}</span>` : ''}`;
+    cell.innerHTML = `${key === todayKey ? '<span class="today-label">Hôm nay</span>' : ''}<span class="day-number">${day}</span>${code ? `<span class="shift-chip ${info.className}">${code}</span>` : '<span class="day-unassigned">Chưa cập nhật</span>'}`;
     cell.addEventListener('click', () => openDayModal(key));
     grid.appendChild(cell);
   }
@@ -4295,9 +4305,11 @@ function bindCalendarSwipe() {
 function openDayModal(key) {
   if (state.suppressCalendarClick) return;
   state.selectedDate = key;
-  state.selectedCode = state.schedule[key] || '18';
+  state.selectedCode = state.schedule[key] || null;
   $('#modalDate').textContent = displayDate(parseDate(key), { weekday: 'long', day: 'numeric', month: 'long' });
-  $('#modalTitle').textContent = `Lịch ngày ${parseDate(key).getDate()}`;
+  $('#modalTitle').textContent = `Lịch ngày ${parseDate(key).getDate()}${state.selectedCode ? '' : ' · Chưa cập nhật'}`;
+  $('#modalSubtitle').textContent = state.selectedCode ? 'Chọn ca của Vy cho ngày này' : 'Ngày chưa có dữ liệu. Chỉ chọn ca khi lịch đã được xác nhận.';
+  $('#saveShift').disabled = !state.selectedCode;
   $$('#shiftPicker button').forEach((button) => button.classList.toggle('active', button.dataset.code === state.selectedCode));
   $('#dayModal').hidden = false;
   renderCalendar();
@@ -4323,13 +4335,9 @@ function setAuthenticated(authenticated) {
   const loginScreen = $('#loginScreen');
   appShell.classList.toggle('is-unlocked', authenticated);
   loginScreen.hidden = authenticated;
-  if (authenticated) {
-    localStorage.setItem(AUTH_KEY, 'true');
-    startChatPolling('vy');
-  } else {
-    localStorage.removeItem(AUTH_KEY);
-    stopChatPolling();
-  }
+  if (!authenticated && state.authenticatedRole === 'vy') state.authenticatedRole = null;
+  if (authenticated) startChatPolling('vy');
+  else stopChatPolling();
 }
 
 async function handleLogin(event) {
@@ -4337,36 +4345,36 @@ async function handleLogin(event) {
   const username = $('#username').value.trim();
   const password = $('#password').value;
   const error = $('#loginError');
-  if (username === DEMO_USERNAME && password === DEMO_PASSWORD) {
+  try {
+    const response = await fetch('/api/user/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+      cache: 'no-store'
+    });
+    const session = await response.json().catch(() => ({}));
+    if (!response.ok || typeof session.token !== 'string' || session.role !== 'vy') throw new Error(session.error || 'Tài khoản hoặc mật khẩu chưa đúng.');
+    localStorage.setItem(VY_TOKEN_KEY, session.token);
+    state.authenticatedRole = 'vy';
     error.textContent = '';
-    try {
-      const response = await fetch('/api/user/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-      const session = await response.json();
-      if (response.ok && typeof session.token === 'string') localStorage.setItem(VY_AUDIO_TOKEN_KEY, session.token);
-      else localStorage.removeItem(VY_AUDIO_TOKEN_KEY);
-    } catch {
-      localStorage.removeItem(VY_AUDIO_TOKEN_KEY);
-    }
     setAuthenticated(true);
     renderOverview();
     renderCalendar();
-    loadSharedSchedule();
+    await loadSharedSchedule();
     handleIncomingNotificationTarget();
     showToast('Đăng nhập thành công, chào Vy yêu 💗');
-    if (!localStorage.getItem(VY_AUDIO_TOKEN_KEY)) showToast('Phiên nghe riêng tư chưa kết nối server; nhạc karaoke sẽ báo lỗi xác thực.');
-    return;
+  } catch (loginError) {
+    localStorage.removeItem(VY_TOKEN_KEY);
+    error.textContent = loginError.message || 'Không thể kết nối máy chủ đăng nhập.';
+    $('#password').select();
   }
-  error.textContent = 'Tài khoản hoặc mật khẩu chưa đúng, thử lại nhé.';
-  $('#password').select();
 }
 
 function handleLogout() {
   closeKaraokeLyrics();
-  localStorage.removeItem(VY_AUDIO_TOKEN_KEY);
+  localStorage.removeItem(VY_TOKEN_KEY);
+  localStorage.removeItem(ADMIN_TOKEN_KEY);
+  state.authenticatedRole = null;
   setAuthenticated(false);
   $('#loginForm').reset();
   $('#loginError').textContent = '';
@@ -4523,11 +4531,12 @@ async function subscribeToWebPush(role = 'vy', adminToken = '') {
     });
   }
   const headers = { 'Content-Type': 'application/json' };
-  if (role === 'admin') headers.Authorization = `Bearer ${adminToken}`;
+  const token = role === 'admin' ? adminToken : sessionToken('vy');
+  if (token) headers.Authorization = `Bearer ${token}`;
   const subscribeResponse = await fetch('/api/push/subscribe', {
     method: 'POST',
     headers,
-    body: JSON.stringify(role === 'admin' ? { subscription, role } : subscription)
+    body: JSON.stringify({ subscription, role })
   });
   if (!subscribeResponse.ok) throw new Error('Không lưu được thiết bị nhận nhắc. Vy thử lại nhé.');
 }
@@ -4706,16 +4715,29 @@ function bindEvents() {
   });
   $$('#shiftPicker button').forEach((button) => button.addEventListener('click', () => {
     state.selectedCode = button.dataset.code;
+    $('#saveShift').disabled = false;
     $$('#shiftPicker button').forEach((item) => item.classList.toggle('active', item === button));
   }));
-  $('#saveShift').addEventListener('click', () => {
+  $('#saveShift').addEventListener('click', async () => {
     if (!state.selectedDate || !state.selectedCode) return;
+    const previousSchedule = { ...state.schedule };
     state.schedule[state.selectedDate] = state.selectedCode;
-    saveSchedule();
+    $('#saveShift').disabled = true;
+    try {
+      await syncScheduleToServer(state.schedule);
+    } catch (error) {
+      state.schedule = previousSchedule;
+      renderOverview();
+      renderCalendar();
+      showToast(error.message || 'Chưa lưu được lịch.');
+      $('#saveShift').disabled = false;
+      return;
+    }
     renderOverview();
     closeDayModal();
     showToast('Đã lưu lịch mới cho Vy rồi nha 🌷');
   });
+  $('#retryScheduleLoad').addEventListener('click', () => loadSharedSchedule());
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape' && !$('#dayModal').hidden) closeDayModal();
   });
@@ -4727,7 +4749,7 @@ function init() {
   bindKaraoke();
   bindEvents();
   bindNotificationNavigation();
-  setAuthenticated(localStorage.getItem(AUTH_KEY) === 'true');
+  setAuthenticated(false);
   renderOverview();
   renderCalendar();
   renderLoveCounter();
@@ -4742,10 +4764,7 @@ function init() {
       console.error('Không đăng ký được service worker:', error);
     });
   }
-  if (localStorage.getItem(ADMIN_TOKEN_KEY)) showAdminScreen();
-  if (localStorage.getItem(AUTH_KEY) === 'true') loadSharedSchedule();
-  handleIncomingCallHint();
-  handleIncomingNotificationTarget();
+  restoreAuthenticatedSession();
 }
 
 init();
