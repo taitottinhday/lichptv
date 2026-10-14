@@ -1,6 +1,6 @@
 import { AVATAR_IMAGE_URL } from './avatar-config.js';
 import { KARAOKE_CATEGORIES, UNIQUE_KARAOKE_SONGS } from './karaoke-data.js';
-import { activeTimedLyricIndex, getLineState, karaokeLyricsTextSimilarity, lrcLineIntervals, normalizeTimedLyrics, parseSyncedKaraokeLyrics, timingMatchesAudio } from './karaoke-timing.js';
+import { activeTimedLyricIndex, estimateLyricLineIntervals, getLineState, karaokeLyricsTextSimilarity, lrcLineIntervals, normalizeTimedLyrics, parseSyncedKaraokeLyrics, timingMatchesAudio } from './karaoke-timing.js';
 
 const ADMIN_TOKEN_KEY = 'lich-cua-vy-admin-token-v1';
 const VY_TOKEN_KEY = 'lich-cua-vy-audio-session-v1';
@@ -891,20 +891,13 @@ function updateKaraokeSyncedLyrics({ refreshRows = false } = {}) {
   const session = state.karaokeLyricsModal;
   const view = $('#karaokeLyricsText');
   if (!audio || !view) return;
-  if (audioState.songId !== session.songId || !karaokeLyricsTimingMatchesAudio(session, audio, audioState)) {
+  const timeline = karaokeLyricsLineTimeline(session, audio, audioState);
+  if (audioState.songId !== session.songId || !timeline.lines.length) {
     view.querySelectorAll('.lyrics-line-row.is-current, .lyrics-line-row.is-done')
       .forEach((line) => line.classList.remove('is-current', 'is-done'));
     return;
   }
-  const wordLines = Array.isArray(session.wordSyncLines) ? session.wordSyncLines : [];
-  const lines = wordLines.length
-    ? normalizeTimedLyrics(wordLines.map((line, index) => ({
-      id: `${session.providerTrackId || session.songId}-word-line-${index}`,
-      text: line?.text || (Array.isArray(line?.words) ? line.words.map((word) => word?.text || '').join('') : ''),
-      startMs: line?.startMs,
-      endMs: line?.endMs
-    })), { warn: import.meta.env.DEV })
-    : lrcLineIntervals(parseSyncedKaraokeLyrics(session.syncedLyrics));
+  const lines = timeline.lines;
   if (!lines.length) {
     audioState.activeLineIndex = -1;
     view.querySelectorAll('.lyrics-line-row.is-current, .lyrics-line-row.is-done')
@@ -952,11 +945,39 @@ function karaokeLyricsTimingMatchesAudio(session, audio, audioState = state.kara
   });
 }
 
+function karaokeLyricsLineTimeline(session, audio, audioState = state.karaokeAudio) {
+  const wordLines = Array.isArray(session?.wordSyncLines) ? session.wordSyncLines : [];
+  if (karaokeLyricsTimingMatchesAudio(session, audio, audioState)) {
+    const lines = wordLines.length
+      ? normalizeTimedLyrics(wordLines.map((line, index) => ({
+        id: `${session.providerTrackId || session.songId}-word-line-${index}`,
+        text: line?.text || (Array.isArray(line?.words) ? line.words.map((word) => word?.text || '').join('') : ''),
+        startMs: line?.startMs,
+        endMs: line?.endMs
+      })), { warn: import.meta.env.DEV })
+      : lrcLineIntervals(parseSyncedKaraokeLyrics(session.syncedLyrics));
+    if (lines.length) return { lines, estimated: false, verified: true };
+  }
+
+  const canEstimate = Boolean(session?.text?.trim() && !session.loading
+    && session.songId && audioState.songId === session.songId && audio?.currentSrc
+    && Number.isFinite(audio.duration) && audio.duration >= 10);
+  if (!canEstimate) return { lines: [], estimated: false, verified: false };
+  const parsedSyncedLines = parseSyncedKaraokeLyrics(session.syncedLyrics);
+  const lyrics = session.source === 'user-lrc' && parsedSyncedLines.length
+    ? parsedSyncedLines.map((line) => line.text)
+    : session.text.replace(/\r\n?/g, '\n').split('\n');
+  return {
+    lines: estimateLyricLineIntervals(lyrics, audio.duration),
+    estimated: true,
+    verified: false
+  };
+}
+
 function startKaraokeLyricsFrameLoop() {
   const audio = $('#karaokeAudioElement');
   if (!audio || audio.paused || audio.ended || karaokeLyricsRafId
-    || !karaokeLyricsTimingMatchesAudio(state.karaokeLyricsModal, audio)
-    || !karaokeSessionHasPlayableTiming(state.karaokeLyricsModal)) return;
+    || !karaokeLyricsLineTimeline(state.karaokeLyricsModal, audio).lines.length) return;
   const tick = () => {
     karaokeLyricsRafId = 0;
     if (audio.paused || audio.ended || state.karaokeAudio.songId !== state.karaokeLyricsModal.songId) return;
@@ -970,14 +991,6 @@ function stopKaraokeLyricsFrameLoop() {
   if (!karaokeLyricsRafId) return;
   cancelAnimationFrame(karaokeLyricsRafId);
   karaokeLyricsRafId = 0;
-}
-
-function karaokeSessionHasPlayableTiming(session) {
-  const wordLines = Array.isArray(session?.wordSyncLines) ? session.wordSyncLines : [];
-  if (wordLines.some((line) => line?.startMs != null && line?.endMs != null
-    && Number.isFinite(Number(line.startMs)) && Number.isFinite(Number(line.endMs))
-    && Number(line.startMs) >= 0 && Number(line.endMs) > Number(line.startMs))) return true;
-  return parseSyncedKaraokeLyrics(session?.syncedLyrics).length >= 2;
 }
 
 function cacheKaraokeLyrics(song, data) {
@@ -1230,18 +1243,20 @@ function renderKaraokeLyricsLines() {
   const view = $('#karaokeLyricsText');
   if (!view) return;
   const wordLines = Array.isArray(session.wordSyncLines) ? session.wordSyncLines : [];
-  const syncedLines = wordLines.length
+  const parsedSyncedLines = parseSyncedKaraokeLyrics(session.syncedLyrics);
+  const wordTimedLines = wordLines.length
     ? wordLines.map((line) => ({ seconds: Number(line?.startMs) / 1000, text: line?.text || (Array.isArray(line?.words) ? line.words.map((word) => word?.text || '').join('') : '') }))
-    : parseSyncedKaraokeLyrics(session.syncedLyrics);
+    : [];
   const audio = $('#karaokeAudioElement');
-  const timingVerified = karaokeLyricsTimingMatchesAudio(session, audio);
-  const wordTimeline = timingVerified ? normalizeTimedLyrics(wordLines.map((line, index) => ({
-    id: `${session.providerTrackId || session.songId}-word-line-${index}`,
-    text: line?.text || (Array.isArray(line?.words) ? line.words.map((word) => word?.text || '').join('') : ''),
-    startMs: line?.startMs,
-    endMs: line?.endMs
-  })), { warn: import.meta.env.DEV }) : [];
-  const lrcTimeline = timingVerified && !wordLines.length ? lrcLineIntervals(syncedLines) : [];
+  const lineTimeline = karaokeLyricsLineTimeline(session, audio);
+  const timingVerified = lineTimeline.verified;
+  const timeline = lineTimeline.lines;
+  const sourceLines = timingVerified && wordLines.length ? wordTimedLines : parsedSyncedLines;
+  const syncedLines = timingVerified && (wordLines.length || parsedSyncedLines.length)
+    ? sourceLines
+    : lineTimeline.estimated && session.source === 'user-lrc' && parsedSyncedLines.length
+      ? parsedSyncedLines
+    : [];
   const lines = syncedLines.length
     ? syncedLines.map((line) => line.text)
     : session.text.replace(/\r\n?/g, '\n').split('\n');
@@ -1265,16 +1280,15 @@ function renderKaraokeLyricsLines() {
     const hidden = session.studyMode && session.hiddenLines.has(index);
     const important = session.importantLines.has(index);
     const wordLine = wordLines[index];
-    const timeline = wordLines.length ? wordTimeline : lrcTimeline;
     const timelineIndex = timeline.findIndex((timed) => timed.sourceIndex === index);
     const timedLine = timelineIndex >= 0 ? timeline[timelineIndex] : null;
-    const hasLineTiming = Boolean(timedLine && timingVerified);
+    const hasLineTiming = Boolean(timedLine);
     const seekTime = timingVerified
       ? wordLines.length ? Number(wordLine?.startMs) / 1000 : Number(syncedLines[index]?.seconds)
       : Number.NaN;
     const hasSeekTime = Number.isFinite(seekTime) && seekTime >= 0;
     const lineData = hasLineTiming
-      ? ` data-synced-lyric-index="${timelineIndex}" data-lyric-time="${timedLine.start}"`
+      ? ` data-synced-lyric-index="${timelineIndex}" data-lyric-time="${timedLine.start}"${lineTimeline.estimated ? ' data-lyric-timing="estimated"' : ''}`
       : '';
     const timedClass = hasLineTiming ? ' is-timed' : '';
     const lineContent = escapeHtml(line);
@@ -1346,12 +1360,14 @@ function renderKaraokeLyricsModal() {
   const hasLanguageNote = session.songId === 'hanh-phuc-moi' && hasLyrics && !session.editing;
   const audio = $('#karaokeAudioElement');
   const timingVerified = karaokeLyricsTimingMatchesAudio(session, audio);
+  const lineTimeline = karaokeLyricsLineTimeline(session, audio);
   const hasTiming = Boolean(session.wordSyncLines?.length || parseSyncedKaraokeLyrics(session.syncedLyrics).length);
   if (session.loading) status.textContent = 'Đang tải lời bài hát…';
   else if (session.error) status.textContent = 'Không đọc được file lời bài hát';
   else if (!hasLyrics) status.textContent = 'Bài hát này chưa có lời';
   else if (session.studyMode) status.textContent = 'Chế độ học thuộc';
   else if (hasLanguageNote) status.textContent = 'Đoạn mở đầu là tiếng Hàn viết bằng phiên âm Latin; phần sau là lời tiếng Việt.';
+  else if (lineTimeline.estimated) status.textContent = 'Đồng bộ ước lượng theo từng dòng và thời lượng bài; có thể lệch.';
   else if (timingVerified && session.wordSyncLines?.length) status.textContent = 'Lời đang tô sáng theo từng dòng; thời điểm có thể lệch nhẹ.';
   else if (timingVerified && parseSyncedKaraokeLyrics(session.syncedLyrics).length) status.textContent = session.source === 'zing-lrc'
     ? 'LRC từ Zing MP3 khớp lời và thời lượng; tô sáng theo từng dòng.'

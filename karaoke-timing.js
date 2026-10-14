@@ -71,6 +71,31 @@ export function lrcLineIntervals(lines) {
   })).filter((line) => line.text?.trim() && Number.isFinite(line.start) && Number.isFinite(line.end) && line.start >= 0 && line.end > line.start);
 }
 
+/** Create explicitly approximate row intervals for lyrics that have no timestamps. */
+export function estimateLyricLineIntervals(lines, durationSeconds) {
+  const duration = Number(durationSeconds);
+  if (!Array.isArray(lines) || !Number.isFinite(duration) || duration < 10) return [];
+  const eligible = lines.map((value, sourceIndex) => ({
+    sourceIndex,
+    text: String(value || '').trim()
+  })).filter(({ text }) => text && !/^\[(verse|chorus|pre-chorus|bridge|điệp khúc|đoạn)\s*[^\]]*\]$/i.test(text));
+  if (!eligible.length) return [];
+
+  const introOffset = Math.min(6, duration * 0.04);
+  const endOffset = Math.min(5, duration * 0.03);
+  const availableDuration = duration - introOffset - endOffset;
+  if (availableDuration <= 0) return [];
+  const weights = eligible.map(({ text }) => Math.max(1, (text.match(/[\p{L}\p{N}]+/gu) || []).length));
+  const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+  let elapsedWeight = 0;
+  return eligible.map((line, index) => {
+    const start = introOffset + availableDuration * elapsedWeight / totalWeight;
+    elapsedWeight += weights[index];
+    const end = introOffset + availableDuration * elapsedWeight / totalWeight;
+    return { id: `estimate-${line.sourceIndex}-${start.toFixed(3)}`, sourceIndex: line.sourceIndex, text: line.text, start, end };
+  });
+}
+
 /** Latest-starting line wins if verified intervals overlap; gaps return -1. */
 export function activeTimedLyricIndex(lines, time) {
   if (!Array.isArray(lines) || !Number.isFinite(time)) return -1;
