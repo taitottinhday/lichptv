@@ -1,6 +1,6 @@
 import { AVATAR_IMAGE_URL } from './avatar-config.js';
 import { KARAOKE_CATEGORIES, UNIQUE_KARAOKE_SONGS } from './karaoke-data.js';
-import { activeTimedLyricIndex, estimateLyricLineIntervals, getLineState, karaokeLyricsTextSimilarity, lrcLineIntervals, normalizeTimedLyrics, parseSyncedKaraokeLyrics, timingMatchesAudio } from './karaoke-timing.js';
+import { activeTimedLyricIndex, estimateLyricLineIntervals, fitTimedLyricIntervalsToAudio, getLineState, karaokeLyricsTextSimilarity, lrcLineIntervals, normalizeTimedLyrics, parseSyncedKaraokeLyrics, timingMatchesAudio } from './karaoke-timing.js';
 
 const ADMIN_TOKEN_KEY = 'lich-cua-vy-admin-token-v1';
 const VY_TOKEN_KEY = 'lich-cua-vy-audio-session-v1';
@@ -955,7 +955,11 @@ function karaokeLyricsLineTimeline(session, audio, audioState = state.karaokeAud
         startMs: line?.startMs,
         endMs: line?.endMs
       })), { warn: import.meta.env.DEV })
-      : lrcLineIntervals(parseSyncedKaraokeLyrics(session.syncedLyrics));
+      : fitTimedLyricIntervalsToAudio(
+        lrcLineIntervals(parseSyncedKaraokeLyrics(session.syncedLyrics)),
+        session.durationSeconds,
+        audio.duration
+      );
     if (lines.length) return { lines, estimated: false, verified: true };
   }
 

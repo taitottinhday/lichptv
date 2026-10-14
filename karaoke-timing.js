@@ -71,6 +71,18 @@ export function lrcLineIntervals(lines) {
   })).filter((line) => line.text?.trim() && Number.isFinite(line.start) && Number.isFinite(line.end) && line.start >= 0 && line.end > line.start);
 }
 
+/** Adjust line boundaries for small recording-length differences after the track is verified. */
+export function fitTimedLyricIntervalsToAudio(lines, sourceDurationSeconds, audioDurationSeconds) {
+  if (!Array.isArray(lines)) return [];
+  const sourceDuration = Number(sourceDurationSeconds);
+  const audioDuration = Number(audioDurationSeconds);
+  if (!Number.isFinite(sourceDuration) || sourceDuration <= 0
+    || !Number.isFinite(audioDuration) || audioDuration <= 0) return lines;
+  const ratio = audioDuration / sourceDuration;
+  if (!Number.isFinite(ratio) || ratio <= 0) return lines;
+  return lines.map((line) => ({ ...line, start: line.start * ratio, end: line.end * ratio }));
+}
+
 /** Create explicitly approximate row intervals for lyrics that have no timestamps. */
 export function estimateLyricLineIntervals(lines, durationSeconds) {
   const duration = Number(durationSeconds);
@@ -117,7 +129,9 @@ export function timingMatchesAudio({ songId, source, providerTrackId, durationSe
   const trustedTimedSource = source === 'lrclib' || source === 'zing-lrc';
   return Boolean(songId && audioSongId === songId && audioSrc && trustedTimedSource && providerTrackId
     && Number.isFinite(audioDuration) && audioDuration > 0 && Number.isFinite(lyricsDuration) && lyricsDuration > 0
-    && Math.abs(audioDuration - lyricsDuration) <= Math.max(1.5, audioDuration * 0.005));
+    // Provider and manifest durations are often rounded differently. A small fixed
+    // allowance avoids rejecting otherwise verified LRC solely at the threshold.
+    && Math.abs(audioDuration - lyricsDuration) <= Math.max(2, audioDuration * 0.005));
 }
 
 export function activeLyricIndex(lines, currentTimeSeconds) {
