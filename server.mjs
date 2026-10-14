@@ -12,14 +12,16 @@ import { AccessToken, LiveKitAPI } from 'livekit-server-sdk';
 import { defaultSchedule } from './schedule-data.js';
 import { AVATAR_IMAGE_URL } from './avatar-config.js';
 import { UNIQUE_KARAOKE_SONGS } from './karaoke-data.js';
-import { karaokeLyricsTextSimilarity } from './karaoke-timing.js';
+import { karaokeLyricsTextSimilarity, parseSyncedKaraokeLyrics } from './karaoke-timing.js';
 
 const { Pool } = pg;
 const app = express();
 const port = Number(process.env.PORT || 4173);
 const isProduction = process.env.NODE_ENV === 'production' || Boolean(process.env.RAILWAY_ENVIRONMENT);
 const distRoot = resolve(fileURLToPath(new URL('./dist', import.meta.url)));
+const publicRoot = resolve(fileURLToPath(new URL('./public/', import.meta.url)));
 const audioManifestPath = resolve(fileURLToPath(new URL('./public/audio-manifest.json', import.meta.url)));
+const karaokeLrcManifestPath = resolve(fileURLToPath(new URL('./public/karaoke-lrc-manifest.json', import.meta.url)));
 const databaseUrl = process.env.DATABASE_URL;
 const pool = databaseUrl ? new Pool({ connectionString: databaseUrl, ssl: databaseUrl.includes('localhost') ? false : { rejectUnauthorized: false }, connectionTimeoutMillis: 5000, idleTimeoutMillis: 30000, query_timeout: 12000, statement_timeout: 10000, max: 8 }) : null;
 const supabaseUrl = process.env.SUPABASE_URL?.trim().replace(/\/$/, '');
@@ -80,6 +82,8 @@ let memoryChatMessageId = 0;
 const memoryChatReactions = new Map();
 const memoryLyrics = new Map();
 const karaokeMetadataCache = new Map();
+const zingLrcCache = new Map();
+let zingLrcManifestPromise;
 const memorySchedule = {};
 let memoryScheduleUpdatedAt = null;
 let pushConfigured = false;
@@ -295,6 +299,7 @@ async function karaokeManifestMetadata(song) {
 function lyricsAttribution(source) {
   if (source === 'musixmatch') return 'Lyrics data provided under the Musixmatch API terms.';
   if (source === 'lrclib') return 'Lyrics retrieved from LRCLIB; verify rights before redistribution.';
+  if (source === 'zing-lrc') return 'LRC timestamps provided by Zing MP3; shown only when lyrics and audio duration match.';
   return '';
 }
 
@@ -338,6 +343,10 @@ function lyricsEntryHasTiming(entry) {
 
 function lyricsTextMatches(left, right) {
   return karaokeLyricsTextSimilarity(left, right) >= 0.9;
+}
+
+async function localLyricsText(songId) {
+  try { return await readFile(resolve(publicRoot, 'lyrics', `${songId}.txt`), 'utf8'); } catch { return ''; }
 }
 
 async function writeStoredLyrics(entry) {
@@ -578,6 +587,57 @@ async function resolveLrclibLyrics(song) {
   };
 }
 
+async function resolveZingLrcLyrics(song) {
+  try {
+    zingLrcManifestPromise ||= readFile(karaokeLrcManifestPath, 'utf8').then(JSON.parse);
+    const manifest = await zingLrcManifestPromise;
+    const entry = manifest?.entries?.[song.songId];
+    if (!entry || !/^https:\/\/static-zmp3\.zmdcdn\.me\/lyrics\//i.test(entry.url || '') || !entry.sourceTrackId) {
+      return { status: 'not_found', reason: 'Chưa có nguồn LRC đã khớp lời cho bài này.', provider: 'zing-lrc' };
+    }
+    const cached = zingLrcCache.get(song.songId);
+    if (cached && cached.expiresAt > Date.now()) return cached.result;
+
+    const response = await fetch(entry.url, {
+      headers: { Accept: 'text/plain', 'User-Agent': lrclibUserAgent },
+      signal: AbortSignal.timeout(10000)
+    });
+    if (!response.ok) return { status: 'not_found', reason: `Nguồn LRC phản hồi HTTP ${response.status}.`, provider: 'zing-lrc' };
+    const rawLrc = await response.text();
+    if (rawLrc.length > 1_000_000) return { status: 'not_found', reason: 'Nguồn LRC vượt quá giới hạn kích thước.', provider: 'zing-lrc' };
+    const timedLines = parseSyncedKaraokeLyrics(rawLrc);
+    if (timedLines.length < 2) return { status: 'not_found', reason: 'Nguồn LRC không có đủ timestamp.', provider: 'zing-lrc' };
+
+    const staticLyrics = await localLyricsText(song.songId);
+    const lyrics = timedLines.map((line) => line.text).join('\n');
+    if (!staticLyrics.trim() || !lyricsTextMatches(staticLyrics, lyrics)) {
+      return { status: 'needs_verification', reason: 'Lời LRC không khớp đủ với lời đang có; không tự ghép timestamp.', provider: 'zing-lrc' };
+    }
+    const result = {
+      status: 'matched',
+      provider: 'zing-lrc',
+      lyrics,
+      syncedLyrics: rawLrc,
+      track: {
+        id: String(entry.sourceTrackId),
+        artistName: String(entry.artist || ''),
+        duration: Number(entry.durationSeconds)
+      },
+      score: 1,
+      attribution: lyricsAttribution('zing-lrc'),
+      sourceUrl: entry.url,
+      cacheAllowed: false
+    };
+    zingLrcCache.set(song.songId, { result, expiresAt: Date.now() + 6 * 60 * 60 * 1000 });
+    return result;
+  } catch (error) {
+    if (error.name === 'AbortError' || error.name === 'TimeoutError') {
+      return { status: 'not_found', reason: 'Nguồn LRC hết thời gian chờ.', provider: 'zing-lrc' };
+    }
+    return { status: 'not_found', reason: 'Không đọc được nguồn LRC.', provider: 'zing-lrc' };
+  }
+}
+
 async function resolveMusixmatchLyrics(song) {
   const search = await musixmatchRequest('track.search', {
     q_track: song.title,
@@ -606,7 +666,20 @@ async function resolveMusixmatchLyrics(song) {
 }
 
 async function resolveLyrics(song) {
-  if (lyricsProvider === 'lrclib') return resolveLrclibLyrics(song);
+  if (lyricsProvider === 'lrclib') {
+    let lrclib;
+    try {
+      lrclib = await resolveLrclibLyrics(song);
+    } catch (error) {
+      lrclib = { status: 'provider_error', reason: error.message || 'LRCLIB không phản hồi.', provider: 'lrclib' };
+    }
+    if (lrclib.status === 'matched' && parseSyncedKaraokeLyrics(lrclib.syncedLyrics).length >= 2) {
+      const staticLyrics = await localLyricsText(song.songId);
+      if (!staticLyrics.trim() || lyricsTextMatches(staticLyrics, lrclib.lyrics)) return lrclib;
+    }
+    const zing = await resolveZingLrcLyrics(song);
+    return zing.status === 'matched' ? zing : lrclib;
+  }
   if (lyricsProvider === 'link') {
     return {
       status: 'link_only',
@@ -651,9 +724,9 @@ async function syncOneLyrics(song, { force = false } = {}) {
     matchScore: resolved.score,
     verificationStatus: 'verified',
     attribution: resolved.attribution,
-    cacheAllowed: lyricsCacheAllowed
+    cacheAllowed: resolved.provider === 'zing-lrc' ? false : lyricsCacheAllowed
   };
-  if (!lyricsCacheAllowed) return { ...resolved, status: 'display_only', entry };
+  if (!lyricsCacheAllowed || entry.cacheAllowed !== true) return { ...resolved, status: 'display_only', entry };
   const stored = await writeStoredLyrics(entry);
   return { ...resolved, status: 'saved', entry: stored || entry };
 }
@@ -671,7 +744,7 @@ function lyricsResultPayload(song, result) {
     artist: entry?.artist || result.track?.artistName || result.track?.artist_name || '',
     source: entry?.source || result.provider || '',
     sourceUrl: result.sourceUrl || '',
-    sourceName: result.sourceName || (result.provider === 'lrclib' ? 'LRCLIB' : ''),
+    sourceName: result.sourceName || (result.provider === 'lrclib' ? 'LRCLIB' : result.provider === 'zing-lrc' ? 'Zing MP3' : ''),
     attribution: entry?.attribution || result.attribution || '',
     providerTrackId: entry?.provider_track_id || result.track?.id || result.track?.track_id || '',
     albumName: entry?.album_name || result.track?.albumName || result.track?.album_name || '',
@@ -679,6 +752,7 @@ function lyricsResultPayload(song, result) {
     hasWordSync: entry?.has_word_sync === true || result.track?.hasWordSync === true,
     wordSyncLines: entry?.wordSyncLines || parseLrcLibLyricsfile(result.track?.lyricsfile),
     cacheable: (result.status === 'saved' || result.status === 'skipped')
+      && entry?.cacheAllowed !== false
       && (entry?.cache_allowed === true || lyricsCacheAllowed),
     matchScore: result.score || entry?.match_score || 0
   };

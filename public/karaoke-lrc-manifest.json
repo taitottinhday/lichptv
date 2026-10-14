@@ -1,0 +1,2141 @@
+{
+  "schemaVersion": 1,
+  "provider": "zing-lrc",
+  "entries": {
+    "10-10": {
+      "title": "10/10 (feat. Phạm Đình Thái Ngân, Anh Tú Atus, Quang Trung & Hùng Huỳnh)",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "z4Rj6CBg1Hur",
+      "durationSeconds": 216,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2/8/1/2/2812bf0be280aa8e76896c161d1c14cb.lrc"
+    },
+    "50-cuoc-goi-nho": {
+      "title": "50 CUỘC GỌI NHỠ",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "Xb3H4Qi6jged",
+      "durationSeconds": 240,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/d/b/1/3/db13beb91b35b162896213e221b6f0b2.lrc"
+    },
+    "aaa": {
+      "title": "AAA",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "ODM2ABwvEbdu",
+      "durationSeconds": 236,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/6/4/0/d/640d4b38afc8db59a551d7fec1da1dd4.lrc"
+    },
+    "ai-chung-tinh-duoc-mai": {
+      "title": "Ai Chung Tình Được Mãi",
+      "artist": "Đinh Tùng Huy, ACV",
+      "sourceTrackId": "jPoiWDjWR4Ja",
+      "durationSeconds": 335,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/4/5/3/e/453e939b626b8ffb90ee15de489cd6ee.lrc"
+    },
+    "ai-ky": {
+      "title": "ÁI KỶ",
+      "artist": "EM XINH \"SAY HI\", Lâm Bảo Ngọc",
+      "sourceTrackId": "nVBT2kqzEHf3",
+      "durationSeconds": 248,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/f/5/8/2/f58218eda05a2d156852b3785cc181a0.lrc"
+    },
+    "ai-yeu-anh-nhat": {
+      "title": "AI YÊU ANH NHẤT",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "cTX80EaxabBI",
+      "durationSeconds": 281,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/3/5/0/d/350d6b8576d2d2d0ac1e9f066300b99f.lrc"
+    },
+    "airplane-mode": {
+      "title": "AIRPLANE MODE",
+      "artist": "Coldzy",
+      "sourceTrackId": "o0imMSN0DZdd",
+      "durationSeconds": 104,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/3/6/e/b/36eb2d711b684c2fb66aa742afa216f2.lrc"
+    },
+    "all-eyes-on-us": {
+      "title": "ALL EYES ON US",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "BsDPDFwkdMUe",
+      "durationSeconds": 274,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/5/7/4/a/574ac673387af668a4666e7a6bcfa3d9.lrc"
+    },
+    "alone": {
+      "title": "Alone",
+      "artist": "Alan Walker",
+      "sourceTrackId": "iYUgqQx5mSnm",
+      "durationSeconds": 159,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/5/8/a/5/58a57c4bfaffaa879d8dc76c7d80f193.lrc"
+    },
+    "anh-biet-roi": {
+      "title": "ANH BIẾT RỒI (feat. Rhyder, Jmi Ko)",
+      "artist": "ANH TRAI \"SAY HI\", Rhyder, Jmi Ko",
+      "sourceTrackId": "zoV5BTqLxwwy",
+      "durationSeconds": 260,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/c/7/5/e/c75e47ad52d38ff24a0b0511f81a9998.lrc"
+    },
+    "anh-cam-giac-minh-sap-chia-tay": {
+      "title": "ANH CẢM GIÁC MÌNH SẮP CHIA TAY",
+      "artist": "ANH TRAI \"SAY HI\", Hải Nam",
+      "sourceTrackId": "alMlMw06xkdX",
+      "durationSeconds": 272,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/7/4/2/a/742a81f710723604a03c9b3b5049ac58.lrc"
+    },
+    "anh-chua-thuong-em-den-vay-dau": {
+      "title": "Anh Chưa Thương Em Đến Vậy Đâu",
+      "artist": "Đạt Long Vinh",
+      "sourceTrackId": "TWZp2mavJ7uX",
+      "durationSeconds": 245,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2/0/7/2/20723467a0dee8737eea5f2dcddc17a8.lrc"
+    },
+    "anh-dung-di-nhe": {
+      "title": "Anh Đừng Đi Nhé",
+      "artist": "T Gumiho",
+      "sourceTrackId": "udwIbDOy89ms",
+      "durationSeconds": 213,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/7/2/6/a/726aea26a2b37cd196e955af7f74a5bd.lrc"
+    },
+    "anh-em-goi-la-co-mat-ngay": {
+      "title": "ANH EM GỌI LÀ CÓ MẶT NGAY (feat. Đức Phúc, CAPTAIN, Quân A.P & Anh Tú)",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "10ebPiH6LGhm",
+      "durationSeconds": 268,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/7/e/9/2/7e92c531c1137a5c92226c6a4ac1951a.lrc"
+    },
+    "anh-khong-den-de-roi-di": {
+      "title": "ANH KHÔNG ĐẾN ĐỂ RỜI ĐI",
+      "artist": "ANH TRAI \"SAY HI\", OgeNus",
+      "sourceTrackId": "tOy7pRguQUua",
+      "durationSeconds": 232,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/e/1/6/f/e16f604bd413e89de6783d32a30822cd.lrc"
+    },
+    "anh-khong-doi-qua": {
+      "title": "Anh Không Đòi Quà",
+      "artist": "OnlyC, Karik",
+      "sourceTrackId": "Cu8ZLNFtp3IF",
+      "durationSeconds": 167,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2014/a/5/a57bee376f07633f6cbaf4c48b937eec_1074792876.lrc"
+    },
+    "anh-muon-em-song-sao": {
+      "title": "Anh Muốn Em Sống Sao",
+      "artist": "Hoàng Oanh",
+      "sourceTrackId": "zlMvMuZUkDpF",
+      "durationSeconds": 274,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/9/f/e/3/9fe36d8d1367e4823b0d8cefd6c0117e.lrc"
+    },
+    "anh-nang-cua-anh": {
+      "title": "Ánh Nắng Của Anh (Chờ Em Đến Ngày Mai OST)",
+      "artist": "Đức Phúc",
+      "sourceTrackId": "m7cEYB3NQrU9",
+      "durationSeconds": 264,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2017/01/12/2290252da79e87550a07e858db86579f_1075798557.lrc"
+    },
+    "anh-trai-nuoc-viet": {
+      "title": "ANH TRAI NƯỚC VIỆT (feat. ERIK, Đức Phúc, Quân A.P, Jsol & Hùng Huỳnh)",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "5DNq0s65mXsK",
+      "durationSeconds": 252,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2/3/b/5/23b51143d9c8feba7ed853db38846324.lrc"
+    },
+    "ao-anh": {
+      "title": "ẢO ẢNH",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "eocD114U8hr2",
+      "durationSeconds": 262,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/0/5/6/b/056bbd2692409362bbd63fa91e4d1d33.lrc"
+    },
+    "ao-em-chua-mac-mot-lan": {
+      "title": "Áo Em Chưa Mặc Một Lần",
+      "artist": "Lưu Ánh Loan, Thanh Vinh",
+      "sourceTrackId": "LOkuAloSxDr4",
+      "durationSeconds": 338,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2/5/e/5/25e5bdc86de1f578d54111f645b5449f.lrc"
+    },
+    "ba-chim-bay-noi": {
+      "title": "Bảy Nổi Ba Chìm",
+      "artist": "Diệu Kiên, CT",
+      "sourceTrackId": "cTOoy6K8Gx7G",
+      "durationSeconds": 273,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/c/b/e/f/cbefb6a40b712e6c4f03361e9a6a4c7d.lrc"
+    },
+    "bac-bling": {
+      "title": "Bắc Bling (Bắc Ninh)",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "1F61hWDHgbyH",
+      "durationSeconds": 245,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/f/9/f/9/f9f973d4ac3b676a4a4d854b05116197.lrc"
+    },
+    "bad-liar": {
+      "title": "Bad Liar",
+      "artist": "Imagine Dragons",
+      "sourceTrackId": "sfXUtpBAAaeu",
+      "durationSeconds": 260,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/e/d/9/e/ed9e6a4c1231b878a4e18becd62b2e4f.lrc"
+    },
+    "bad-night": {
+      "title": "BAD NIGHT",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "Q8VIa4x2Xsjw",
+      "durationSeconds": 234,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/6/0/e/2/60e26a9dabc835433c971455eeea7ab1.lrc"
+    },
+    "ban-thiet-ke": {
+      "title": "Bản Thiết Kế",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "TZb0GNjcwQtg",
+      "durationSeconds": 288,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/f/1/7/5/f175749e606b88c3dcb5de4ea9392f11.lrc"
+    },
+    "banh": {
+      "title": "BẢNH (feat. Anh Tú Atus, Song Luân, RHYDER, HURRYKNG, Captain, Quang Trung, Dương Domic, Anh Tú, JSOL, Đỗ Phú Quí, Tage, Phạm Đình Thái Ngân, Phạm Anh Duy & Hùng Huỳnh)",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "DnC6EE51pnx8",
+      "durationSeconds": 218,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/b/a/a/b/baab27b41a9e9ef64037937418eb40fa.lrc"
+    },
+    "banh-mi-khong": {
+      "title": "Bánh Mì Không",
+      "artist": "Đạt G, DuUyen",
+      "sourceTrackId": "yNQUiRR5TUK",
+      "durationSeconds": 245,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/6/f/9/7/6f97fc3d7c394df24915e878b913d7bb.lrc"
+    },
+    "bao-loi-con-chua-noi": {
+      "title": "BAO LỜI CON CHƯA NÓI (feat. Dương Domic, Anh Tú Atus, Song Luân, Quang Trung & Anh Tú)",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "olFSfNGnpTza",
+      "durationSeconds": 333,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/f/d/d/2/fdd29871fcea0ed7123e0cfa56dd6f98.lrc"
+    },
+    "bat-tinh-yeu-len": {
+      "title": "Bật Tình Yêu Lên",
+      "artist": "Tăng Duy Tân, Hòa Minzy",
+      "sourceTrackId": "iCF7bpqNwpe2",
+      "durationSeconds": 204,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/7/f/2/6/7f26f7ad3e77cc8b9259b1618f64440f.lrc"
+    },
+    "bay": {
+      "title": "Bay",
+      "artist": "Zina Bya",
+      "sourceTrackId": "M19qvPi5huIm",
+      "durationSeconds": 334,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2014/2/7/2788774e301b7c3107d8e208742f95cc_1074433236.lrc"
+    },
+    "ben-tren-tang-lau": {
+      "title": "Bên Trên Tầng Lầu",
+      "artist": "Tăng Duy Tân",
+      "sourceTrackId": "ZCy2QCga0Yv2",
+      "durationSeconds": 184,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/8/4/b/a/84bab1b4b163442eeddb256135d2a154.lrc"
+    },
+    "bi-mat-nho": {
+      "title": "Bí Mật Nhỏ",
+      "artist": "B Ray, Hoàng Tôn, Bảo Hân Helia",
+      "sourceTrackId": "iudkhdKtMCZ2",
+      "durationSeconds": 234,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/1/3/d/3/13d381e51393289b03b57cf647e99c33.lrc"
+    },
+    "bon-chu-lam": {
+      "title": "Bốn Chữ Lắm",
+      "artist": "Khánh Bình",
+      "sourceTrackId": "dROdbdInNlA9",
+      "durationSeconds": 257,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2/7/0/c/270c9591ae809e634b278e8c3cefbf7b.lrc"
+    },
+    "bong-bong-bang-bang": {
+      "title": "Bống Bống Bang Bang",
+      "artist": "Bé Bào Ngư",
+      "sourceTrackId": "YulldlYMEQQn",
+      "durationSeconds": 234,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/a/4/6/a/a46a8d054f81b9aaee64654b7a2e5849.lrc"
+    },
+    "bong-phu-hoa": {
+      "title": "Bóng Phù Hoa",
+      "artist": "Phương Mỹ Chi, DTAP",
+      "sourceTrackId": "dFpnKk75KnUR",
+      "durationSeconds": 275,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/f/1/2/c/f12c0b581d71eaef134c759ecef1f294.lrc"
+    },
+    "bounce": {
+      "title": "BOUNCE",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "6pPrkFKO6GHq",
+      "durationSeconds": 234,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2/a/e/2/2ae2ad6873c8bb2ee0f41c5e6c8508fd.lrc"
+    },
+    "bua-yeu": {
+      "title": "BÙA YÊU (feat. Thanh Lam & Orange)",
+      "artist": "OUR SONG VIETNAM, Thanh Lam, Orange",
+      "sourceTrackId": "2S2ZFlXIN7BK",
+      "durationSeconds": 239,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/b/8/0/e/b80e3923e045336fd6e255b63809cb49.lrc"
+    },
+    "bui-bay-vao-mat": {
+      "title": "Bụi Bay Vào Mắt",
+      "artist": "Phạm Quỳnh Anh",
+      "sourceTrackId": "jZ4VaWnxzqdZ",
+      "durationSeconds": 265,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2016/e/d/ed0b9baa70dbaec14f9bbc9dcf2d8dc2_1073755638.lrc"
+    },
+    "buoc-qua-doi-nhau": {
+      "title": "Bước Qua Đời Nhau",
+      "artist": "Lê Bảo Bình",
+      "sourceTrackId": "OD6WzwCIaeNG",
+      "durationSeconds": 280,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/4/3/2/e/432e4ae6ed87761161c4fce4c9cf5a1b.lrc"
+    },
+    "buoc-qua-nhau": {
+      "title": "Bước Qua Nhau",
+      "artist": "Vũ.",
+      "sourceTrackId": "jf4JPz9c8vh",
+      "durationSeconds": 258,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/8/c/d/8/8cd8391ec7d59ae2d142a50a050fcada.lrc"
+    },
+    "buon-thi-cu-khoc-di": {
+      "title": "Buồn Thì Cứ Khóc Đi",
+      "artist": "Lynk Lee",
+      "sourceTrackId": "iYfKj6tZSiJy",
+      "durationSeconds": 222,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/b/7/2/f/b72f0ae207a624b768e3e399cd2058b5.lrc"
+    },
+    "cach-yeu-dung-dieu": {
+      "title": "CÁCH (YÊU ĐÚNG) ĐIỆU",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "mQ4W5dZ1xgmn",
+      "durationSeconds": 260,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/0/0/d/d/00ddce7c5e3fc6f58eac20155540f1c1.lrc"
+    },
+    "can-i-get-your-love": {
+      "title": "CAN I GET YOUR LOVE?",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "26FWUFdFk3tb",
+      "durationSeconds": 283,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/6/5/9/a/659ad4af6496047350f51d0445664139.lrc"
+    },
+    "cat-doi-noi-sau": {
+      "title": "Cắt Đôi Nỗi Sầu",
+      "artist": "Tăng Duy Tân, Drum7",
+      "sourceTrackId": "fArbJxXgtMVv",
+      "durationSeconds": 182,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/e/1/d/b/e1db94a14c4851a41567b2c4ce213cfd.lrc"
+    },
+    "catch-me-if-you-can": {
+      "title": "Catch Me If You Can",
+      "artist": "Alan Walker, Sorana",
+      "sourceTrackId": "ETrsi3WhpNv",
+      "durationSeconds": 151,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/7/6/f/7/76f7bf29183eccf701c0cf036710716b.lrc"
+    },
+    "cau-vong-khuyet": {
+      "title": "Cầu Vồng Khuyết",
+      "artist": "Đạt Long Vinh",
+      "sourceTrackId": "jK1uPjHIRCvt",
+      "durationSeconds": 179,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/5/6/1/1/5611c2119937ce5d1023be181d1f8ea6.lrc"
+    },
+    "chac-ai-do-se-ve": {
+      "title": "Chắc Ai Đó Sẽ Về",
+      "artist": "Sơn Tùng M-TP",
+      "sourceTrackId": "um7LDE6F9vJl",
+      "durationSeconds": 274,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2015/b/d/bdd7c5287a4ea30a2acd611e93689b0a_1075109848.lrc"
+    },
+    "cham": {
+      "title": "Chạm",
+      "artist": "Ưng Hoàng Phúc",
+      "sourceTrackId": "Jm3hTUOFaKUd",
+      "durationSeconds": 280,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/b/a/5/4/ba547df2364071ac32a842f0204eb00f.lrc"
+    },
+    "cham-khe-tim-anh-mot-chut-thoi": {
+      "title": "Chạm Khẽ Tim Anh Một Chút Thôi",
+      "artist": "Noo Phước Thịnh",
+      "sourceTrackId": "19fZ9hnjK6K4",
+      "durationSeconds": 346,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2017/11/24/b652087924775b3e886579ca9ed2cb2b_1076405441.lrc"
+    },
+    "chan-thanh": {
+      "title": "Chân Thành",
+      "artist": "IN THE MIDDLE",
+      "sourceTrackId": "gphbpANbiZKr",
+      "durationSeconds": 305,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/a/0/4/7/a047b2111cea42f5ac2411462e7fe341.lrc"
+    },
+    "chang-kho-thuy-cung": {
+      "title": "CHÀNG KHỜ THỦY CUNG (feat. Negav & GREY D)",
+      "artist": "ANH TRAI \"SAY HI\", Negav, GREY D",
+      "sourceTrackId": "mVIfB7600J8S",
+      "durationSeconds": 309,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/1/1/3/8/1138a80be11bcef381a635a92cc1d3ee.lrc"
+    },
+    "chao-em-co-gai-lam-hong": {
+      "title": "Chào Em Cô Gái Lam Hồng",
+      "artist": "Trung Đức",
+      "sourceTrackId": "Bz2vbFAONJwS",
+      "durationSeconds": 248,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2015/e/5/e54af1c0322ccd8825521f0b775ff323_1073822151.lrc"
+    },
+    "chill-guys-ngon-zai": {
+      "title": "CHILL GUYS NGON ZAI",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "waUYBtOa0TsU",
+      "durationSeconds": 229,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/7/1/3/6/71362ed37f20a2718ad819930be995fd.lrc"
+    },
+    "chim-trang-mo-coi": {
+      "title": "Chim Trắng Mồ Côi",
+      "artist": "Đan Trường",
+      "sourceTrackId": "HOEC3oP2Ictq",
+      "durationSeconds": 361,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/6/e/9/f/6e9f902596dbceabe165c2c480e0ae9b.lrc"
+    },
+    "cho-anh-ve": {
+      "title": "CHỜ ANH VỀ",
+      "artist": "ANH TRAI \"SAY HI\", B Ray, AMEE",
+      "sourceTrackId": "cTOOgDJ8Tbwv",
+      "durationSeconds": 214,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/4/8/d/5/48d5fa14e59a75532bef393b311134f3.lrc"
+    },
+    "cho-em-gan-anh-them-chut-nua": {
+      "title": "Cho Em Gần Anh Thêm Chút Nữa",
+      "artist": "Lệ Quyên, Hoài Sa",
+      "sourceTrackId": "DMjWSAdwk6Ry",
+      "durationSeconds": 310,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/d/6/7/0/d67073de9a095ef6c07df347aed43250.lrc"
+    },
+    "cho-vua-long-em": {
+      "title": "Cho Vừa Lòng Em",
+      "artist": "Duy Mạnh",
+      "sourceTrackId": "s2Xj97TwGene",
+      "durationSeconds": 286,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/9/6/4/d/964d0a6bf24e96641b95556225470006.lrc"
+    },
+    "chu-ky-moi": {
+      "title": "CHU KỲ MỚI",
+      "artist": "EM XINH \"SAY HI\", Bích Phương",
+      "sourceTrackId": "q1CxXexIXnF",
+      "durationSeconds": 300,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/3/c/f/3/3cf3eee3136e44699552e4317b90b0e5.lrc"
+    },
+    "chua-quen-nguoi-yeu-cu": {
+      "title": "CHƯA QUÊN NGƯỜI YÊU CŨ",
+      "artist": "Thiều Bảo Trâm, Dương Hoàng Yến, N.T.B",
+      "sourceTrackId": "r8TRBsPtXLS0",
+      "durationSeconds": 329,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/5/d/3/b/5d3bc92479a7e24c0466cee60bde332e.lrc"
+    },
+    "chuyen-gian-thien-ly": {
+      "title": "Chuyện Giàn Thiên Lý",
+      "artist": "Mai Tuấn, Huỳnh Thật",
+      "sourceTrackId": "QUhwIdxU2sej",
+      "durationSeconds": 316,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/4/4/a/5/44a51c9138f45bced8ce8c786420b5c0.lrc"
+    },
+    "chuyen-nhu-chua-bat-dau": {
+      "title": "Chuyện Như Chưa Bắt Đầu",
+      "artist": "Thảo Wendy",
+      "sourceTrackId": "zoRo8Nxp0QYi",
+      "durationSeconds": 257,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/7/a/c/3/7ac34353ea78f8d3804fef3e69236836.lrc"
+    },
+    "co-ay-khong-yeu-anh": {
+      "title": "CÔ ẤY KHÔNG YÊU ANH",
+      "artist": "EM XINH \"SAY HI\", Bảo Anh, Phúc Du",
+      "sourceTrackId": "e1p26kuYZSnM",
+      "durationSeconds": 248,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/9/7/f/7/97f7be1f28046a97dd6e68db029d4398.lrc"
+    },
+    "co-dai-va-hoa-danh-danh": {
+      "title": "Cỏ Dại Và Hoa Dành Dành",
+      "artist": "Vicky Nhung, Chu Thúy Quỳnh",
+      "sourceTrackId": "u1bor6EcKLK2",
+      "durationSeconds": 259,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/7/a/1/e/7a1e5b481b3b9673547295d5d62e0e60.lrc"
+    },
+    "co-don-anh-cung-vui": {
+      "title": "CÔ ĐƠN ANH CŨNG VUI",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "eQoK9U8JWcdk",
+      "durationSeconds": 350,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/0/6/7/a/067a6b25bd42b31b18d024a81b1cbcc6.lrc"
+    },
+    "co-don-tren-sofa": {
+      "title": "Cô Đơn Trên Sofa",
+      "artist": "Hồ Ngọc Hà",
+      "sourceTrackId": "ieFU4SnJkk7H",
+      "durationSeconds": 263,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/7/d/b/8/7db8a94827da8cbceee3a9f68d7d52af.lrc"
+    },
+    "co-em-cho": {
+      "title": "Có Em Chờ",
+      "artist": "Hồ Võ Thanh Thảo",
+      "sourceTrackId": "YnV8ay0W9Hd5",
+      "durationSeconds": 182,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/4/3/5/8/435878f0ffd4126fea11a837a164e887.lrc"
+    },
+    "co-gai-mo-duong": {
+      "title": "Cô Gái Mở Đường",
+      "artist": "Tốp Nữ Quân Khu Bảy",
+      "sourceTrackId": "JBalHlIrbnBH",
+      "durationSeconds": 350,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/c/3/1/c/c31c455f0319af627557457041a447e8.lrc"
+    },
+    "co-gi-dau-ma-cay": {
+      "title": "CÓ GÌ ĐÂU MÀ CAY",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "ieGQsOmK13Ac",
+      "durationSeconds": 288,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/1/b/5/4/1b544516b68f1285f09abf9b8beffbbd.lrc"
+    },
+    "co-hen-voi-thanh-xuan": {
+      "title": "có hẹn với thanh xuân",
+      "artist": "MONSTAR, GREY D",
+      "sourceTrackId": "rQM0gRZEUBYL",
+      "durationSeconds": 218,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2/4/2/b/242b0f9cdabb18046583f80aa99eb384.lrc"
+    },
+    "co-khong-giu-mat-dung-tim": {
+      "title": "Có Không Giữ Mất Đừng Tìm",
+      "artist": "Cảnh Minh",
+      "sourceTrackId": "uQ3xF7r2KILY",
+      "durationSeconds": 244,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2015/1/5/15a6f9370bdfbd105db625cdddb32aba_1075260008.lrc"
+    },
+    "con-buom-xuan": {
+      "title": "Con Bướm Xuân",
+      "artist": "Hồ Quang Hiếu",
+      "sourceTrackId": "Zq0EZ9cFSEe4",
+      "durationSeconds": 239,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/8/7/3/2/873231056a6215ee2c8fe4fa8cc8b8a3.lrc"
+    },
+    "con-gi-dep-hon": {
+      "title": "Còn Gì Đẹp Hơn (Mưa Đỏ Original Soundtrack)",
+      "artist": "Nguyễn Hùng",
+      "sourceTrackId": "LDZyJBHANfKP",
+      "durationSeconds": 282,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/0/6/4/1/064109c496d02d0b082d23dbb0375c35.lrc"
+    },
+    "con-la-gi-cua-nhau": {
+      "title": "Còn Là Gì Của Nhau",
+      "artist": "Châu Khải Phong",
+      "sourceTrackId": "5CNdN2N7Ku0Y",
+      "durationSeconds": 292,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2/6/7/7/2677c361add774cdbdb4997472cfa06e.lrc"
+    },
+    "con-mua-tinh-yeu": {
+      "title": "Cơn Mưa Tình Yêu",
+      "artist": "Quang Hà, Thu Dung",
+      "sourceTrackId": "74ZTgmdObiOx",
+      "durationSeconds": 296,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/b/d/3/1/bd31b1705c82984be4992e5d7a45810a.lrc"
+    },
+    "cong-chua-bong-bong": {
+      "title": "Công Chúa Bong Bóng",
+      "artist": "Bảo Thy, 2B",
+      "sourceTrackId": "bntQjV6xlDVn",
+      "durationSeconds": 290,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2015/d/e/deb8f424aa2632cbb44f717c5aa92263_1073762513.lrc"
+    },
+    "crazy": {
+      "title": "CRAZY",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "C1lGq1bHZ8uR",
+      "durationSeconds": 197,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/f/d/f/0/fdf01386126f5fbec6f5176ff855f643.lrc"
+    },
+    "cu-de-anh-ta-roi-di": {
+      "title": "CỨ ĐỂ ANH TA RỜI ĐI (feat. Dương Domic, Quang Hùng MasterD, Lou Hoàng, Song Luân & Bảo Anh)",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "nzZMHEZ8RdWT",
+      "durationSeconds": 273,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/9/2/9/e/929ed0d5c3d857d301c7c0931a9680c7.lrc"
+    },
+    "cu-do-tai-con-mua": {
+      "title": "CỨ ĐỔ TẠI CƠN MƯA",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "IHnbEIkqZ9kw",
+      "durationSeconds": 255,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/6/d/1/a/6d1a7d33439c733fbf2d29dc82fd6aea.lrc"
+    },
+    "cu-moi-sang-anh-lai": {
+      "title": "CỨ MỖI SÁNG ANH LẠI.. (feat. Quân A.P)",
+      "artist": "ANH TRAI \"SAY HI\", Quân A.P",
+      "sourceTrackId": "Xz3lcOJzLRYW",
+      "durationSeconds": 334,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2/7/e/1/27e1a13ef00c99c24ba15c4c34fa309d.lrc"
+    },
+    "cung-anh": {
+      "title": "Cùng Anh",
+      "artist": "Ngọc Dolil, Hagii, STee",
+      "sourceTrackId": "ObvZec40ddMW",
+      "durationSeconds": 198,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2018/d/e/de14ccb07a016a6509b42d6fd7b08bd3.lrc"
+    },
+    "cung-may-la-e": {
+      "title": "CŨNG MAY LÀ Ế",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "t5fDuwkdj2aw",
+      "durationSeconds": 223,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/3/9/1/9/3919dd9885d15eb1f2e6f99f8c4819b0.lrc"
+    },
+    "cuoc-song-em-on-khong": {
+      "title": "Cuộc Sống Em Ổn Không",
+      "artist": "Anh Tú",
+      "sourceTrackId": "CE7Isxpc5xh",
+      "durationSeconds": 344,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/4/3/4/0/4340ce672a10292e7ac92e8951af5743.lrc"
+    },
+    "da-nghi": {
+      "title": "ĐA NGHI",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "189gJ74GLvRj",
+      "durationSeconds": 258,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/5/b/a/f/5bafc31e4c7ee1a73e62ad1561735c93.lrc"
+    },
+    "da-tung": {
+      "title": "Đã Từng",
+      "artist": "Bùi Anh Tuấn, Dương Hoàng Yến",
+      "sourceTrackId": "qCHaasgJde7E",
+      "durationSeconds": 296,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2015/d/a/da0421d23969b261f776969e6722c866_1075176001.lrc"
+    },
+    "dam-chim": {
+      "title": "ĐẮM CHÌM",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "beGfsmkjNfCx",
+      "durationSeconds": 226,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/0/1/7/8/0178f0adb3c440e18ce2d72af77ee13f.lrc"
+    },
+    "dan-ban-tay": {
+      "title": "ĐAN BÀN TAY",
+      "artist": "EM XINH \"SAY HI\", Châu Bùi, Binz",
+      "sourceTrackId": "iaqq4dGBr5DV",
+      "durationSeconds": 270,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/0/d/b/0/0db0316695e39cf7b694bbd44f2f91d6.lrc"
+    },
+    "dap-vo-cay-dan": {
+      "title": "Đập Vỡ Cây Đàn",
+      "artist": "Quang Lê",
+      "sourceTrackId": "3Yax7MnMXAa5",
+      "durationSeconds": 305,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2017/01/05/a1f05c471e4337291fb378988a0147fa_1073893479.lrc"
+    },
+    "dat-nuoc-tron-niem-vui": {
+      "title": "Đất Nước Trọn Niềm Vui",
+      "artist": "Tạ Minh Tâm",
+      "sourceTrackId": "CmxIdaq3vGyE",
+      "durationSeconds": 298,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2015/f/d/fdcece3e4007288fcd3f15d27712117f_1073860902.lrc"
+    },
+    "dau-co-den-dau": {
+      "title": "DẪU CÓ ĐẾN ĐÂU",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "GIQ30fLgSVCy",
+      "durationSeconds": 242,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/8/8/b/1/88b17fa0cf8cb1808571cf36facfe456.lrc"
+    },
+    "dau-de-truong-thanh": {
+      "title": "Đau Để Trưởng Thành",
+      "artist": "Lê Quốc Vương",
+      "sourceTrackId": "zoPeNKPqmHIv",
+      "durationSeconds": 211,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/f/7/5/f/f75ff5b705cf13b098e295733bf81681.lrc"
+    },
+    "dau-doi-sung": {
+      "title": "ĐẦU ĐỘI SỪNG (feat. Quân A.P, HURRYKNG & Hùng Huỳnh)",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "zNG7pFIMbwpa",
+      "durationSeconds": 214,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/b/9/1/7/b91709d5939bb77cfe34d5c6081a1951.lrc"
+    },
+    "dau-meo-duoi-chuot": {
+      "title": "ĐẦU MÈO ĐUÔI CHUỘT",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "Ce0ugRfwqVOS",
+      "durationSeconds": 232,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2/3/c/4/23c4f5539791a583c39385f5a01e3783.lrc"
+    },
+    "de-mi-noi-cho-ma-nghe": {
+      "title": "Để Mị Nói Cho Mà Nghe",
+      "artist": "Hoàng Thùy Linh",
+      "sourceTrackId": "wz10O6hgvT69",
+      "durationSeconds": 193,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2/9/e/7/29e75edd9565d1a74da1ac477e073016.lrc"
+    },
+    "dem-giang-sinh-mua-ha": {
+      "title": "ĐÊM GIÁNG SINH MÙA HẠ",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "S56JVdxxSrWM",
+      "durationSeconds": 327,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/0/9/a/8/09a872658469c0aa80ebcc1e9eef66dd.lrc"
+    },
+    "deu-la-cua-em": {
+      "title": "ĐỀU LÀ CỦA EM (feat. Dương Domic, Anh Tú Atus, Song Luân, Quang Trung & Anh Tú)",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "ao7ARGF68iiV",
+      "durationSeconds": 238,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/9/1/7/a/917a479b2dbd83b37586e38391c791d3.lrc"
+    },
+    "di-giua-troi-ruc-ro": {
+      "title": "ĐI GIỮA TRỜI RỰC RỠ",
+      "artist": "DJ Mie, Chị Đẹp Đạp Gió Rẽ Sóng",
+      "sourceTrackId": "LO6Xy9h4N52v",
+      "durationSeconds": 218,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/4/7/b/9/47b9aff151e77450c2cc7c6d7e05eeeb.lrc"
+    },
+    "di-ve": {
+      "title": "ĐI VỀ",
+      "artist": "EM XINH \"SAY HI\", Pháo",
+      "sourceTrackId": "dQRazH4oVPHE",
+      "durationSeconds": 208,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/3/8/a/f/38af6d2b301ccd129a29791c53fa61af.lrc"
+    },
+    "dieu-em-luon-mong-muon": {
+      "title": "ĐIỀU EM LUÔN MONG MUỐN",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "PwE9qB5xzd5k",
+      "durationSeconds": 197,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/4/c/1/b/4c1b9ee8f94783b2541ec16c5bf31815.lrc"
+    },
+    "do-anh-si": {
+      "title": "Do Anh Si",
+      "artist": "Han Sara",
+      "sourceTrackId": "dohoqBaMzl6h",
+      "durationSeconds": 208,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/b/5/e/3/b5e37709b0c66dab824d0b54ca234fb3.lrc"
+    },
+    "doa-hong-choi-voi": {
+      "title": "ĐÓA HỒNG CHƠI VƠI (feat. Anh Tú)",
+      "artist": "ANH TRAI \"SAY HI\", Anh Tú",
+      "sourceTrackId": "ODp5yMGz8cnA",
+      "durationSeconds": 314,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/6/6/3/c/663ca0fd87710f04ab6d2debb1d4175b.lrc"
+    },
+    "doa-phu-dung-cuoi-cung": {
+      "title": "ĐÓA PHÙ DUNG CUỐI CÙNG (feat. Đức Phúc)",
+      "artist": "ANH TRAI \"SAY HI\", Đức Phúc",
+      "sourceTrackId": "uzIHNSslrtEK",
+      "durationSeconds": 327,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/6/8/6/d/686d9462f566be26972ab0170df9e2ef.lrc"
+    },
+    "doan-kich-cam": {
+      "title": "ĐOẠN KỊCH CÂM",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "Lq1qSCs6hKeJ",
+      "durationSeconds": 242,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/5/a/5/b/5a5b86d848739d10186a7eca54c9ba81.lrc"
+    },
+    "doan-xem": {
+      "title": "ĐOÁN XEM",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "g5P2r3KSLQ5i",
+      "durationSeconds": 198,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/c/8/f/f/c8ff202ab3ef909f0cc4f96aba8cd223.lrc"
+    },
+    "doc-nhat-vo-nhi": {
+      "title": "ĐỘC NHẤT VÔ NHỊ",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "CupuyIrg7n2d",
+      "durationSeconds": 260,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/9/3/b/c/93bc61c0aab0ad9b69a5251ce1801eb9.lrc"
+    },
+    "doi-thong-hai-mo": {
+      "title": "Đồi Thông Hai Mộ",
+      "artist": "Quỳnh Trang, Huỳnh Thật",
+      "sourceTrackId": "JMN1qdXb12n7",
+      "durationSeconds": 397,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/5/4/8/8/54888c6df8b6dc2b10b207b1fd5acf00.lrc"
+    },
+    "dong-mau-lac-hong": {
+      "title": "Dòng Máu Lạc Hồng",
+      "artist": "Đan Trường",
+      "sourceTrackId": "tZFrN5aFfiOA",
+      "durationSeconds": 392,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2015/7/5/75533ae177999f5758786549ec36f041_1073752194.lrc"
+    },
+    "du-cho-tan-the": {
+      "title": "Dù Cho Tận Thế",
+      "artist": "ERIK",
+      "sourceTrackId": "YBizAuZUZiMv",
+      "durationSeconds": 233,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/3/8/f/e/38fe0fe98e160163d94d3aa02219c332.lrc"
+    },
+    "dung-bien-mat-hom-nay": {
+      "title": "ĐỪNG BIẾN MẤT HÔM NAY",
+      "artist": "ANH TRAI \"SAY HI\", Phạm Đình Thái Ngân",
+      "sourceTrackId": "qYmUukHH3Zuv",
+      "durationSeconds": 237,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/5/d/f/9/5df949e734fa31eb3111231cf88696ab.lrc"
+    },
+    "dung-nguoi-dung-thoi-diem": {
+      "title": "Đúng Người Đúng Thời Điểm",
+      "artist": "Thanh Hưng",
+      "sourceTrackId": "9RBAyiveWHh",
+      "durationSeconds": 296,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/0/b/5/5/0b558227765ce3634a2be711683a0b59.lrc"
+    },
+    "dung-nhu-thoi-quen": {
+      "title": "Đừng Như Thói Quen",
+      "artist": "Ice Cream Hoàng Khánh",
+      "sourceTrackId": "ZW9wocgWuym9",
+      "durationSeconds": 248,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/1/7/7/5/177502482476c09e86e555ef9bfd5bec.lrc"
+    },
+    "dung-roi-xa-nhau": {
+      "title": "Đừng Rời Xa Nhau",
+      "artist": "Quốc Thiên, Nguyễn Minh Cường",
+      "sourceTrackId": "DnoJwDjHrwDL",
+      "durationSeconds": 254,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/b/3/3/c/b33cabc83eaa54d1406de96d9284745b.lrc"
+    },
+    "duoc-tin-em-lay-chong": {
+      "title": "Được Tin Em Lấy Chồng",
+      "artist": "Quang Lê",
+      "sourceTrackId": "6T6u3LXKbMaR",
+      "durationSeconds": 254,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/3/0/d/d/30dd6b92cfc0a7d5ac8d996a2b13f821.lrc"
+    },
+    "duong-chan-troi": {
+      "title": "Đường Chân Trời",
+      "artist": "Nguyễn Hồng Thuận, Trương Thế Vinh",
+      "sourceTrackId": "R0Awzhpwj60W",
+      "durationSeconds": 267,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/d/7/4/9/d749f1b5df4216b9704078129477d8a1.lrc"
+    },
+    "duong-gian": {
+      "title": "DƯƠNG GIAN",
+      "artist": "EM XINH \"SAY HI\", LAMOON",
+      "sourceTrackId": "YrCzMR3inB38",
+      "durationSeconds": 230,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/9/9/3/1/9931120614c29fea8fc6a3b88447c421.lrc"
+    },
+    "duong-tinh-doi-nga": {
+      "title": "Đường Tình Đôi Ngả",
+      "artist": "Trịnh Nam Phương, Thu Trang MC",
+      "sourceTrackId": "V8QLTeASMeYR",
+      "durationSeconds": 301,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2017/11/24/6286858e2ee62a92dca9ad98ea4efc04_1076281560.lrc"
+    },
+    "duong-ve-hai-thon": {
+      "title": "Đường Về Hai Thôn",
+      "artist": "Dương Hồng Loan, Lê Sang",
+      "sourceTrackId": "DbNeozYT64pw",
+      "durationSeconds": 341,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/9/d/7/4/9d74a0c22a42dc78867c5c7196de43e0.lrc"
+    },
+    "duyen": {
+      "title": "DUYÊN",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "dtznB0SqzvF",
+      "durationSeconds": 256,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/7/a/2/c/7a2c4b194d919292d4dd970accf75641.lrc"
+    },
+    "ech-ngoai-day-gieng": {
+      "title": "ẾCH NGOÀI ĐÁY GIẾNG",
+      "artist": "EM XINH \"SAY HI\", Phương Mỹ Chi",
+      "sourceTrackId": "ibN9WqfFDmk3",
+      "durationSeconds": 233,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/7/8/4/a/784af85ed04258982c94e038e1731cc0.lrc"
+    },
+    "em-cua-ngay-hom-qua": {
+      "title": "Em Của Ngày Hôm Qua",
+      "artist": "Sơn Tùng M-TP",
+      "sourceTrackId": "yTPspCIlrm0y",
+      "durationSeconds": 232,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2015/e/1/e14839237b39e52c44f01c1a11656592_1074816191.lrc"
+    },
+    "em-gai-mua": {
+      "title": "Em Gái Mưa",
+      "artist": "Charmy Pham",
+      "sourceTrackId": "CnrByoAylVep",
+      "durationSeconds": 324,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2017/09/11/3ebde5d98e1e131a4bff6adb12b4ce66_1076366914.lrc"
+    },
+    "em-khong-co-ua": {
+      "title": "EM KHÔNG CÓ ƯA",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "c5FqJIvVOJqR",
+      "durationSeconds": 242,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/3/f/c/0/3fc05468fecb0d62715b5351dc109096.lrc"
+    },
+    "em-khong-la-duy-nhat": {
+      "title": "Em Không Là Duy Nhất",
+      "artist": "Tóc Tiên",
+      "sourceTrackId": "o9qKNuFyhpw5",
+      "durationSeconds": 281,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2017/04/10/701a73f0b14538f78b9671fdb15e3019_1075862366.lrc"
+    },
+    "em-khong-muon-mot-minh": {
+      "title": "EM KHÔNG MUỐN MỘT MÌNH (feat. Anh Tú Atus)",
+      "artist": "ANH TRAI \"SAY HI\", Anh Tú Atus",
+      "sourceTrackId": "ftUAoln48Hky",
+      "durationSeconds": 190,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/5/6/2/0/5620f423acc94ef3953f04ff5d5c55ec.lrc"
+    },
+    "em-thich-la-duoc": {
+      "title": "EM THÍCH LÀ ĐƯỢC",
+      "artist": "EM XINH \"SAY HI\", Miu Lê, CoolKid",
+      "sourceTrackId": "qiCJZmxHKtZt",
+      "durationSeconds": 206,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/b/4/3/3/b43350fbad0ba681ff2f24e001c0fb9f.lrc"
+    },
+    "exit-sign": {
+      "title": "Exit Sign",
+      "artist": "HIEUTHUHAI, marzuz",
+      "sourceTrackId": "KnguN3oeg4h",
+      "durationSeconds": 202,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2/e/d/5/2ed55c9c8571750b405925c9794faf09.lrc"
+    },
+    "forever-say-hi": {
+      "title": "FOREVER SAY HI",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "n1EPwfRUwzsh",
+      "durationSeconds": 298,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2/4/e/b/24ebe3f515e711c3e0718798914fe7e9.lrc"
+    },
+    "ga-san-ca": {
+      "title": "GÃ SĂN CÁ",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "xtpTd3eL0N7a",
+      "durationSeconds": 233,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/c/c/8/a/cc8a5722035141329e90815892dbb7b8.lrc"
+    },
+    "gap-em-luc-tan-vo": {
+      "title": "Gặp Em Lúc Tan Vỡ",
+      "artist": "Trung Quân",
+      "sourceTrackId": "9kw9CKd3K28T",
+      "durationSeconds": 262,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/1/d/2/b/1d2b32bf5061bcbdbbd0863e156b37dd.lrc"
+    },
+    "gentleman": {
+      "title": "GENTLEMAN",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "b1zmUL9xj542",
+      "durationSeconds": 263,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/d/e/1/4/de1424c5d44a9ada0e9087aa93e582a1.lrc"
+    },
+    "giac-mong-vo": {
+      "title": "GIẤC MỘNG VỠ",
+      "artist": "ANH TRAI \"SAY HI\", Ryn Lee",
+      "sourceTrackId": "Q9eYTYdUNvuT",
+      "durationSeconds": 282,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/0/6/5/8/0658fadbcee15990191e1b01971df533.lrc"
+    },
+    "gieo-que": {
+      "title": "Gieo Quẻ",
+      "artist": "Hoàng Thùy Linh, Đen",
+      "sourceTrackId": "nlqQkbTrB3WM",
+      "durationSeconds": 199,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/d/a/4/b/da4b498cb7c55f385c931cd9e64ea079.lrc"
+    },
+    "goi-cho-anh": {
+      "title": "Gọi Cho Anh",
+      "artist": "Noo Phước Thịnh",
+      "sourceTrackId": "ZhdKcxkU8m3K",
+      "durationSeconds": 163,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/0/f/9/a/0f9a5af6159fdd36f3fc00151e167179.lrc"
+    },
+    "hanh-phuc-moi": {
+      "title": "Hạnh Phúc Mới",
+      "artist": "Hari Won, Phạm Quỳnh Anh",
+      "sourceTrackId": "kK8VvHyJpXMq",
+      "durationSeconds": 276,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/7/d/8/5/7d85e4bd645532878dd68ff3061872ad.lrc"
+    },
+    "hao-khi-viet-nam": {
+      "title": "Hào Khí Việt Nam",
+      "artist": "Phan Đinh Tùng",
+      "sourceTrackId": "S6LhE7aioLl4",
+      "durationSeconds": 274,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2015/5/d/5dac261f186fde24d1d9c92d59109a0a_1075201617.lrc"
+    },
+    "hao-quang": {
+      "title": "Hào Quang",
+      "artist": "RHYDER, Pháp Kiều, Dương Domic",
+      "sourceTrackId": "UIdCy9ruZ0GR",
+      "durationSeconds": 308,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/a/3/3/f/a33f24e467f57c6bf8c09f31fbf7f001.lrc"
+    },
+    "hat-mai-khuc-quan-hanh": {
+      "title": "Hát Mãi Khúc Quân Hành",
+      "artist": "FM",
+      "sourceTrackId": "aVyKWggzPbqp",
+      "durationSeconds": 212,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/b/e/3/7/be3718f0be290944d262ecba8f1dc78c.lrc"
+    },
+    "he": {
+      "title": "HỀ",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "Mn3OH6B8FrJv",
+      "durationSeconds": 266,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/e/0/0/4/e0041093ec22d78876dc0a239bfcdc08.lrc"
+    },
+    "hen-uoc-tu-hu-vo": {
+      "title": "Hẹn Ước Từ Hư Vô",
+      "artist": "Mai Hường",
+      "sourceTrackId": "nRRZKqeqs29t",
+      "durationSeconds": 243,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/3/0/5/e/305eaf8438e81e9ba61e8f301a897763.lrc"
+    },
+    "hermosa": {
+      "title": "HERMOSA",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "DuNqZaxIZKsK",
+      "durationSeconds": 246,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/4/f/7/8/4f7865f7da136ed49412b9169eb648de.lrc"
+    },
+    "hit-drama": {
+      "title": "HÍT \"DRAMA\" (feat. Isaac, WEAN, Anh Tú & Đỗ Phú Quí)",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "2LudUfy2ZJNU",
+      "durationSeconds": 217,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/f/0/1/3/f013eea21b37294e01362cc0bc62a3eb.lrc"
+    },
+    "hoa-muoi-gio": {
+      "title": "Hoa Mười Giờ",
+      "artist": "Lưu Ánh Loan",
+      "sourceTrackId": "2L7medADyqAR",
+      "durationSeconds": 370,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2018/02/23/ea7e1f42d9ce44211079a31e1f48ee30_1075890806.lrc"
+    },
+    "hoa-no-khong-mau": {
+      "title": "Hoa Nở Không Màu",
+      "artist": "Hoài Lâm",
+      "sourceTrackId": "iul3rCP7AlJ5",
+      "durationSeconds": 328,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/5/b/a/e/5baea91d3c9e20e8b55543813f9fca2d.lrc"
+    },
+    "hoa-no-ve-dem": {
+      "title": "Hoa Nở Về Đêm",
+      "artist": "Phương Anh",
+      "sourceTrackId": "GEmsOtKOnVuE",
+      "durationSeconds": 354,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/9/3/5/a/935a963208d7c61e785b1b30efc8bf24.lrc"
+    },
+    "hom-nay-toi-buon": {
+      "title": "Hôm Nay Tôi Buồn",
+      "artist": "Phùng Khánh Linh",
+      "sourceTrackId": "dQgJnAJxkpIh",
+      "durationSeconds": 276,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2018/f/5/f5ed4d2e3531f51cb2d4a63dae3fc6e9.lrc"
+    },
+    "hon-ca-yeu": {
+      "title": "Hơn Cả Yêu",
+      "artist": "Đức Phúc",
+      "sourceTrackId": "Je4jMhw0MdA",
+      "durationSeconds": 256,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/d/1/3/2/d1325a4520c456cf5cb8613a6d2bf0ee.lrc"
+    },
+    "hong-nhan": {
+      "title": "Hồng Nhan",
+      "artist": "Jack – J97",
+      "sourceTrackId": "MdkjhlPaLBR5",
+      "durationSeconds": 192,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/1/a/e/a/1aea4ce69cc85d1cf9cf4e2a341c3916.lrc"
+    },
+    "hourglass": {
+      "title": "HOURGLASS",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "c5ZrSsfZO4sj",
+      "durationSeconds": 228,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/e/8/0/4/e80494794db435bcc61913d8386f2caf.lrc"
+    },
+    "huong-dem-bay-xa": {
+      "title": "Hương Đêm Bay Xa",
+      "artist": "Hari Won",
+      "sourceTrackId": "Bds0P3iPjtVW",
+      "durationSeconds": 222,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2015/e/d/ede477fee4442f200a3ed0a2ed194704_1075140029.lrc"
+    },
+    "hut": {
+      "title": "HÚT (feat. Lou Hoàng, Pháp Kiều, WEAN, Quân A.P, Hải Đăng Doo, Ali Hoàng Dương & Nicky)",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "2vUHTbitob3",
+      "durationSeconds": 205,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/a/9/4/2/a9426e3b40c69cdc5e7e5ae02753a406.lrc"
+    },
+    "i-c-o-n": {
+      "title": "I.C.O.N (feat. Isaac, HIEUTHUHAI, Đức Phúc, ERIK, Quân A.P, Quang Hùng MasterD, Lou Hoàng, Pháp Kiều, WEAN, Negav, Hải Đăng Doo, Gin Tuấn Kiệt, Ali Hoàng Dương, Nicky, Vũ Thịnh & Công Dương)",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "Ik43hUwUElzn",
+      "durationSeconds": 197,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/3/a/f/9/3af93e8b0c35bbebca6fd0a678e4f5b5.lrc"
+    },
+    "idnat-im-doi-nguoi-anh-thuong": {
+      "title": "IDNAT (IM ĐỢI NGƯỜI ANH THƯƠNG)",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "YuNY94cFMDgv",
+      "durationSeconds": 239,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/9/6/e/2/96e2080c18d6f0b2b70702dd2142abbc.lrc"
+    },
+    "illusion": {
+      "title": "ILLUSION",
+      "artist": "ANH TRAI \"SAY HI\", Vũ Cát Tường",
+      "sourceTrackId": "XBtykQJbezfb",
+      "durationSeconds": 288,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/5/6/f/7/56f77f75afbf30792b864dece5ea4b35.lrc"
+    },
+    "ke-hai-loi": {
+      "title": "KẺ HAI LỜI",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "mBZbOhTpgrS",
+      "durationSeconds": 250,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/1/7/4/9/174949b81e2db2c17af4ed8c275b9a0d.lrc"
+    },
+    "khat-vong-tuoi-tre": {
+      "title": "Khát Vọng Tuổi Trẻ",
+      "artist": "CLB Giai Điệu Xanh",
+      "sourceTrackId": "qbinoovcmioF",
+      "durationSeconds": 224,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/5/8/3/0/5830a33bc8284140288d180326cede5c.lrc"
+    },
+    "khi-em-lon": {
+      "title": "Khi Em Lớn",
+      "artist": "Orange, Hoàng Dũng",
+      "sourceTrackId": "BzI9vBDMbEzE",
+      "durationSeconds": 228,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/4/d/d/4/4dd44b6425c2ef699aba079f9d3aaae1.lrc"
+    },
+    "khieu-vu-duoi-trang": {
+      "title": "KHIÊU VŨ DƯỚI TRĂNG (feat. ERIK)",
+      "artist": "ANH TRAI \"SAY HI\", ERIK",
+      "sourceTrackId": "AgFhKNBGXna9",
+      "durationSeconds": 263,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/a/b/9/e/ab9e661f3f2dcc261b4af1cfd2a2d75b.lrc"
+    },
+    "khoa-ly-biet": {
+      "title": "KHÓA LY BIỆT (feat. Anh Tú)",
+      "artist": "OUR SONG VIETNAM, Anh Tú",
+      "sourceTrackId": "JitTo4BtQsre",
+      "durationSeconds": 317,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/e/c/2/7/ec27f58777f595bc6840184f4bf84d17.lrc"
+    },
+    "khoc-cung-em": {
+      "title": "Khóc Cùng Em",
+      "artist": "Mr. Siro, GRAY, Wind",
+      "sourceTrackId": "Ej0JgHCtFekH",
+      "durationSeconds": 236,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/6/f/7/f/6f7ff7c5f438782a40ea3815ced608ba.lrc"
+    },
+    "khong-biet-phai-noi-gi-khong-biet-phai-lam-sao": {
+      "title": "Không biết phải nói gì không biết phải làm sao",
+      "artist": "VƯƠNG BÌNH, Lâm Bảo Ngọc",
+      "sourceTrackId": "6ODmpzIYrrme",
+      "durationSeconds": 308,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/c/6/f/0/c6f04e15c94e3a986b4bcfd828ff01bb.lrc"
+    },
+    "khong-gio-roi": {
+      "title": "Không Giờ Rồi",
+      "artist": "Phương Anh",
+      "sourceTrackId": "waCKaOogL14D",
+      "durationSeconds": 306,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/5/d/f/a/5dfac8375a3daa6472ea085584511bc4.lrc"
+    },
+    "khong-phai-tai-chung-minh": {
+      "title": "Không Phải Tại Chúng Mình",
+      "artist": "Quang Lê, Hà My",
+      "sourceTrackId": "Q8b7v2kiuxVf",
+      "durationSeconds": 294,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2017/01/05/1745c704d0ae411453b1251d20a417f2_1074175864.lrc"
+    },
+    "khong-sao-ma-em-day-roi": {
+      "title": "Không Sao Mà, Em Đây Rồi",
+      "artist": "Suni Hạ Linh, Lou Hoàng",
+      "sourceTrackId": "MdWS350SNJpY",
+      "durationSeconds": 268,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/f/1/f/4/f1f49baee85afad06540a75c979b9c51.lrc"
+    },
+    "khong-the-cung-nhau-suot-kiep": {
+      "title": "Không Thể Cùng Nhau Suốt Kiếp",
+      "artist": "Hòa Minzy, Mr. Siro",
+      "sourceTrackId": "koi16aBaKj9",
+      "durationSeconds": 301,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/a/f/e/e/afeebac4a6c3731de704009320a26e90.lrc"
+    },
+    "khong-thoi-gian": {
+      "title": "Không Thời Gian",
+      "artist": "Dương Domic",
+      "sourceTrackId": "6HamxhBKXvQq",
+      "durationSeconds": 218,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/0/b/2/5/0b25a1b5f16b08ebd11e3a31c9c7ee1d.lrc"
+    },
+    "kim-tu-thap": {
+      "title": "KIM TỰ THÁP (feat. CAPTAIN)",
+      "artist": "ANH TRAI \"SAY HI\", Captain",
+      "sourceTrackId": "ZWr9WWAWIKim",
+      "durationSeconds": 274,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/c/9/2/7/c927e485a54214fb55826fc9e33d3ca6.lrc"
+    },
+    "lan-dau-tien": {
+      "title": "Lần Đầu Tiên",
+      "artist": "Emcee L (Da LAB), Muộii",
+      "sourceTrackId": "in8Sg4Z3UO6Y",
+      "durationSeconds": 214,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/4/f/a/0/4fa00e8108eff63a14ffee697328f71f.lrc"
+    },
+    "lan-uu-tien": {
+      "title": "LÀN ƯU TIÊN",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "kTHrsJrN1QHh",
+      "durationSeconds": 203,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/4/7/d/4/47d417bdc8b35c85f3c9ee0798ffbd72.lrc"
+    },
+    "lau-dai-tinh-ai": {
+      "title": "Lâu Đài Tình Ái",
+      "artist": "Khưu Huy Vũ, Dương Hồng Loan",
+      "sourceTrackId": "w7CeMO5RfLt5",
+      "durationSeconds": 318,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2017/05/26/68bbee73ab635ba40156c4bba11947ff_1076040892.lrc"
+    },
+    "lau-khong-gap": {
+      "title": "LÂU KHÔNG GẶP (feat. Song Luân & Tage)",
+      "artist": "ANH TRAI \"SAY HI\", Song Luân, Tage",
+      "sourceTrackId": "KOA9uo1LjvcG",
+      "durationSeconds": 259,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/f/7/f/1/f7f17d1fbf5c59bdb0e4bb9b6b972cb8.lrc"
+    },
+    "like-a-horse": {
+      "title": "LIKE A HORSE",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "AHmAoidDlRgj",
+      "durationSeconds": 227,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/0/0/3/7/00378168e55c4fd2bcad6bfda1e08e0a.lrc"
+    },
+    "live-my-way": {
+      "title": "LIVE MY WAY",
+      "artist": "EM XINH \"SAY HI\", Tiên Tiên",
+      "sourceTrackId": "EhRIvjhbviJO",
+      "durationSeconds": 230,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/a/c/8/4/ac841e59612432ac62c50b3b73111add.lrc"
+    },
+    "loi-nguoc-dong": {
+      "title": "LỘI NGƯỢC DÒNG",
+      "artist": "EM XINH \"SAY HI\", Orange",
+      "sourceTrackId": "s9XJUMtAZDMm",
+      "durationSeconds": 242,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/9/d/3/2/9d32d3d3f620a042544fb623272044d3.lrc"
+    },
+    "loi-that-long-khi-say": {
+      "title": "LỜI THẬT LÒNG KHI SAY",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "I6T0wlnnXwIT",
+      "durationSeconds": 209,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/1/0/c/c/10ccaaf237595bc0ea22dafc69b9866f.lrc"
+    },
+    "loi-thu-toi": {
+      "title": "LỜI THÚ TỘI",
+      "artist": "EM XINH \"SAY HI\", Saabirose",
+      "sourceTrackId": "jmVJp4vTsq9",
+      "durationSeconds": 244,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/b/6/6/5/b6657aa56b33fb3ee3699b3cec0df778.lrc"
+    },
+    "long-me": {
+      "title": "Lòng Mẹ",
+      "artist": "Thùy Trang",
+      "sourceTrackId": "MenW5ENXg1hO",
+      "durationSeconds": 319,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2015/6/7/67f5ef8fa525d99a82467b08c75a3e1a_1073817387.lrc"
+    },
+    "love-sand": {
+      "title": "LOVE SAND (feat. HIEUTHUHAI, JSOL, Ali Hoàng Dương & Vũ Thịnh)",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "LJBg5k2Y61VH",
+      "durationSeconds": 235,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/7/e/7/e/7e7ed1fe3c661f0e9ae8a27ec7982283.lrc"
+    },
+    "mai-mai-la-bao-xa": {
+      "title": "Mãi Mãi Là Bao Xa",
+      "artist": "Thiên Phong",
+      "sourceTrackId": "Ym0jylKG4rTn",
+      "durationSeconds": 256,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/d/c/3/6/dc36cba3ae89b4a609d3ee5cda375646.lrc"
+    },
+    "mat-ket-noi": {
+      "title": "Mất Kết Nối",
+      "artist": "Dương Domic",
+      "sourceTrackId": "9tR3D5G26nMD",
+      "durationSeconds": 207,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/a/4/7/8/a478e4a85ffdc73e9f8cf0ae3647c504.lrc"
+    },
+    "mat-la-ban": {
+      "title": "MẤT LA BÀN",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "nlQtWLPRpT9Q",
+      "durationSeconds": 245,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/c/5/0/7/c507d26b75f9648642884832b9054f8e.lrc"
+    },
+    "mat-nai-cha-cha-cha": {
+      "title": "Mắt Nai Cha Cha Cha",
+      "artist": "Hồng Ngọc",
+      "sourceTrackId": "MaW7vAfcHer3",
+      "durationSeconds": 280,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/5/1/7/c/517c5a783aa7e275d97804800cf83b8d.lrc"
+    },
+    "mat-troi-cua-em": {
+      "title": "Mặt Trời Của Em",
+      "artist": "Phương Ly, JustaTee",
+      "sourceTrackId": "UtBUCfY3FNOJ",
+      "durationSeconds": 249,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2018/01/22/836d3235b00043a45285d48482c975d0_1076420203.lrc"
+    },
+    "minh-anh-thoi": {
+      "title": "Mình Anh Thôi",
+      "artist": "Negav",
+      "sourceTrackId": "Rf4aV0ltkhSJ",
+      "durationSeconds": 213,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/5/0/7/9/5079f96b7954e1423e074d6488e5d777.lrc"
+    },
+    "minh-yeu-nhau-di": {
+      "title": "Mình Yêu Nhau Đi",
+      "artist": "A 'Namese, Lâm Bảo Ngọc",
+      "sourceTrackId": "mlfJo6BEQR4s",
+      "durationSeconds": 210,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/f/7/4/a/f74a24d72264789e0f78ce274b7e392c.lrc"
+    },
+    "minh-yeu-nhau-tu-kiep-nao": {
+      "title": "Mình Yêu Nhau Từ Kiếp Nào (Pháp Sư Mù OST)",
+      "artist": "Trung Quân Idol",
+      "sourceTrackId": "vAAJOdhyBbxK",
+      "durationSeconds": 308,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/f/f/5/b/ff5b24ee3d85db26a0884a6c872ecff4.lrc"
+    },
+    "moi-doan-minh-len-san": {
+      "title": "MỜI ĐOÀN MÌNH LÊN SÀN",
+      "artist": "ANH TRAI \"SAY HI\", Gill",
+      "sourceTrackId": "V4xjxTAXf2xb",
+      "durationSeconds": 222,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2/a/f/6/2af6317bac5250871cb922a46bbbfc1d.lrc"
+    },
+    "mong-duyen": {
+      "title": "MỘNG DUYÊN",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "m7VmNxSIH5tn",
+      "durationSeconds": 289,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/7/b/c/d/7bcde302496366f81383012e6ef730ff.lrc"
+    },
+    "morse-code": {
+      "title": "MORSE CODE",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "ySb154BowCBO",
+      "durationSeconds": 290,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/5/5/6/2/5562ab6f191032f2c4a900d09cdf6359.lrc"
+    },
+    "mot-nguoi-nhu-the": {
+      "title": "Một Người Như Thế",
+      "artist": "TINH HÀ \"SAY HI\", MAIQUINN, KIMLONG",
+      "sourceTrackId": "XB1G9W7Hf2u1",
+      "durationSeconds": 219,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/b/0/6/1/b061ba067db8a9df6616c2d6402daceb.lrc"
+    },
+    "mot-nha": {
+      "title": "Một Nhà",
+      "artist": "Da LAB",
+      "sourceTrackId": "Be0gq9gpR6hw",
+      "durationSeconds": 186,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2017/12/23/fd4b2008ed0dc73dcddd7fad714c96a0_1075033645.lrc"
+    },
+    "mot-tam-hon-binh-than": {
+      "title": "MỘT TÂM HỒN BÌNH THẢN",
+      "artist": "ANH TRAI \"SAY HI\", Hustlang Robber",
+      "sourceTrackId": "waNFl8w08KJV",
+      "durationSeconds": 256,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/8/1/0/5/8105e3b2c1168dba6a6b51b762acab4e.lrc"
+    },
+    "mrt": {
+      "title": "MRT",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "xnzJ9B1EZB9",
+      "durationSeconds": 331,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/8/7/4/0/8740640cdea2cc7e1f22e3e295a18fc5.lrc"
+    },
+    "muon-ruou-to-tinh": {
+      "title": "Mượn Rượu Tỏ Tình",
+      "artist": "BigDaddy, Emily",
+      "sourceTrackId": "oNgkIkMBqWIM",
+      "durationSeconds": 198,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/1/e/3/a/1e3ab95e68c04d835c67daf0da230f00.lrc"
+    },
+    "mvp-mua-voi-phong": {
+      "title": "MVP (MƯA VỘI PHÓNG)",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "CzBvlbSVU8GW",
+      "durationSeconds": 222,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/8/6/9/3/869309e2ceee4041e8442f5676ed34ae.lrc"
+    },
+    "nam-anh-em-tren-mot-chiec-xe-tang": {
+      "title": "Năm Anh Em Trên Một Chiếc Xe Tăng",
+      "artist": "Tốp Ca Nam Tổng Cục Chính Trị",
+      "sourceTrackId": "SHYfjMr4BKu2",
+      "durationSeconds": 356,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2014/9/a/9a24c51bb4f24b11c0cc3b1b41daca05_1073891277.lrc"
+    },
+    "nang-am-cua-anh": {
+      "title": "Ánh Nắng Của Anh (Chờ Em Đến Ngày Mai OST)",
+      "artist": "Đức Phúc",
+      "sourceTrackId": "m7cEYB3NQrU9",
+      "durationSeconds": 264,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2017/01/12/2290252da79e87550a07e858db86579f_1075798557.lrc"
+    },
+    "nang-am-xa-dan": {
+      "title": "Nắng Ấm Xa Dần",
+      "artist": "Sơn Tùng M-TP",
+      "sourceTrackId": "woP4j7NXbgG",
+      "durationSeconds": 190,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2017/01/05/a341b4d33cffd570f7558e24341a75f3_1074679839.lrc"
+    },
+    "nang-tho": {
+      "title": "Nàng Thơ",
+      "artist": "Hoàng Dũng",
+      "sourceTrackId": "ZqfoKtrd1H7M",
+      "durationSeconds": 254,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/a/b/5/1/ab51ba63294631b958663a394379e362.lrc"
+    },
+    "nang-tien-ca": {
+      "title": "Nàng Tiên Cá",
+      "artist": "Hòa Minzy",
+      "sourceTrackId": "Mm4rgflcuKb1",
+      "durationSeconds": 212,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/1/f/5/d/1f5de4f226555df424997db7b1dda148.lrc"
+    },
+    "ngan-nga": {
+      "title": "NGÂN NGA (feat. Isaac, HURRYKNG, Negav, Gin Tuấn Kiệt & Vũ Thảo My)",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "LZx35BQUSckp",
+      "durationSeconds": 292,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/f/1/a/5/f1a5e4270a46ba7df8dee2b14a86534d.lrc"
+    },
+    "ngao-nghe": {
+      "title": "NGẠO NGHỄ (feat. Anh Tú Atus, Isaac, Rhyder & HURRYKNG)",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "VwvO94m11XS",
+      "durationSeconds": 195,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/4/9/8/5/4985e893dfaa97bde3ec16cd3811463c.lrc"
+    },
+    "ngao-ngo": {
+      "title": "Ngáo Ngơ",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "1sob8v5iTNRA",
+      "durationSeconds": 253,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/4/7/e/8/47e88fa9ba4235805a1c896cb853707e.lrc"
+    },
+    "ngat-ngay-con-ga-tay": {
+      "title": "NGẤT NGÂY CON GÀ TÂY",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "YzMSxjMQqeKq",
+      "durationSeconds": 215,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/7/a/c/0/7ac0f8d374ba21ef2dec69c1ee705aa0.lrc"
+    },
+    "ngoi-sao-hy-vong": {
+      "title": "NGÔI SAO HY VỌNG",
+      "artist": "ANH TRAI \"SAY HI\", CONGB",
+      "sourceTrackId": "w13OktIENIKG",
+      "durationSeconds": 244,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/d/f/5/9/df59b9125b46358b5c767134e37f6282.lrc"
+    },
+    "nguoi-dau-tien": {
+      "title": "Người Đầu Tiên",
+      "artist": "Juky San, buitruonglinh",
+      "sourceTrackId": "XYsbgJe9EF9",
+      "durationSeconds": 216,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/0/5/e/7/05e7873562bfb5380cde74c0e5967f86.lrc"
+    },
+    "nguoi-den-sau": {
+      "title": "Người Đến Sau",
+      "artist": "Hoài Lâm",
+      "sourceTrackId": "ghkdKKD2SgPx",
+      "durationSeconds": 320,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/9/b/1/3/9b1387cc7d6143829a4a923bcd102fa6.lrc"
+    },
+    "nguoi-im-lang-gap-nguoi-hay-noi": {
+      "title": "Người Im Lặng Gặp Người Hay Nói",
+      "artist": "HIEUTHUHAI",
+      "sourceTrackId": "UtqDYKMLcVL0",
+      "durationSeconds": 256,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/0/4/8/2/04826b350cb81ab35c32b2c085fce607.lrc"
+    },
+    "nguoi-la-oi": {
+      "title": "Người Lạ Ơi",
+      "artist": "Karik, Orange, Superbrothers",
+      "sourceTrackId": "we7oPa4ikTKO",
+      "durationSeconds": 217,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2018/01/22/d3c01811511194542a8015aad04710f3_1078016588.lrc"
+    },
+    "nguoi-nhu-anh-xung-dang-co-don": {
+      "title": "NGƯỜI NHƯ ANH XỨNG ĐÁNG CÔ ĐƠN",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "iCJ46HLsGsmS",
+      "durationSeconds": 317,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/a/c/3/d/ac3dbd46b6861861a876b200a0ac51d1.lrc"
+    },
+    "nguoi-tinh-cua-nang": {
+      "title": "NGƯỜI TÌNH CỦA NẮNG (feat. Anh Tú, Captain, Hải Đăng Doo, Vũ Thịnh & Lyly)",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "M1LUgW4zj5QP",
+      "durationSeconds": 240,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/d/6/7/8/d678d9dd5f0f632c26022a37d9de99cb.lrc"
+    },
+    "nguoi-tren-day": {
+      "title": "người trên dây",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "MdhueKpv3aTH",
+      "durationSeconds": 215,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2/4/e/8/24e8b317bfda10b0bb724f58236363d2.lrc"
+    },
+    "nguoi-yeu-chua-sinh-ra": {
+      "title": "NGƯỜI YÊU CHƯA SINH RA",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "VsSgshEn6kM0",
+      "durationSeconds": 234,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/8/d/b/6/8db6d3ee06fd65dc958bd32eda2eacb1.lrc"
+    },
+    "nguoi-yeu-cu": {
+      "title": "Người Yêu Cũ",
+      "artist": "Phan Mạnh Quỳnh",
+      "sourceTrackId": "Q0o5iVm66B1j",
+      "durationSeconds": 234,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2015/3/b/3b1fd3f463cd938de846273115849597_1074520424.lrc"
+    },
+    "nha-anh-o-dau-the": {
+      "title": "Anh Nhà Ở Đâu Thế?",
+      "artist": "AMEE, B Ray",
+      "sourceTrackId": "xLVWMfkWBg3M",
+      "durationSeconds": 217,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/3/f/8/3/3f834adae70006297945f2ff31ba1ea2.lrc"
+    },
+    "nhin-ve-phia-anh": {
+      "title": "NHÌN VỀ PHÍA ANH",
+      "artist": "ANH TRAI \"SAY HI\", Ngô Kiến Huy",
+      "sourceTrackId": "5P6PDn2RLpqs",
+      "durationSeconds": 212,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/d/d/e/9/dde9ae005452543ba9e5d26786764d42.lrc"
+    },
+    "nhu-co-bac-ho-trong-ngay-vui-dai-thang": {
+      "title": "Như Có Bác Hồ Trong Ngày Vui Đại Thắng",
+      "artist": "Trường Kha",
+      "sourceTrackId": "XwdEopxS6vAX",
+      "durationSeconds": 207,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/c/d/4/3/cd436fe6dd964d446159200ed7fb99e3.lrc"
+    },
+    "no-far-no-star": {
+      "title": "NO FAR, NO STAR (feat. Song Luân, RHYDER, HURRYKNG, Captain, Đỗ Phú Quí & Tage)",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "yTSsnWMTwgWU",
+      "durationSeconds": 252,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2/e/9/7/2e97f4ced1b628e0021b68a0c9e11c63.lrc"
+    },
+    "no-long-dong-y": {
+      "title": "NỠ LÒNG ĐỒNG Ý",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "3bEZPNqwV4hz",
+      "durationSeconds": 290,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/a/3/e/c/a3ec57bd9dab03b111569f46b41801d9.lrc"
+    },
+    "noi-ay-con-tim-ve": {
+      "title": "Nơi Ấy Con Tìm Về",
+      "artist": "Hồ Quang Hiếu",
+      "sourceTrackId": "Du4fcXv2uvIh",
+      "durationSeconds": 261,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/d/2/6/4/d264c296f1701605c8db9eb45de550f6.lrc"
+    },
+    "noi-dao-xa": {
+      "title": "Nơi Đảo Xa",
+      "artist": "Huỳnh Lợi",
+      "sourceTrackId": "9EZhQg2MiQDc",
+      "durationSeconds": 333,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2017/01/05/0cf46c5d132af15adf269e7e779cc6fa_1074486083.lrc"
+    },
+    "noi-dau-giua-hoa-binh": {
+      "title": "Nỗi Đau Giữa Hòa Bình",
+      "artist": "Hòa Minzy, Nguyễn Văn Chung",
+      "sourceTrackId": "OXQKV4WBHIgH",
+      "durationSeconds": 319,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/6/c/4/f/6c4f39cf23e6a911e7448f992167db27.lrc"
+    },
+    "noi-dau-ngay-dai": {
+      "title": "NỖI ĐAU NGÂY DẠI (feat. HIEUTHUHAI, Đức Phúc & Công Dương)",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "B1lITCUDltpz",
+      "durationSeconds": 259,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/d/f/c/3/dfc3d5c418226d8eaee70c73f3284fe1.lrc"
+    },
+    "noi-nay-co-anh": {
+      "title": "Nơi Này Có Anh",
+      "artist": "Sơn Tùng M-TP",
+      "sourceTrackId": "d7qtCrRV89zn",
+      "durationSeconds": 262,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2017/04/10/437fd8dab336d63566e90d61e2dde4ea_1075841896.lrc"
+    },
+    "not-my-fault": {
+      "title": "NOT MY FAULT",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "DXpZ5pDCGzTQ",
+      "durationSeconds": 246,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/e/1/8/3/e1836c660601ea2fcd90ba187ed29e88.lrc"
+    },
+    "nuoc-mat-ca-sau": {
+      "title": "Nước Mắt Cá Sấu",
+      "artist": "HIEUTHUHAI",
+      "sourceTrackId": "ijqQJTTiIql",
+      "durationSeconds": 206,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/7/8/7/1/78712fe1a8d51e7bbd477894c25fcbb4.lrc"
+    },
+    "o-day-ai-cung-thuong-con": {
+      "title": "Ở ĐÂY AI CŨNG THƯƠNG CON",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "IA3DoEDa7ptT",
+      "durationSeconds": 271,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/0/f/b/1/0fb15ffb69d6ea528c23a2bbc602879c.lrc"
+    },
+    "perfect": {
+      "title": "Perfect",
+      "artist": "Double Chick",
+      "sourceTrackId": "iC6asDDBxPov",
+      "durationSeconds": 258,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/8/b/7/6/8b76bda5883282b2630d9b2d1adf9eed.lrc"
+    },
+    "phia-sau-mot-co-gai": {
+      "title": "Phía Sau Một Cô Gái",
+      "artist": "Phan Duy Anh",
+      "sourceTrackId": "CBTz22ECtURh",
+      "durationSeconds": 168,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/b/2/6/b/b26bb2183ce6928f2cce884b9447ab3c.lrc"
+    },
+    "qua-chin-qua": {
+      "title": "QUẢ CHÍN QUÁ",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "ibO8IedarGRj",
+      "durationSeconds": 278,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/3/b/3/6/3b367752c273385b9d2e17a2add327dc.lrc"
+    },
+    "red-flag": {
+      "title": "RED FLAG",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "7RGtuJSGt7tW",
+      "durationSeconds": 234,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/1/8/1/8/1818c9fd7b558684887095540fe1b68b.lrc"
+    },
+    "regret": {
+      "title": "regret",
+      "artist": "qt.",
+      "sourceTrackId": "uRKajl8tVSji",
+      "durationSeconds": 204,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/7/d/c/4/7dc485e11fc4cbf9dac653b06ea49e6a.lrc"
+    },
+    "roi-toi-luon": {
+      "title": "Rồi Tới Luôn",
+      "artist": "Nal",
+      "sourceTrackId": "fxvfdeYNNQlX",
+      "durationSeconds": 247,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/6/d/c/d/6dcd139580a3021abf4e1225efced9de.lrc"
+    },
+    "roi-tu-do": {
+      "title": "RƠI TỰ DO",
+      "artist": "EM XINH \"SAY HI\", LyHan",
+      "sourceTrackId": "xkFtveQQfJAo",
+      "durationSeconds": 201,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/7/9/2/c/792c3fbb4bb4da3e8c80b785466efde0.lrc"
+    },
+    "run": {
+      "title": "RUN",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "tKv5BKZCJvam",
+      "durationSeconds": 248,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/c/1/7/3/c173c7f51584e4978b25447a7c5cbf92.lrc"
+    },
+    "run-to-you": {
+      "title": "RUN TO YOU",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "QFIW4yaiBhsU",
+      "durationSeconds": 276,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/9/9/d/4/99d456864dbafbdc82e7c1b89a6536f1.lrc"
+    },
+    "sai-gon-dau-long-qua": {
+      "title": "Sài Gòn Đau Lòng Quá",
+      "artist": "Hứa Kim Tuyền, Hoàng Duyên",
+      "sourceTrackId": "B7R0Rl8fcl4i",
+      "durationSeconds": 309,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/1/3/9/e/139eef61cfca226b1a1b3a47322cf842.lrc"
+    },
+    "sao-hang-a": {
+      "title": "SAO HẠNG A (feat. HIEUTHUHAI, Dương Domic, Song Luân, Jsol & Trần Đăng Dương)",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "eF9Y4cE0nwBL",
+      "durationSeconds": 253,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/3/1/c/0/31c0269af129877580cd126ac98ac15a.lrc"
+    },
+    "sau-dem-nay": {
+      "title": "Sau Đêm Nay",
+      "artist": "Sean, Tweny, Sshine",
+      "sourceTrackId": "M1go2dm06GBf",
+      "durationSeconds": 219,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/6/6/a/b/66ab385a31797bd0c1fa8006a2af3172.lrc"
+    },
+    "sau-lung-anh-co-ai-kia": {
+      "title": "Sau Lưng Anh Có Ai Kìa",
+      "artist": "Thiều Bảo Trâm",
+      "sourceTrackId": "R802v6FnJtyI",
+      "durationSeconds": 303,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/b/a/2/1/ba21fa2b0eb67104521d856614cca598.lrc"
+    },
+    "sau-tat-ca": {
+      "title": "Sau Tất Cả",
+      "artist": "ERIK",
+      "sourceTrackId": "wa1OPT4kVty4",
+      "durationSeconds": 235,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2016/8/d/8d1ef658c5f0a05f503d27368b2195a8_1075455731.lrc"
+    },
+    "sau-tim-thiep-hong": {
+      "title": "Sầu Tím Thiệp Hồng",
+      "artist": "Quang Lê, Lệ Quyên",
+      "sourceTrackId": "xSPy6SCW4KgD",
+      "durationSeconds": 288,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2018/01/22/13b955ac016fc8519874ceba2b298b5a_1074584968.lrc"
+    },
+    "secret": {
+      "title": "SECRET",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "2c1bTRD6Tevs",
+      "durationSeconds": 281,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/3/e/3/f/3e3f872f762dbd318370f8437ab5c840.lrc"
+    },
+    "see-tinh": {
+      "title": "See Tình",
+      "artist": "Hoàng Thùy Linh",
+      "sourceTrackId": "BrZ0ZC8KJLA1",
+      "durationSeconds": 185,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/d/9/2/8/d92816805ac9fead46d0e7887d2a6a0b.lrc"
+    },
+    "so-dam": {
+      "title": "SO ĐẬM",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "DCrCOgigWRs5",
+      "durationSeconds": 220,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/e/b/8/d/eb8d2a33b7d5b014f0d9000120e79d54.lrc"
+    },
+    "so-good": {
+      "title": "SO GOOD",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "SOpQgGbeN8ng",
+      "durationSeconds": 241,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/b/2/5/0/b2503d29b266eb86f33adb0418092d6a.lrc"
+    },
+    "som-muon-thi": {
+      "title": "SỚM MUỘN THÌ",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "Mw6AAxD5v7a7",
+      "durationSeconds": 321,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/0/a/0/5/0a054f830e6277fe6ba77ee5bb3e3e21.lrc"
+    },
+    "song-vo-vo-bo": {
+      "title": "SÓNG VỖ VỠ BỜ (feat. Anh Tú, JSOL, ERIK, Dương Domic & Phạm Anh Duy)",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "VFyE09X8XTPD",
+      "durationSeconds": 323,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/9/6/2/e/962eea92b0b99f71049d71fe38e5e0b7.lrc"
+    },
+    "sos": {
+      "title": "SOS",
+      "artist": "The Sans",
+      "sourceTrackId": "jhze9NlRkusd",
+      "durationSeconds": 215,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/9/7/8/a/978a9b162ff811e3c05cbf13c34bd4df.lrc"
+    },
+    "suy-nghi-trong-anh": {
+      "title": "Suy Nghĩ Trong Anh",
+      "artist": "Khắc Việt",
+      "sourceTrackId": "b7lAbILMlMkQ",
+      "durationSeconds": 263,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/d/1/8/4/d18481c3da28208a2011fa3b7d998efb.lrc"
+    },
+    "tadida": {
+      "title": "TADIDA",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "vL5go5NRA8EX",
+      "durationSeconds": 272,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/0/b/9/5/0b95632006fd1f688ed0f88dc5d83c7f.lrc"
+    },
+    "tai-sinh": {
+      "title": "Tái Sinh",
+      "artist": "Tùng Dương",
+      "sourceTrackId": "V96X1PyrQIpV",
+      "durationSeconds": 240,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/1/5/4/2/1542f21b80e682a8682cbdb9760a1b02.lrc"
+    },
+    "tan-cung-noi-nho": {
+      "title": "Tận Cùng Nỗi Nhớ",
+      "artist": "Will",
+      "sourceTrackId": "LZ2iZ20qZYbQ",
+      "durationSeconds": 279,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/c/4/b/2/c4b20c04499ba77bb3e71587888df43c.lrc"
+    },
+    "tet-tinh": {
+      "title": "tết tình",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "G2Mkoiepiwob",
+      "durationSeconds": 220,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/c/e/7/c/ce7c8b4624521b24941bb56aa60fddf3.lrc"
+    },
+    "thao-tung-tam-ly": {
+      "title": "THAO TÚNG TÂM LÝ",
+      "artist": "EM XINH \"SAY HI\", MAIQUINN",
+      "sourceTrackId": "EHMR7aWW3QGw",
+      "durationSeconds": 229,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/6/a/1/2/6a1241dee2a7313723c223f0283c32e0.lrc"
+    },
+    "thay-toi-yeu-co-ay": {
+      "title": "Thay Tôi Yêu Cô Ấy",
+      "artist": "Thanh Hưng",
+      "sourceTrackId": "xkk3s0ZsxyBV",
+      "durationSeconds": 329,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/f/e/2/4/fe24e03359ba01bf9f302b49e49ecea2.lrc"
+    },
+    "the-gioi-cua-anh": {
+      "title": "THẾ GIỚI CỦA ANH",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "vgJE4menlyS8",
+      "durationSeconds": 258,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/1/c/2/b/1c2bef29294eca28ba6ebbb9fd748542.lrc"
+    },
+    "the-real-aura": {
+      "title": "THE REAL AURA",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "fyiocsAHb0kp",
+      "durationSeconds": 300,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/3/d/c/e/3dce1b5acd9bcec11543857ff608c50d.lrc"
+    },
+    "the-spectre": {
+      "title": "The Spectre",
+      "artist": "Alan Walker",
+      "sourceTrackId": "b1i73CoOeJ8R",
+      "durationSeconds": 194,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2017/09/18/50866fd1a63bca6b8303c1880e175dd8_1076379596.lrc"
+    },
+    "the-stars": {
+      "title": "THE STARS (feat. 30 Anh Trai)",
+      "artist": "ANH TRAI \"SAY HI\", 30 Anh Trai",
+      "sourceTrackId": "jDvfADBqMJOY",
+      "durationSeconds": 240,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/0/7/f/c/07fc097d099c83d5fd6319809627ef97.lrc"
+    },
+    "thi-si": {
+      "title": "THI SĨ (feat. Đức Phúc, ERIK, Phạm Anh Duy & Tage)",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "yswhlOZjbDM",
+      "durationSeconds": 288,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/a/e/6/d/ae6d74b719fff22517217b336cf5b168.lrc"
+    },
+    "thieu-than": {
+      "title": "Thiêu Thân",
+      "artist": "B Ray, Sofia",
+      "sourceTrackId": "CahtzX2IMKU7",
+      "durationSeconds": 199,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/a/1/e/9/a1e9f9954b1d6a97227aab38c2de703d.lrc"
+    },
+    "thoat-ra-khoi-em": {
+      "title": "THOÁT RA KHỎI EM",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "ALuvQTKccBlb",
+      "durationSeconds": 258,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/8/7/5/9/87595ebe18158c0006fe26cbaa8be3f2.lrc"
+    },
+    "thu-cuoi": {
+      "title": "Thu Cuối",
+      "artist": "Yanbi, Mr.T, Hằng BingBoong",
+      "sourceTrackId": "Hi3xS5xBLQDN",
+      "durationSeconds": 292,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/6/d/e/a/6dea402284a1d4cf213844b861b39be0.lrc"
+    },
+    "thuc": {
+      "title": "THỨC",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "esSmapPVnC1q",
+      "durationSeconds": 323,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2/d/0/d/2d0dd32b273db0d602ff87b289c4ce1e.lrc"
+    },
+    "thuy-trieu": {
+      "title": "Thủy Triều",
+      "artist": "Quang Hùng MasterD",
+      "sourceTrackId": "wzoZLiH2jki2",
+      "durationSeconds": 186,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/f/6/9/3/f69319e373e5168e5eea462074e0d169.lrc"
+    },
+    "tiec-vui-co-ban-hien": {
+      "title": "TIỆC VUI CÓ BẠN HIỀN",
+      "artist": "ANH TRAI \"SAY HI\", BigDaddy",
+      "sourceTrackId": "5PkCweX0bg3V",
+      "durationSeconds": 193,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/d/6/e/d/d6edfedfe1a8b27cc3ca3e06d117e082.lrc"
+    },
+    "tim-em": {
+      "title": "Tìm Em",
+      "artist": "Hngle, Bảo Anh",
+      "sourceTrackId": "ibFZoc6gggxy",
+      "durationSeconds": 275,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/5/c/3/f/5c3fe67426cae5aba07c6d03dead659a.lrc"
+    },
+    "tim-lai-bau-troi": {
+      "title": "Tìm Lại Bầu Trời",
+      "artist": "Tuấn Hưng, Khắc Việt",
+      "sourceTrackId": "SZhbXqQWtuUl",
+      "durationSeconds": 327,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2/e/6/b/2e6b0b7cc9e269232203515eba258c66.lrc"
+    },
+    "tin-hieu-yeu": {
+      "title": "TÍN HIỆU YÊU",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "ygVjfM3wfNIi",
+      "durationSeconds": 187,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/f/4/0/9/f4092ef9cda98102783d51e8ad825fc7.lrc"
+    },
+    "tinh-ban-dieu-ky": {
+      "title": "Tình Bạn Diệu Kỳ (Cover)",
+      "artist": "Bé Tú Anh, Nhã Khang",
+      "sourceTrackId": "tLdkxMzCdqpl",
+      "durationSeconds": 193,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/f/c/8/6/fc86e136011553e69e8acfb29ebaa520.lrc"
+    },
+    "tinh-cuoi-cung": {
+      "title": "TÌNH CUỐI CÙNG (feat. Jsol)",
+      "artist": "ANH TRAI \"SAY HI\", JSOL",
+      "sourceTrackId": "vkWVzPROVVaB",
+      "durationSeconds": 231,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/6/3/6/f/636f3da9321c2f9621407b8133fdc031.lrc"
+    },
+    "tinh-dau-qua-chen": {
+      "title": "TÌNH ĐẦU QUÁ CHÉN (feat. Quang Hùng MasterD, Negav, Pháp Kiều & Erik)",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "fc5Q6wyShz0J",
+      "durationSeconds": 316,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/c/c/9/6/cc969dbd88565b953c937b37284c2080.lrc"
+    },
+    "tinh-yeu-mau-nang": {
+      "title": "Tình Yêu Màu Nắng",
+      "artist": "Đoàn Thúy Trang, BigDaddy",
+      "sourceTrackId": "gOwZN8RnAUr6",
+      "durationSeconds": 298,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2015/7/b/7b2f41cb72cdc3b1b000606564121bfe_1074585023.lrc"
+    },
+    "to-quoc-goi-ten-minh": {
+      "title": "Tổ Quốc Gọi Tên Mình",
+      "artist": "Huỳnh Lợi",
+      "sourceTrackId": "id51PRwH5RmZ",
+      "durationSeconds": 359,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2017/09/11/bbcc3fa2e7fae8acd78298fc4895c4ff_1074486084.lrc"
+    },
+    "together-we-shine": {
+      "title": "TOGETHER WE SHINE",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "Zi3hmbUAeaiP",
+      "durationSeconds": 317,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/7/a/0/1/7a01f6b1ee36ba9202e83a93e3692652.lrc"
+    },
+    "toi-cho-em": {
+      "title": "Tội Cho Em",
+      "artist": "Hà Nhi",
+      "sourceTrackId": "gQABnAAGCZP",
+      "durationSeconds": 316,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/a/e/a/1/aea16e70210bbed505f4f4d889158b95.lrc"
+    },
+    "tran-bo-nho": {
+      "title": "Tràn Bộ Nhớ",
+      "artist": "Dương Domic",
+      "sourceTrackId": "BryNYfapyeky",
+      "durationSeconds": 173,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/f/f/3/9/ff393d90f2b98daee73d20e2e65a7ce7.lrc"
+    },
+    "trinh": {
+      "title": "TRÌNH",
+      "artist": "HIEUTHUHAI",
+      "sourceTrackId": "Aw5zXBCnrsT",
+      "durationSeconds": 275,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/d/2/e/1/d2e18e2d2d0a066380c0a547ad42fada.lrc"
+    },
+    "tro-thanh-nguoi-em-muon": {
+      "title": "TRỞ THÀNH NGƯỜI EM MUỐN?!",
+      "artist": "ANH TRAI \"SAY HI\", Jey B",
+      "sourceTrackId": "KJwD7689jkhH",
+      "durationSeconds": 246,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/e/9/a/c/e9ac3220852112965803e083befdad3c.lrc"
+    },
+    "troi-em-lai": {
+      "title": "TRÓI EM LẠI (feat. Quang Hùng MasterD)",
+      "artist": "ANH TRAI \"SAY HI\", Quang Hùng MasterD",
+      "sourceTrackId": "y6kRBQ1N5BUt",
+      "durationSeconds": 265,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/8/2/6/b/826b60cac450e844702cd99e79c00cad.lrc"
+    },
+    "troi-sao": {
+      "title": "TRỜI SAO",
+      "artist": "EM XINH \"SAY HI\", 52Hz",
+      "sourceTrackId": "AtfymxDJoDA9",
+      "durationSeconds": 312,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/0/6/8/9/06899d82d06d3297601e4c057db193e0.lrc"
+    },
+    "truc-giac": {
+      "title": "TRỰC GIÁC",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "H3qR66XDPjJu",
+      "durationSeconds": 308,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/b/c/8/4/bc844b702d054fc81758f4b5e5e303f4.lrc"
+    },
+    "truong-son-dong-truong-son-tay": {
+      "title": "Trường Sơn Đông Trường Sơn Tây",
+      "artist": "Đông Quân, Thanh Ngọc",
+      "sourceTrackId": "vIssoXUE5LBD",
+      "durationSeconds": 359,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2015/2/b/2b18007595c16fe70955936b063a4f59_1075287329.lrc"
+    },
+    "tu-nguyen": {
+      "title": "Tự Nguyện",
+      "artist": "Đức Tuấn, Noo Phước Thịnh",
+      "sourceTrackId": "immN7BRwYF2Y",
+      "durationSeconds": 252,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2015/1/5/15e31a5cd711e0141add86bee37f73ba_1075286146.lrc"
+    },
+    "tung": {
+      "title": "TỪNG",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "19X67E6zd01o",
+      "durationSeconds": 264,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/1/2/0/0/120070afc566eaf83d309d0c7f284f1d.lrc"
+    },
+    "tup-leu-ly-tuong": {
+      "title": "Túp Lều Lý Tưởng",
+      "artist": "Hồ Quang Hiếu",
+      "sourceTrackId": "GcH9K2rl60Ad",
+      "durationSeconds": 277,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2014/9/a/9a46a28348cbee5ca9ca9cc50a6f7170_1074262289.lrc"
+    },
+    "van-ly-doc-hanh": {
+      "title": "VẠN LÝ ĐỘC HÀNH",
+      "artist": "ANH TRAI \"SAY HI\", Karik",
+      "sourceTrackId": "BzmHIM3vJwVw",
+      "durationSeconds": 235,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/1/9/3/6/1936dca72cc59dc0a82d9d3a5ec205a1.lrc"
+    },
+    "ve-dau-mai-toc-nguoi-thuong": {
+      "title": "Về Đâu Mái Tóc Người Thương",
+      "artist": "Quang Lê",
+      "sourceTrackId": "c5ZajczbXNFo",
+      "durationSeconds": 258,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2017/01/13/d2b31d36f14fa7d0b6cd7357eb36e40e_1074175842.lrc"
+    },
+    "vi-me-anh-bat-chia-tay": {
+      "title": "Vì Mẹ Anh Bắt Chia Tay",
+      "artist": "Miu Lê, Karik, Châu Đăng Khoa",
+      "sourceTrackId": "nlmSe26PMF7z",
+      "durationSeconds": 262,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/8/a/c/e/8ace218e600f48bbf5153506218d4b76.lrc"
+    },
+    "vi-yeu-ma-cu-dam-dau": {
+      "title": "VÌ YÊU CỨ ĐÂM ĐẦU",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "2tK29uCT170I",
+      "durationSeconds": 209,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/4/9/c/3/49c350c190dc2726a51c7ca2631d85a4.lrc"
+    },
+    "viet-nam-trong-toi-la": {
+      "title": "Việt Nam Trong Tôi Là",
+      "artist": "Yến Lê",
+      "sourceTrackId": "e40k9yPQq63f",
+      "durationSeconds": 259,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/b/f/3/d/bf3dfe7df51c2891c85baac17e0740c1.lrc"
+    },
+    "viet-tiep-cau-chuyen-hoa-binh": {
+      "title": "Viết Tiếp Câu Chuyện Hòa Bình",
+      "artist": "Nguyễn Văn Chung, Tùng Dương",
+      "sourceTrackId": "DXtCWQblkPyI",
+      "durationSeconds": 297,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/d/3/5/6/d356b62bba3db77323530ac1771b3b14.lrc"
+    },
+    "vo-cung": {
+      "title": "Vô Cùng",
+      "artist": "Nhã Thy",
+      "sourceTrackId": "wzaxQ2vPcwlg",
+      "durationSeconds": 299,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/4/6/e/4/46e4e4a741d72f8ea93b5f72fa83b3fd.lrc"
+    },
+    "vo-so-lan-tinh-co": {
+      "title": "VÔ SỐ LẦN TÌNH CỜ",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "OQJnpBKhe8h",
+      "durationSeconds": 221,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/3/2/f/c/32fc6187e7154553639bfaf43e4f5018.lrc"
+    },
+    "vo-tay": {
+      "title": "VỖ TAY",
+      "artist": "EM XINH \"SAY HI\", Phương Ly",
+      "sourceTrackId": "urmmAFzGHfNc",
+      "durationSeconds": 241,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/e/0/f/8/e0f8d5ea97196803bd707b718d24f1d3.lrc"
+    },
+    "vu-dieu-cong-chieng": {
+      "title": "Vũ Điệu Cồng Chiêng",
+      "artist": "Tóc Tiên",
+      "sourceTrackId": "XcVq7P4QRnY",
+      "durationSeconds": 274,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/7/3/e/0/73e0351f21f695eb0eace25122df32a7.lrc"
+    },
+    "waiting-for-you": {
+      "title": "Waiting For You",
+      "artist": "MONO, Onionn",
+      "sourceTrackId": "BQfYy9h2OKFO",
+      "durationSeconds": 266,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/1/0/6/d/106d60a96bfb566ff191bebdf13c8e3c.lrc"
+    },
+    "walk": {
+      "title": "Walk",
+      "artist": "NCT 127",
+      "sourceTrackId": "ndzs6fBZZZN7",
+      "durationSeconds": 192,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/9/0/6/0/906046270fe637e500484ef22cea16f4.lrc"
+    },
+    "who-i-am": {
+      "title": "Who I Am",
+      "artist": "Alan Walker, Putri Ariani, Peder Elias",
+      "sourceTrackId": "CananIwdwzVg",
+      "durationSeconds": 194,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2/4/0/4/24042ef44f632fd44d96a457049262c9.lrc"
+    },
+    "xoay-vong": {
+      "title": "XOAY VÒNG",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "Hh1QhEOr1JCv",
+      "durationSeconds": 206,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/e/2/c/f/e2cfbbc485aefdb09d8b711b608859d4.lrc"
+    },
+    "yeu-la-tha-thu": {
+      "title": "Yêu Là Tha Thu (Em Chưa 18 OST)",
+      "artist": "OnlyC",
+      "sourceTrackId": "j5lHfjqICBYh",
+      "durationSeconds": 273,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2017/04/23/6bebaf9ab030414090098e78577c0be3_1076121946.lrc"
+    },
+    "yeu-mot-nguoi-vo-tam": {
+      "title": "Yêu Một Người Vô Tâm",
+      "artist": "Bảo Anh",
+      "sourceTrackId": "cZ6S4yS4sQSd",
+      "durationSeconds": 310,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/2017/01/04/ab4d000eeff4cc096a38d37b542929ca_1075771982.lrc"
+    },
+    "yeu-yeu-yeu-thuong-thuong-thuong": {
+      "title": "YÊU YÊU YÊU, THƯƠNG THƯƠNG THƯƠNG",
+      "artist": "ANH TRAI \"SAY HI\", Sơn.K",
+      "sourceTrackId": "gpy4SVXtX80g",
+      "durationSeconds": 209,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/1/b/e/0/1be0fde6ccbb0e9950bc689d66ee60a8.lrc"
+    },
+    "you": {
+      "title": "You",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "HdZocsfWnXo",
+      "durationSeconds": 292,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/e/7/2/1/e721d0f9bb832bda3ec0710ad366009b.lrc"
+    },
+    "you-had-me-at-hello": {
+      "title": "YOU HAD ME AT HELLO (feat. Phạm Đình Thái Ngân, Lou Hoàng, Hải Đăng Doo & Gin Tuấn Kiệt)",
+      "artist": "Nhiều nghệ sĩ",
+      "sourceTrackId": "3YHWzA5dRjem",
+      "durationSeconds": 218,
+      "url": "https://static-zmp3.zmdcdn.me/lyrics/c/3/e/c/c3ec852fca0c4210daaedd238507619e.lrc"
+    }
+  }
+}

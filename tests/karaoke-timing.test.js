@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { activeLyricIndex, activeTimedLyricIndex, getLineProgress, getLineState, karaokeLyricsTextSimilarity, lrcLineIntervals, normalizeTimedLyrics, parseSyncedKaraokeLyrics, timingMatchesAudio, wordPlaybackState } from '../karaoke-timing.js';
 
 // Explicit test-only timing fixture. These timestamps do not represent a real song.
@@ -131,6 +132,25 @@ test('progressive timing requires the same track and a verified LRCLIB duration 
   assert.equal(timingMatchesAudio({ ...match, providerTrackId: '' }), false);
   assert.equal(timingMatchesAudio({ ...match, audioDuration: 185 }), false);
   assert.equal(timingMatchesAudio({ ...match, durationSeconds: null }), false);
+});
+
+test('verified Zing LRC timing uses the same strict active-audio duration checks', () => {
+  const match = {
+    songId: 'song-a', source: 'zing-lrc', providerTrackId: 'zing-track-1', durationSeconds: 185,
+    audioSongId: 'song-a', audioSrc: 'https://audio.example/song-a.mp3', audioDuration: 185.4
+  };
+  assert.equal(timingMatchesAudio(match), true);
+  assert.equal(timingMatchesAudio({ ...match, audioDuration: 190 }), false);
+  assert.equal(timingMatchesAudio({ ...match, source: 'unverified-lrc' }), false);
+});
+
+test('Zing LRC manifest contains only entries verified against the existing static lyrics', async () => {
+  const manifest = JSON.parse(await readFile(new URL('../public/karaoke-lrc-manifest.json', import.meta.url), 'utf8'));
+  const entries = Object.values(manifest.entries || {});
+  assert.equal(manifest.provider, 'zing-lrc');
+  assert.equal(entries.length, 305);
+  assert.ok(entries.every((entry) => entry.sourceTrackId && entry.durationSeconds > 0
+    && /^https:\/\/static-zmp3\.zmdcdn\.me\/lyrics\//.test(entry.url)));
 });
 
 test('plain text has no inferred synchronization timestamps', () => {

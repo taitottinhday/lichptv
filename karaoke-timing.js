@@ -86,10 +86,11 @@ export function activeTimedLyricIndex(lines, time) {
   return active;
 }
 
-/** Require server-matched LRCLIB identity and a close duration match with this song's active audio. */
+/** Require a matched provider recording and a close duration match with this song's active audio. */
 export function timingMatchesAudio({ songId, source, providerTrackId, durationSeconds, audioSongId, audioSrc, audioDuration }) {
   const lyricsDuration = Number(durationSeconds);
-  return Boolean(songId && audioSongId === songId && audioSrc && source === 'lrclib' && providerTrackId
+  const trustedTimedSource = source === 'lrclib' || source === 'zing-lrc';
+  return Boolean(songId && audioSongId === songId && audioSrc && trustedTimedSource && providerTrackId
     && Number.isFinite(audioDuration) && audioDuration > 0 && Number.isFinite(lyricsDuration) && lyricsDuration > 0
     && Math.abs(audioDuration - lyricsDuration) <= Math.max(1.5, audioDuration * 0.005));
 }

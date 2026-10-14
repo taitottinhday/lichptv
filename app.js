@@ -289,6 +289,7 @@ function rememberKaraokeLyricsSession(song, data) {
     durationSeconds: data.durationSeconds || null,
     hasWordSync: data.hasWordSync === true,
     attribution: data.attribution || '',
+    sourceUrl: data.sourceUrl || '',
     updatedAt: new Date().toISOString()
   };
 }
@@ -1074,6 +1075,7 @@ async function refreshKaraokeTimedLyrics(song, requestId) {
   if (!session.text.trim()) session.text = liveLyrics.lyrics || '';
   session.providerTrackId = liveLyrics.providerTrackId || session.providerTrackId;
   session.sourceName = liveLyrics.sourceName || liveLyrics.source || 'LRCLIB';
+  session.sourceUrl = liveLyrics.sourceUrl || '';
   session.loading = false;
   session.error = false;
   state.karaokeAudio.activeLineIndex = -1;
@@ -1363,7 +1365,7 @@ function renderKaraokeLyricsModal() {
   cover.hidden = !metadata.coverUrl;
   $('#karaokeAlbumMeta').textContent = [metadata.album, metadata.year, metadata.durationSeconds ? formatKaraokeTime(metadata.durationSeconds) : ''].filter(Boolean).join(' · ');
   $('#karaokeLyricsCategory').textContent = karaokeCategoryLabel(song.category);
-  sourceLink.hidden = !session.sourceUrl || hasLyrics || session.loading || session.editing;
+  sourceLink.hidden = !session.sourceUrl || session.loading || session.editing;
   sourceLink.href = session.sourceUrl || '#';
   sourceLink.textContent = session.sourceName ? `${session.sourceName} ↗` : 'Mở nguồn lời bài hát ↗';
   modal.classList.toggle('is-fullscreen', session.fullscreen);
@@ -1395,10 +1397,14 @@ function renderKaraokeLyricsModal() {
   else if (session.studyMode) status.textContent = 'Chế độ học thuộc';
   else if (hasLanguageNote) status.textContent = 'Đoạn mở đầu là tiếng Hàn viết bằng phiên âm Latin; phần sau là lời tiếng Việt.';
   else if (timingVerified && session.wordSyncLines?.length) status.textContent = 'Đang đồng bộ theo mốc thời gian từng từ của bản thu đã khớp.';
-  else if (timingVerified && parseSyncedKaraokeLyrics(session.syncedLyrics).length) status.textContent = matchMedia('(max-width: 800px)').matches
-    ? 'Lời LRC khớp bản nhạc; trên màn hình nhỏ tô sáng theo trạng thái dòng.'
-    : 'Đồng bộ ước lượng theo từng câu; LRC chỉ ghi thời điểm bắt đầu mỗi câu.';
-  else if (hasTiming && session.source === 'lrclib' && session.providerTrackId && session.durationSeconds && audio?.currentSrc && Number.isFinite(audio.duration)) status.textContent = 'Bản audio không khớp thời lượng lời; đang hiển thị lời tĩnh.';
+  else if (timingVerified && parseSyncedKaraokeLyrics(session.syncedLyrics).length) status.textContent = session.source === 'zing-lrc'
+    ? (matchMedia('(max-width: 800px)').matches
+      ? 'LRC từ Zing MP3 khớp lời và thời lượng; màn hình nhỏ tô sáng theo trạng thái dòng.'
+      : 'Đồng bộ ước lượng theo câu từ LRC Zing MP3; chỉ dùng khi lời và thời lượng audio khớp.')
+    : matchMedia('(max-width: 800px)').matches
+      ? 'Lời LRC khớp bản nhạc; trên màn hình nhỏ tô sáng theo trạng thái dòng.'
+      : 'Đồng bộ ước lượng theo từng câu; LRC chỉ ghi thời điểm bắt đầu mỗi câu.';
+  else if (hasTiming && ['lrclib', 'zing-lrc'].includes(session.source) && session.providerTrackId && session.durationSeconds && audio?.currentSrc && Number.isFinite(audio.duration)) status.textContent = 'Bản audio không khớp thời lượng lời; đang hiển thị lời tĩnh.';
   else status.textContent = 'Lời bài hát chưa có đồng bộ thời gian.';
   status.hidden = !session.loading && !session.error && !session.studyMode && !hasLanguageNote && !hasLyrics;
 
@@ -1540,7 +1546,7 @@ async function openKaraokeLyrics(songId, { continueQueue = false } = {}) {
     session.durationSeconds = liveLyrics.durationSeconds || null;
     session.providerTrackId = liveLyrics.providerTrackId || '';
     session.sourceName = liveLyrics.sourceName || liveLyrics.source || '';
-    session.sourceUrl = '';
+    session.sourceUrl = liveLyrics.sourceUrl || '';
     session.loading = false;
     session.error = false;
     renderKaraokeLyricsModal();

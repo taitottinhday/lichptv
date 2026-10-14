@@ -2,6 +2,9 @@ node_modules/
 dist/
 /downloads/audios/
 /downloads/json/
+/downloads/vocal-inbox/
+/downloads/vocal-import-status.json
+/audio-sources.local.json
 /.venv-align/
 __pycache__/
 *.py[cod]
