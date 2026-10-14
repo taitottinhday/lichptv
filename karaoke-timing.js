@@ -11,11 +11,87 @@ export function parseSyncedKaraokeLyrics(value) {
     if (!text || !timestamps.length) continue;
     for (const timestamp of timestamps) {
       const fraction = timestamp[3] || '';
-      const seconds = Math.max(0, Number(timestamp[1]) * 60 + Number(timestamp[2]) + (fraction ? Number(`0.${fraction}`) : 0) + offsetSeconds);
-      if (Number.isFinite(seconds)) parsed.push({ seconds, text });
+      const minutes = Number(timestamp[1]);
+      const wholeSeconds = Number(timestamp[2]);
+      if (wholeSeconds > 59) continue;
+      const seconds = minutes * 60 + wholeSeconds + (fraction ? Number(`0.${fraction}`) : 0) + offsetSeconds;
+      if (Number.isFinite(seconds)) parsed.push({ seconds: Math.max(0, seconds), text });
     }
   }
   return parsed.length >= 2 ? parsed.sort((a, b) => a.seconds - b.seconds) : [];
+}
+
+export function clamp01(value) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.min(1, Math.max(0, value));
+}
+
+export function getLineProgress(time, start, end) {
+  if (![time, start, end].every(Number.isFinite) || start < 0 || end <= start) return 0;
+  return clamp01((time - start) / (end - start));
+}
+
+export function getLineState(time, line) {
+  const start = Number(line?.start);
+  const end = Number(line?.end);
+  if (!Number.isFinite(time) || !Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end <= start) return 'upcoming';
+  if (time < start) return 'upcoming';
+  if (time >= end) return 'done';
+  return 'active';
+}
+
+/** Normalize known seconds fields only. Milliseconds are converted only for explicit *Ms fields. */
+export function normalizeTimedLyrics(input, { warn = false } = {}) {
+  if (!Array.isArray(input)) return [];
+  const result = [];
+  input.forEach((line, index) => {
+    const text = typeof line?.text === 'string' ? line.text.trim() : '';
+    let start = Number(line?.start ?? line?.timeStart ?? line?.seconds ?? line?.timestamp);
+    let end = Number(line?.end ?? line?.timeEnd);
+    if (line?.startMs != null && line?.start === undefined && line?.timeStart === undefined && line?.seconds === undefined) start = Number(line.startMs) / 1000;
+    if (line?.endMs != null && line?.end === undefined && line?.timeEnd === undefined) end = Number(line.endMs) / 1000;
+    if (!text || !Number.isFinite(start) || !Number.isFinite(end) || start < 0 || end <= start) {
+      if (warn && typeof console !== 'undefined') console.warn(`Bỏ qua dòng lyrics có timing không hợp lệ (index ${index}).`);
+      return;
+    }
+    result.push({ id: String(line.id || `lyric-${index}-${start}`), sourceIndex: index, text, start, end });
+  });
+  return result.sort((left, right) => left.start - right.start || left.end - right.end);
+}
+
+/** LRC supplies starts only; the next start is an explicitly approximate line end. */
+export function lrcLineIntervals(lines) {
+  if (!Array.isArray(lines)) return [];
+  return lines.slice(0, -1).map((line, index) => ({
+    id: `lrc-${index}-${line.seconds}`,
+    sourceIndex: index,
+    text: line.text,
+    start: line.seconds,
+    end: lines[index + 1].seconds
+  })).filter((line) => line.text?.trim() && Number.isFinite(line.start) && Number.isFinite(line.end) && line.start >= 0 && line.end > line.start);
+}
+
+/** Latest-starting line wins if verified intervals overlap; gaps return -1. */
+export function activeTimedLyricIndex(lines, time) {
+  if (!Array.isArray(lines) || !Number.isFinite(time)) return -1;
+  let active = -1;
+  let latestStart = -Infinity;
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    if (getLineState(time, line) === 'active' && line.start >= latestStart) {
+      latestStart = line.start;
+      active = index;
+    }
+  }
+  return active;
+}
+
+/** Require server-matched LRCLIB identity and a close duration match with this song's active audio. */
+export function timingMatchesAudio({ songId, source, providerTrackId, durationSeconds, audioSongId, audioSrc, audioDuration }) {
+  const lyricsDuration = Number(durationSeconds);
+  return Boolean(songId && audioSongId === songId && audioSrc && source === 'lrclib' && providerTrackId
+    && Number.isFinite(audioDuration) && audioDuration > 0 && Number.isFinite(lyricsDuration) && lyricsDuration > 0
+    && Math.abs(audioDuration - lyricsDuration) <= Math.max(1.5, audioDuration * 0.005));
 }
 
 export function activeLyricIndex(lines, currentTimeSeconds) {

@@ -1,6 +1,6 @@
 import { AVATAR_IMAGE_URL } from './avatar-config.js';
 import { KARAOKE_CATEGORIES, UNIQUE_KARAOKE_SONGS } from './karaoke-data.js';
-import { activeLyricIndex, karaokeLyricsTextSimilarity, parseSyncedKaraokeLyrics, wordPlaybackState } from './karaoke-timing.js';
+import { activeTimedLyricIndex, getLineProgress, getLineState, karaokeLyricsTextSimilarity, lrcLineIntervals, normalizeTimedLyrics, parseSyncedKaraokeLyrics, timingMatchesAudio, wordPlaybackState } from './karaoke-timing.js';
 
 const ADMIN_TOKEN_KEY = 'lich-cua-vy-admin-token-v1';
 const VY_TOKEN_KEY = 'lich-cua-vy-audio-session-v1';
@@ -82,8 +82,9 @@ let karaokeJudgeRequestId = 0;
 let karaokeNextTrackTimer = 0;
 let karaokeVocalGraph;
 let karaokeVocalProcessing = false;
-let karaokeLyricsAutoFollowPausedUntil = 0;
 let karaokeLyricsProgrammaticScrollUntil = 0;
+let karaokeLyricsFollowPaused = false;
+let karaokeLyricsRafId = 0;
 const callUiStates = new Map();
 
 const CALL_BACKGROUND_PRESETS = [
@@ -347,6 +348,8 @@ function createKaraokeLyricsModalState() {
     text: '',
     syncedLyrics: '',
     wordSyncLines: [],
+    source: '',
+    durationSeconds: null,
     metadata: null,
     providerTrackId: '',
     loading: false,
@@ -786,6 +789,7 @@ async function beginKaraokeSession() {
 }
 
 function resetKaraokeAudio(message = '', status = 'idle') {
+  stopKaraokeLyricsFrameLoop();
   const previous = state.karaokeAudio;
   previous.requestId += 1;
   previous.controller?.abort();
@@ -880,43 +884,134 @@ async function prepareKaraokeAudio(songId, autoPlay = false) {
   renderKaraokeAudioControls();
 }
 
-function updateKaraokeSyncedLyrics() {
+function updateKaraokeSyncedLyrics({ refreshRows = false } = {}) {
   const audio = $('#karaokeAudioElement');
   const audioState = state.karaokeAudio;
   const session = state.karaokeLyricsModal;
-  if (!audio || audioState.songId !== session.songId) return;
-  const wordLines = Array.isArray(session.wordSyncLines) ? session.wordSyncLines : [];
-  const lines = wordLines.length
-    ? wordLines.map((line) => ({ seconds: Number(line.startMs) / 1000, text: line.text || '' }))
-    : parseSyncedKaraokeLyrics(session.syncedLyrics);
-  if (!lines.length) {
-    $('#karaokeLyricsText')?.querySelectorAll('.is-word-current').forEach((word) => word.classList.remove('is-word-current'));
+  const view = $('#karaokeLyricsText');
+  if (!audio || !view) return;
+  if (audioState.songId !== session.songId || !karaokeLyricsTimingMatchesAudio(session, audio, audioState)) {
+    view.querySelectorAll('.lyrics-line-row.is-current, .lyrics-line-row.is-done, .karaoke-word.is-word-current, .karaoke-word.is-word-sung')
+      .forEach((line) => line.classList.remove('is-current', 'is-done', 'is-word-current', 'is-word-sung'));
+    view.querySelectorAll('.karaoke-lyric-glyph').forEach((glyph) => glyph.style.setProperty('--glyph-progress', '0%'));
     return;
   }
-  const activeIndex = activeLyricIndex(lines, audio.currentTime);
+  const wordLines = Array.isArray(session.wordSyncLines) ? session.wordSyncLines : [];
+  const lines = wordLines.length
+    ? normalizeTimedLyrics(wordLines.map((line, index) => ({
+      id: `${session.providerTrackId || session.songId}-word-line-${index}`,
+      text: line?.text || (Array.isArray(line?.words) ? line.words.map((word) => word?.text || '').join('') : ''),
+      startMs: line?.startMs,
+      endMs: line?.endMs
+    })), { warn: import.meta.env.DEV })
+    : lrcLineIntervals(parseSyncedKaraokeLyrics(session.syncedLyrics));
+  if (!lines.length) {
+    audioState.activeLineIndex = -1;
+    view.querySelectorAll('.lyrics-line-row.is-current, .lyrics-line-row.is-done, .karaoke-word.is-word-current, .karaoke-word.is-word-sung')
+      .forEach((line) => line.classList.remove('is-current', 'is-done', 'is-word-current', 'is-word-sung'));
+    return;
+  }
+  const activeIndex = activeTimedLyricIndex(lines, audio.currentTime);
   const changedLine = activeIndex !== audioState.activeLineIndex;
+  const refreshLineStyles = changedLine || refreshRows;
   audioState.activeLineIndex = activeIndex;
-  const rows = $('#karaokeLyricsText')?.querySelectorAll('[data-synced-lyric-index]') || [];
-  rows.forEach((row) => {
-    const isCurrent = Number(row.dataset.syncedLyricIndex) === activeIndex;
-    const needsScroll = isCurrent && (changedLine || !row.classList.contains('is-current'));
-    row.classList.toggle('is-current', isCurrent);
-    if (needsScroll && Date.now() >= karaokeLyricsAutoFollowPausedUntil) {
-      karaokeLyricsProgrammaticScrollUntil = Date.now() + 1200;
-      row.scrollIntoView({ block: 'center', behavior: audio.seeking || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-    }
+  const rows = view.querySelectorAll('[data-synced-lyric-index]');
+  if (refreshLineStyles) {
+    rows.forEach((row) => {
+      const lineIndex = Number(row.dataset.syncedLyricIndex);
+      const model = lines[lineIndex];
+      const lineState = model ? getLineState(audio.currentTime, model) : 'upcoming';
+      const isCurrent = lineIndex === activeIndex;
+      row.classList.toggle('is-current', isCurrent);
+      row.classList.toggle('is-done', lineState === 'done');
+      if (changedLine && isCurrent && !karaokeLyricsFollowPaused) {
+        $('#karaokeLyricsFollow')?.setAttribute('hidden', '');
+        karaokeLyricsProgrammaticScrollUntil = Date.now() + 1200;
+        const container = $('#karaokeLyricsBody');
+        if (container) {
+          const containerRect = container.getBoundingClientRect();
+          const rowRect = row.getBoundingClientRect();
+          const nextTop = container.scrollTop + rowRect.top - containerRect.top - container.clientHeight * 0.4;
+          container.scrollTo({ top: nextTop, behavior: audio.seeking || matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+        }
+      }
+    });
+  }
+  const activeRow = activeIndex >= 0 ? view.querySelector(`[data-synced-lyric-index="${activeIndex}"]`) : null;
+  const progressRows = refreshLineStyles ? rows : activeRow ? [activeRow] : [];
+  progressRows.forEach((row) => {
+    const index = Number(row.dataset.syncedLyricIndex);
+    const model = lines[index];
+    if (!model) return;
+    const progress = getLineProgress(audio.currentTime, model.start, model.end);
+    row.querySelectorAll('.karaoke-lyric-glyph').forEach((glyph) => {
+      const from = Number(glyph.dataset.glyphFrom);
+      const to = Number(glyph.dataset.glyphTo);
+      const glyphProgress = to > from ? Math.min(1, Math.max(0, (progress - from) / (to - from))) : 0;
+      glyph.style.setProperty('--glyph-progress', `${(glyphProgress * 100).toFixed(1)}%`);
+    });
   });
-  const words = $('#karaokeLyricsText')?.querySelectorAll('[data-word-start]') || [];
   const currentTimeMs = audio.currentTime * 1000;
-  words.forEach((element) => {
-    const playback = wordPlaybackState({ startMs: element.dataset.wordStart, endMs: element.dataset.wordEnd }, currentTimeMs);
-    const current = playback.state === 'current';
-    element.classList.toggle('is-word-sung', playback.state === 'sung');
-    element.classList.toggle('is-word-current', current);
-    element.classList.toggle('is-word-upcoming', playback.state === 'upcoming');
-    if (current) element.style.setProperty('--word-progress', `${(playback.progress * 100).toFixed(1)}%`);
-    else element.style.removeProperty('--word-progress');
+  const activeWordRow = activeIndex >= 0 ? activeRow : null;
+  const wordRows = refreshLineStyles ? view.querySelectorAll('[data-word-sync-line]') : activeWordRow ? [activeWordRow] : [];
+  wordRows.forEach((row) => {
+    row.querySelectorAll('[data-word-start]').forEach((element) => {
+      const playback = wordPlaybackState({ startMs: element.dataset.wordStart, endMs: element.dataset.wordEnd }, currentTimeMs);
+      const current = playback.state === 'current';
+      element.classList.toggle('is-word-sung', playback.state === 'sung');
+      element.classList.toggle('is-word-current', current);
+      element.classList.toggle('is-word-upcoming', playback.state === 'upcoming');
+      if (current) element.style.setProperty('--word-progress', `${(playback.progress * 100).toFixed(1)}%`);
+      else element.style.removeProperty('--word-progress');
+    });
   });
+}
+
+function karaokeLyricsTimingMatchesAudio(session, audio, audioState = state.karaokeAudio) {
+  return timingMatchesAudio({
+    songId: session?.songId,
+    source: session?.source,
+    providerTrackId: session?.providerTrackId,
+    durationSeconds: session?.durationSeconds,
+    audioSongId: audioState.songId,
+    audioSrc: audio?.currentSrc,
+    audioDuration: audio?.duration
+  });
+}
+
+function startKaraokeLyricsFrameLoop() {
+  const audio = $('#karaokeAudioElement');
+  if (!audio || audio.paused || audio.ended || karaokeLyricsRafId
+    || !karaokeLyricsTimingMatchesAudio(state.karaokeLyricsModal, audio)
+    || !karaokeSessionHasPlayableTiming(state.karaokeLyricsModal)) return;
+  const tick = () => {
+    karaokeLyricsRafId = 0;
+    if (audio.paused || audio.ended || state.karaokeAudio.songId !== state.karaokeLyricsModal.songId) return;
+    updateKaraokeSyncedLyrics();
+    karaokeLyricsRafId = requestAnimationFrame(tick);
+  };
+  karaokeLyricsRafId = requestAnimationFrame(tick);
+}
+
+function stopKaraokeLyricsFrameLoop() {
+  if (!karaokeLyricsRafId) return;
+  cancelAnimationFrame(karaokeLyricsRafId);
+  karaokeLyricsRafId = 0;
+}
+
+function karaokeGraphemes(value) {
+  if (typeof Intl.Segmenter === 'function') {
+    return [...new Intl.Segmenter('vi', { granularity: 'grapheme' }).segment(value)].map((part) => part.segment);
+  }
+  return Array.from(value);
+}
+
+function karaokeSessionHasPlayableTiming(session) {
+  const wordLines = Array.isArray(session?.wordSyncLines) ? session.wordSyncLines : [];
+  if (wordLines.some((line) => line?.startMs != null && line?.endMs != null
+    && Number.isFinite(Number(line.startMs)) && Number.isFinite(Number(line.endMs))
+    && Number(line.startMs) >= 0 && Number(line.endMs) > Number(line.startMs))) return true;
+  return parseSyncedKaraokeLyrics(session?.syncedLyrics).length >= 2;
 }
 
 function cacheKaraokeLyrics(song, data) {
@@ -974,6 +1069,8 @@ async function refreshKaraokeTimedLyrics(song, requestId) {
   else rememberKaraokeLyricsSession(song, matchedLyrics);
   session.syncedLyrics = liveLyrics.syncedLyrics || '';
   session.wordSyncLines = liveLyrics.wordSyncLines || [];
+  session.source = liveLyrics.source || 'lrclib';
+  session.durationSeconds = liveLyrics.durationSeconds || null;
   if (!session.text.trim()) session.text = liveLyrics.lyrics || '';
   session.providerTrackId = liveLyrics.providerTrackId || session.providerTrackId;
   session.sourceName = liveLyrics.sourceName || liveLyrics.source || 'LRCLIB';
@@ -1167,8 +1264,17 @@ function renderKaraokeLyricsLines() {
   if (!view) return;
   const wordLines = Array.isArray(session.wordSyncLines) ? session.wordSyncLines : [];
   const syncedLines = wordLines.length
-    ? wordLines.map((line) => ({ seconds: Number(line.startMs) / 1000, text: line.text || line.words.map((word) => word.text).join('') }))
+    ? wordLines.map((line) => ({ seconds: Number(line?.startMs) / 1000, text: line?.text || (Array.isArray(line?.words) ? line.words.map((word) => word?.text || '').join('') : '') }))
     : parseSyncedKaraokeLyrics(session.syncedLyrics);
+  const audio = $('#karaokeAudioElement');
+  const timingVerified = karaokeLyricsTimingMatchesAudio(session, audio);
+  const wordTimeline = timingVerified ? normalizeTimedLyrics(wordLines.map((line, index) => ({
+    id: `${session.providerTrackId || session.songId}-word-line-${index}`,
+    text: line?.text || (Array.isArray(line?.words) ? line.words.map((word) => word?.text || '').join('') : ''),
+    startMs: line?.startMs,
+    endMs: line?.endMs
+  })), { warn: import.meta.env.DEV }) : [];
+  const lrcTimeline = timingVerified && !wordLines.length ? lrcLineIntervals(syncedLines) : [];
   const lines = syncedLines.length
     ? syncedLines.map((line) => line.text)
     : session.text.replace(/\r\n?/g, '\n').split('\n');
@@ -1178,8 +1284,7 @@ function renderKaraokeLyricsLines() {
     const vietnameseStart = lines.findIndex((line, index) => index > 0 && /^nhưng giờ đây\b/i.test(line.trim()));
     if (vietnameseStart > 0) languageMarkers.set(vietnameseStart, 'Tiếng Việt');
   }
-  const audio = $('#karaokeAudioElement');
-  const canSeek = state.karaokeAudio.songId === session.songId && Number.isFinite(audio?.duration) && audio.duration > 0;
+  const canSeek = timingVerified && state.karaokeAudio.songId === session.songId && Number.isFinite(audio?.duration) && audio.duration > 0;
   view.innerHTML = lines.map((line, index) => {
     const languageMarker = languageMarkers.has(index)
       ? `<div class="lyrics-language-label">${escapeHtml(languageMarkers.get(index))}</div>`
@@ -1193,25 +1298,38 @@ function renderKaraokeLyricsLines() {
     const hidden = session.studyMode && session.hiddenLines.has(index);
     const important = session.importantLines.has(index);
     const wordLine = wordLines[index];
-    const lineData = wordLine
-      ? ` data-synced-lyric-index="${index}" data-word-sync-line="${index}"`
-      : syncedLines.length ? ` data-synced-lyric-index="${index}" data-lyric-time="${syncedLines[index].seconds}"` : '';
-    const disabled = (wordLine || syncedLines.length) && !canSeek ? ' disabled' : '';
-    const timedClass = wordLine || syncedLines.length ? ' is-timed' : '';
-    const time = wordLine ? wordLine.startMs / 1000 : syncedLines[index]?.seconds;
-    const lineContent = wordLine?.words?.length
-      ? wordLine.words.map((word) => `<span class="karaoke-word" data-word-start="${Number(word.startMs)}" data-word-end="${Number(word.endMs)}">${escapeHtml(word.text)}</span>`).join(' ')
-      : escapeHtml(line);
+    const timeline = wordLines.length ? wordTimeline : lrcTimeline;
+    const timelineIndex = timeline.findIndex((timed) => timed.sourceIndex === index);
+    const timedLine = timelineIndex >= 0 ? timeline[timelineIndex] : null;
+    const hasLineTiming = Boolean(timedLine && timingVerified);
+    const seekTime = timingVerified
+      ? wordLines.length ? Number(wordLine?.startMs) / 1000 : Number(syncedLines[index]?.seconds)
+      : Number.NaN;
+    const hasSeekTime = Number.isFinite(seekTime) && seekTime >= 0;
+    const lineData = hasLineTiming
+      ? ` data-synced-lyric-index="${timelineIndex}"${Array.isArray(wordLine?.words) && wordLine.words.length ? ` data-word-sync-line="${index}"` : ''} data-lyric-time="${timedLine.start}"`
+      : '';
+    const timedClass = hasLineTiming ? ' is-timed' : '';
+    const lineContent = Array.isArray(wordLine?.words) && wordLine.words.length && timingVerified
+      ? wordLine.words.map((word) => `<span class="karaoke-word" data-word-start="${Number(word?.startMs)}" data-word-end="${Number(word?.endMs)}">${escapeHtml(word?.text || '')}</span>`).join(' ')
+      : hasLineTiming && !matchMedia('(max-width: 800px)').matches
+        ? karaokeGraphemes(line).map((grapheme, glyphIndex, graphemes) => {
+          const from = glyphIndex / graphemes.length;
+          const to = (glyphIndex + 1) / graphemes.length;
+          if (/^\s+$/u.test(grapheme)) return escapeHtml(grapheme);
+          return `<span class="karaoke-lyric-glyph" aria-hidden="true" data-glyph-from="${from}" data-glyph-to="${to}" style="--glyph-progress:0%">${escapeHtml(grapheme)}</span>`;
+        }).join('')
+        : escapeHtml(line);
     return `
       ${languageMarker}<div class="lyrics-line-row${important ? ' is-important' : ''}${timedClass}"${lineData}>
-        <button class="lyrics-line${hidden ? ' is-hidden' : ''}" type="button" data-lyrics-line="${index}" aria-label="${syncedLines.length ? `Tua đến ${formatKaraokeTime(syncedLines[index].seconds)}: ` : ''}${hidden ? 'Hiện dòng lời bài hát' : 'Dòng lời bài hát'}"${syncedLines.length ? ` data-lyric-time="${syncedLines[index].seconds}"${disabled}` : ''}>
+        <button class="lyrics-line${hidden ? ' is-hidden' : ''}" type="button" data-lyrics-line="${index}" aria-label="${hidden ? 'Hiện dòng lời bài hát' : `${hasSeekTime ? `Tua đến ${formatKaraokeTime(seekTime)}: ` : ''}${escapeHtml(line)}`}"${hasSeekTime ? ` data-lyric-time="${seekTime}"${!canSeek ? ' disabled' : ''}` : ''}>
           ${hidden ? '••• Nhấn để hiện dòng •••' : lineContent}
         </button>
         <button class="lyrics-mark-button${important ? ' is-active' : ''}" type="button" data-lyrics-mark="${index}" aria-label="${important ? 'Bỏ đánh dấu dòng' : 'Đánh dấu dòng quan trọng'}">${important ? '★' : '☆'}</button>
       </div>
     `;
   }).join('');
-  updateKaraokeSyncedLyrics();
+  updateKaraokeSyncedLyrics({ refreshRows: true });
 }
 
 function renderKaraokeLyricsModal() {
@@ -1268,13 +1386,21 @@ function renderKaraokeLyricsModal() {
   }
 
   const hasLanguageNote = session.songId === 'hanh-phuc-moi' && hasLyrics && !session.editing;
+  const audio = $('#karaokeAudioElement');
+  const timingVerified = karaokeLyricsTimingMatchesAudio(session, audio);
+  const hasTiming = Boolean(session.wordSyncLines?.length || parseSyncedKaraokeLyrics(session.syncedLyrics).length);
   if (session.loading) status.textContent = 'Đang tải lời bài hát…';
   else if (session.error) status.textContent = 'Không đọc được file lời bài hát';
   else if (!hasLyrics) status.textContent = 'Bài hát này chưa có lời';
   else if (session.studyMode) status.textContent = 'Chế độ học thuộc';
   else if (hasLanguageNote) status.textContent = 'Đoạn mở đầu là tiếng Hàn viết bằng phiên âm Latin; phần sau là lời tiếng Việt.';
-  else status.textContent = '';
-  status.hidden = !session.loading && !session.error && !session.studyMode && !hasLanguageNote;
+  else if (timingVerified && session.wordSyncLines?.length) status.textContent = 'Đang đồng bộ theo mốc thời gian từng từ của bản thu đã khớp.';
+  else if (timingVerified && parseSyncedKaraokeLyrics(session.syncedLyrics).length) status.textContent = matchMedia('(max-width: 800px)').matches
+    ? 'Lời LRC khớp bản nhạc; trên màn hình nhỏ tô sáng theo trạng thái dòng.'
+    : 'Đồng bộ ước lượng theo từng câu; LRC chỉ ghi thời điểm bắt đầu mỗi câu.';
+  else if (hasTiming && session.source === 'lrclib' && session.providerTrackId && session.durationSeconds && audio?.currentSrc && Number.isFinite(audio.duration)) status.textContent = 'Bản audio không khớp thời lượng lời; đang hiển thị lời tĩnh.';
+  else status.textContent = 'Lời bài hát chưa có đồng bộ thời gian.';
+  status.hidden = !session.loading && !session.error && !session.studyMode && !hasLanguageNote && !hasLyrics;
 
   view.hidden = session.loading || !hasLyrics || session.editing;
   empty.hidden = session.loading || hasLyrics || session.editing;
@@ -1326,6 +1452,8 @@ async function openKaraokeLyrics(songId, { continueQueue = false } = {}) {
   $('#karaokeJudgeButton').textContent = '🎙️ Bắt đầu hát karaoke';
   $('#karaokeJudgeTimer').textContent = '';
   const session = state.karaokeLyricsModal;
+  karaokeLyricsFollowPaused = false;
+  $('#karaokeLyricsFollow')?.setAttribute('hidden', '');
   const stored = karaokeLyricsForSong(song);
   const savedUi = lyricsUiForSong(song.songId);
   const requestId = `${song.songId}:${Date.now()}`;
@@ -1338,6 +1466,8 @@ async function openKaraokeLyrics(songId, { continueQueue = false } = {}) {
   session.text = stored?.text || '';
   session.syncedLyrics = stored?.syncedLyrics || '';
   session.wordSyncLines = stored?.wordSyncLines || [];
+  session.source = stored?.source || '';
+  session.durationSeconds = stored?.durationSeconds || null;
   session.metadata = null;
   session.providerTrackId = stored?.providerTrackId || '';
   session.loading = !session.text;
@@ -1369,6 +1499,8 @@ async function openKaraokeLyrics(songId, { continueQueue = false } = {}) {
     session.text = serverLyrics.lyrics;
     session.syncedLyrics = serverLyrics.syncedLyrics || '';
     session.wordSyncLines = serverLyrics.wordSyncLines || [];
+    session.source = serverLyrics.source || '';
+    session.durationSeconds = serverLyrics.durationSeconds || null;
     session.providerTrackId = serverLyrics.providerTrackId || '';
     session.sourceName = serverLyrics.source || '';
     session.loading = false;
@@ -1385,6 +1517,8 @@ async function openKaraokeLyrics(songId, { continueQueue = false } = {}) {
     if (!text.trim()) throw new Error('lyrics-empty');
     if (session.requestId !== requestId) return;
     session.text = text;
+    session.source = 'public-file';
+    session.durationSeconds = null;
     session.loading = false;
     state.karaokeLyrics[song.songId] = { text, source: 'public-file', updatedAt: new Date().toISOString() };
     saveKaraokeLyrics();
@@ -1402,6 +1536,8 @@ async function openKaraokeLyrics(songId, { continueQueue = false } = {}) {
     session.text = liveLyrics.lyrics;
     session.syncedLyrics = liveLyrics.syncedLyrics || '';
     session.wordSyncLines = liveLyrics.wordSyncLines || [];
+    session.source = liveLyrics.source || 'lrclib';
+    session.durationSeconds = liveLyrics.durationSeconds || null;
     session.providerTrackId = liveLyrics.providerTrackId || '';
     session.sourceName = liveLyrics.sourceName || liveLyrics.source || '';
     session.sourceUrl = '';
@@ -1417,6 +1553,11 @@ async function openKaraokeLyrics(songId, { continueQueue = false } = {}) {
       if (session.requestId !== requestId) return;
       if (synced?.lyrics) {
         session.text = synced.lyrics;
+        session.syncedLyrics = synced.syncedLyrics || '';
+        session.wordSyncLines = synced.wordSyncLines || [];
+        session.source = synced.source || '';
+        session.durationSeconds = synced.durationSeconds || null;
+        session.providerTrackId = synced.providerTrackId || '';
         session.loading = false;
         session.editing = false;
         renderKaraokeLyricsModal();
@@ -1604,6 +1745,9 @@ function saveEditedKaraokeLyrics() {
   state.karaokeLyricsModal.text = lyricsText;
   state.karaokeLyricsModal.syncedLyrics = isLrc ? text : '';
   state.karaokeLyricsModal.wordSyncLines = [];
+  state.karaokeLyricsModal.source = isLrc ? 'user-lrc' : 'user-input';
+  state.karaokeLyricsModal.durationSeconds = null;
+  state.karaokeLyricsModal.providerTrackId = '';
   state.karaokeLyricsModal.sourceName = isLrc ? 'LRC có timestamp' : 'Lời tự nhập';
   state.karaokeLyricsModal.editing = false;
   state.karaokeLyricsModal.error = false;
@@ -1645,7 +1789,12 @@ function bindKaraoke() {
       renderKaraokeAudioControls();
       renderKaraokeLyricsLines();
       updateKaraokeSyncedLyrics();
+      renderKaraokeLyricsModal();
       if (current.autoPlay && state.karaokeLyricsModal.karaokeActive) enableKaraokeVocalReduction(true);
+    });
+    audio.addEventListener('durationchange', () => {
+      updateKaraokeSyncedLyrics();
+      renderKaraokeLyricsModal();
     });
     audio.addEventListener('canplay', () => {
       const current = state.karaokeAudio;
@@ -1654,6 +1803,7 @@ function bindKaraoke() {
       current.message = 'Sẵn sàng phát · nhấn nút để bắt đầu';
       renderKaraokeAudioControls();
       renderKaraokeLyricsLines();
+      updateKaraokeSyncedLyrics();
       if (current.autoPlay && state.karaokeLyricsModal.karaokeActive) enableKaraokeVocalReduction(true);
     });
     audio.addEventListener('playing', () => {
@@ -1663,6 +1813,7 @@ function bindKaraoke() {
       current.message = 'Đang phát';
       renderKaraokeAudioControls();
       updateKaraokeSyncedLyrics();
+      startKaraokeLyricsFrameLoop();
     });
     audio.addEventListener('waiting', () => {
       const current = state.karaokeAudio;
@@ -1672,16 +1823,19 @@ function bindKaraoke() {
       renderKaraokeAudioControls();
     });
     audio.addEventListener('pause', () => {
+      stopKaraokeLyricsFrameLoop();
       renderKaraokeAudioControls();
       updateKaraokeSyncedLyrics();
     });
-    audio.addEventListener('seeking', updateKaraokeSyncedLyrics);
-    audio.addEventListener('seeked', updateKaraokeSyncedLyrics);
+    audio.addEventListener('seeking', () => { updateKaraokeSyncedLyrics(); renderKaraokeAudioControls(); });
+    audio.addEventListener('seeked', () => { updateKaraokeSyncedLyrics(); renderKaraokeAudioControls(); });
     audio.addEventListener('timeupdate', () => {
       renderKaraokeAudioControls();
       updateKaraokeSyncedLyrics();
     });
     audio.addEventListener('ended', async () => {
+      stopKaraokeLyricsFrameLoop();
+      updateKaraokeSyncedLyrics();
       const endedSongId = state.karaokeLyricsModal.songId;
       const wasJudging = karaokeJudgeSession?.songId === endedSongId;
       state.karaokeAudio.status = 'ready';
@@ -1703,6 +1857,7 @@ function bindKaraoke() {
       }, scoreVisible ? 5000 : 350);
     });
     audio.addEventListener('error', () => {
+      stopKaraokeLyricsFrameLoop();
       const current = state.karaokeAudio;
       if (!current.songId || current.songId !== state.karaokeLyricsModal.songId || !audio.currentSrc) return;
       audio.pause();
@@ -1711,6 +1866,15 @@ function bindKaraoke() {
       current.status = 'error';
       current.message = 'Audio lỗi hoặc định dạng không được trình duyệt hỗ trợ.';
       renderKaraokeAudioControls();
+      updateKaraokeSyncedLyrics();
+      renderKaraokeLyricsModal();
+    });
+    audio.addEventListener('emptied', () => {
+      stopKaraokeLyricsFrameLoop();
+      updateKaraokeSyncedLyrics();
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') updateKaraokeSyncedLyrics();
     });
   }
   $('#karaokeAudioPlay')?.addEventListener('click', async () => {
@@ -1752,10 +1916,24 @@ function bindKaraoke() {
   $('#karaokeScorePopup')?.addEventListener('click', (event) => {
     if (event.target.id === 'karaokeScorePopup') closeKaraokeScorePopup();
   });
+  $('#karaokeLyricsFollow')?.addEventListener('click', () => {
+    karaokeLyricsFollowPaused = false;
+    $('#karaokeLyricsFollow').hidden = true;
+    state.karaokeAudio.activeLineIndex = -1;
+    updateKaraokeSyncedLyrics();
+  });
   $('#karaokeLyricsBody')?.addEventListener('scroll', () => {
     if (Date.now() < karaokeLyricsProgrammaticScrollUntil) return;
-    karaokeLyricsAutoFollowPausedUntil = Date.now() + 3500;
+    karaokeLyricsFollowPaused = true;
+    $('#karaokeLyricsFollow').hidden = false;
   }, { passive: true });
+  const pauseLyricsFollow = () => {
+    karaokeLyricsFollowPaused = true;
+    $('#karaokeLyricsFollow').hidden = false;
+  };
+  ['wheel', 'touchstart', 'pointerdown'].forEach((eventName) => {
+    $('#karaokeLyricsBody')?.addEventListener(eventName, pauseLyricsFollow, { passive: true });
+  });
   const lyricsModal = $('#karaokeLyricsModal');
   lyricsModal?.addEventListener('click', (event) => {
     if (event.target.id === 'karaokeLyricsModal') {
