@@ -1,6 +1,6 @@
 import { AVATAR_IMAGE_URL } from './avatar-config.js';
 import { KARAOKE_CATEGORIES, UNIQUE_KARAOKE_SONGS } from './karaoke-data.js';
-import { activeTimedLyricIndex, getLineProgress, getLineState, karaokeLyricsTextSimilarity, lrcLineIntervals, normalizeTimedLyrics, parseSyncedKaraokeLyrics, timingMatchesAudio, wordPlaybackState } from './karaoke-timing.js';
+import { activeTimedLyricIndex, getLineState, karaokeLyricsTextSimilarity, lrcLineIntervals, normalizeTimedLyrics, parseSyncedKaraokeLyrics, timingMatchesAudio } from './karaoke-timing.js';
 
 const ADMIN_TOKEN_KEY = 'lich-cua-vy-admin-token-v1';
 const VY_TOKEN_KEY = 'lich-cua-vy-audio-session-v1';
@@ -811,8 +811,8 @@ function resetKaraokeAudio(message = '', status = 'idle') {
     autoPlay: false
   };
   renderKaraokeAudioControls();
-  $('#karaokeLyricsText')?.querySelectorAll('.lyrics-line-row.is-current, .karaoke-word.is-word-current').forEach((line) => {
-    line.classList.remove('is-current', 'is-word-current');
+  $('#karaokeLyricsText')?.querySelectorAll('.lyrics-line-row.is-current').forEach((line) => {
+    line.classList.remove('is-current');
   });
 }
 
@@ -892,9 +892,8 @@ function updateKaraokeSyncedLyrics({ refreshRows = false } = {}) {
   const view = $('#karaokeLyricsText');
   if (!audio || !view) return;
   if (audioState.songId !== session.songId || !karaokeLyricsTimingMatchesAudio(session, audio, audioState)) {
-    view.querySelectorAll('.lyrics-line-row.is-current, .lyrics-line-row.is-done, .karaoke-word.is-word-current, .karaoke-word.is-word-sung')
-      .forEach((line) => line.classList.remove('is-current', 'is-done', 'is-word-current', 'is-word-sung'));
-    view.querySelectorAll('.karaoke-lyric-glyph').forEach((glyph) => glyph.style.setProperty('--glyph-progress', '0%'));
+    view.querySelectorAll('.lyrics-line-row.is-current, .lyrics-line-row.is-done')
+      .forEach((line) => line.classList.remove('is-current', 'is-done'));
     return;
   }
   const wordLines = Array.isArray(session.wordSyncLines) ? session.wordSyncLines : [];
@@ -908,8 +907,8 @@ function updateKaraokeSyncedLyrics({ refreshRows = false } = {}) {
     : lrcLineIntervals(parseSyncedKaraokeLyrics(session.syncedLyrics));
   if (!lines.length) {
     audioState.activeLineIndex = -1;
-    view.querySelectorAll('.lyrics-line-row.is-current, .lyrics-line-row.is-done, .karaoke-word.is-word-current, .karaoke-word.is-word-sung')
-      .forEach((line) => line.classList.remove('is-current', 'is-done', 'is-word-current', 'is-word-sung'));
+    view.querySelectorAll('.lyrics-line-row.is-current, .lyrics-line-row.is-done')
+      .forEach((line) => line.classList.remove('is-current', 'is-done'));
     return;
   }
   const activeIndex = activeTimedLyricIndex(lines, audio.currentTime);
@@ -939,33 +938,6 @@ function updateKaraokeSyncedLyrics({ refreshRows = false } = {}) {
     });
   }
   const activeRow = activeIndex >= 0 ? view.querySelector(`[data-synced-lyric-index="${activeIndex}"]`) : null;
-  const progressRows = refreshLineStyles ? rows : activeRow ? [activeRow] : [];
-  progressRows.forEach((row) => {
-    const index = Number(row.dataset.syncedLyricIndex);
-    const model = lines[index];
-    if (!model) return;
-    const progress = getLineProgress(audio.currentTime, model.start, model.end);
-    row.querySelectorAll('.karaoke-lyric-glyph').forEach((glyph) => {
-      const from = Number(glyph.dataset.glyphFrom);
-      const to = Number(glyph.dataset.glyphTo);
-      const glyphProgress = to > from ? Math.min(1, Math.max(0, (progress - from) / (to - from))) : 0;
-      glyph.style.setProperty('--glyph-progress', `${(glyphProgress * 100).toFixed(1)}%`);
-    });
-  });
-  const currentTimeMs = audio.currentTime * 1000;
-  const activeWordRow = activeIndex >= 0 ? activeRow : null;
-  const wordRows = refreshLineStyles ? view.querySelectorAll('[data-word-sync-line]') : activeWordRow ? [activeWordRow] : [];
-  wordRows.forEach((row) => {
-    row.querySelectorAll('[data-word-start]').forEach((element) => {
-      const playback = wordPlaybackState({ startMs: element.dataset.wordStart, endMs: element.dataset.wordEnd }, currentTimeMs);
-      const current = playback.state === 'current';
-      element.classList.toggle('is-word-sung', playback.state === 'sung');
-      element.classList.toggle('is-word-current', current);
-      element.classList.toggle('is-word-upcoming', playback.state === 'upcoming');
-      if (current) element.style.setProperty('--word-progress', `${(playback.progress * 100).toFixed(1)}%`);
-      else element.style.removeProperty('--word-progress');
-    });
-  });
 }
 
 function karaokeLyricsTimingMatchesAudio(session, audio, audioState = state.karaokeAudio) {
@@ -998,13 +970,6 @@ function stopKaraokeLyricsFrameLoop() {
   if (!karaokeLyricsRafId) return;
   cancelAnimationFrame(karaokeLyricsRafId);
   karaokeLyricsRafId = 0;
-}
-
-function karaokeGraphemes(value) {
-  if (typeof Intl.Segmenter === 'function') {
-    return [...new Intl.Segmenter('vi', { granularity: 'grapheme' }).segment(value)].map((part) => part.segment);
-  }
-  return Array.from(value);
 }
 
 function karaokeSessionHasPlayableTiming(session) {
@@ -1309,19 +1274,10 @@ function renderKaraokeLyricsLines() {
       : Number.NaN;
     const hasSeekTime = Number.isFinite(seekTime) && seekTime >= 0;
     const lineData = hasLineTiming
-      ? ` data-synced-lyric-index="${timelineIndex}"${Array.isArray(wordLine?.words) && wordLine.words.length ? ` data-word-sync-line="${index}"` : ''} data-lyric-time="${timedLine.start}"`
+      ? ` data-synced-lyric-index="${timelineIndex}" data-lyric-time="${timedLine.start}"`
       : '';
     const timedClass = hasLineTiming ? ' is-timed' : '';
-    const lineContent = Array.isArray(wordLine?.words) && wordLine.words.length && timingVerified
-      ? wordLine.words.map((word) => `<span class="karaoke-word" data-word-start="${Number(word?.startMs)}" data-word-end="${Number(word?.endMs)}">${escapeHtml(word?.text || '')}</span>`).join(' ')
-      : hasLineTiming && !matchMedia('(max-width: 800px)').matches
-        ? karaokeGraphemes(line).map((grapheme, glyphIndex, graphemes) => {
-          const from = glyphIndex / graphemes.length;
-          const to = (glyphIndex + 1) / graphemes.length;
-          if (/^\s+$/u.test(grapheme)) return escapeHtml(grapheme);
-          return `<span class="karaoke-lyric-glyph" aria-hidden="true" data-glyph-from="${from}" data-glyph-to="${to}" style="--glyph-progress:0%">${escapeHtml(grapheme)}</span>`;
-        }).join('')
-        : escapeHtml(line);
+    const lineContent = escapeHtml(line);
     return `
       ${languageMarker}<div class="lyrics-line-row${important ? ' is-important' : ''}${timedClass}"${lineData}>
         <button class="lyrics-line${hidden ? ' is-hidden' : ''}" type="button" data-lyrics-line="${index}" aria-label="${hidden ? 'Hiện dòng lời bài hát' : `${hasSeekTime ? `Tua đến ${formatKaraokeTime(seekTime)}: ` : ''}${escapeHtml(line)}`}"${hasSeekTime ? ` data-lyric-time="${seekTime}"${!canSeek ? ' disabled' : ''}` : ''}>
@@ -1396,14 +1352,10 @@ function renderKaraokeLyricsModal() {
   else if (!hasLyrics) status.textContent = 'Bài hát này chưa có lời';
   else if (session.studyMode) status.textContent = 'Chế độ học thuộc';
   else if (hasLanguageNote) status.textContent = 'Đoạn mở đầu là tiếng Hàn viết bằng phiên âm Latin; phần sau là lời tiếng Việt.';
-  else if (timingVerified && session.wordSyncLines?.length) status.textContent = 'Đang đồng bộ theo mốc thời gian từng từ của bản thu đã khớp.';
+  else if (timingVerified && session.wordSyncLines?.length) status.textContent = 'Lời đang tô sáng theo từng dòng; thời điểm có thể lệch nhẹ.';
   else if (timingVerified && parseSyncedKaraokeLyrics(session.syncedLyrics).length) status.textContent = session.source === 'zing-lrc'
-    ? (matchMedia('(max-width: 800px)').matches
-      ? 'LRC từ Zing MP3 khớp lời và thời lượng; màn hình nhỏ tô sáng theo trạng thái dòng.'
-      : 'Đồng bộ ước lượng theo câu từ LRC Zing MP3; chỉ dùng khi lời và thời lượng audio khớp.')
-    : matchMedia('(max-width: 800px)').matches
-      ? 'Lời LRC khớp bản nhạc; trên màn hình nhỏ tô sáng theo trạng thái dòng.'
-      : 'Đồng bộ ước lượng theo từng câu; LRC chỉ ghi thời điểm bắt đầu mỗi câu.';
+    ? 'LRC từ Zing MP3 khớp lời và thời lượng; tô sáng theo từng dòng.'
+    : 'Lời LRC khớp bản nhạc; tô sáng theo từng dòng, thời điểm có thể lệch nhẹ.';
   else if (hasTiming && ['lrclib', 'zing-lrc'].includes(session.source) && session.providerTrackId && session.durationSeconds && audio?.currentSrc && Number.isFinite(audio.duration)) status.textContent = 'Bản audio không khớp thời lượng lời; đang hiển thị lời tĩnh.';
   else status.textContent = 'Lời bài hát chưa có đồng bộ thời gian.';
   status.hidden = !session.loading && !session.error && !session.studyMode && !hasLanguageNote && !hasLyrics;

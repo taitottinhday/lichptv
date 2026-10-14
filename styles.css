@@ -898,7 +898,7 @@ body.karaoke-modal-open { overflow: hidden; }
   .karaoke-audio-controls { grid-template-columns: 42px minmax(0,1fr); gap: 8px 10px; }
   .karaoke-audio-volume { grid-column: 1 / -1; justify-self: end; width: min(190px,70%); }
 }
-@media (prefers-reduced-motion: reduce) { .karaoke-audio-panel.is-loading .karaoke-audio-status::before { animation: none; } .karaoke-word { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .karaoke-audio-panel.is-loading .karaoke-audio-status::before { animation: none; } }
 
 /* Spotify-inspired track detail and karaoke focus, scoped to the lyrics modal. */
 .karaoke-lyrics-card { width: min(1080px, 100%); max-height: min(92svh, 980px); }
@@ -920,11 +920,6 @@ body.karaoke-modal-open { overflow: hidden; }
 .karaoke-lyrics-text:not(.is-left) .lyrics-line { text-align: center; }
 .lyrics-line-row.is-current { transform: translateX(3px); border-radius: 10px; background: rgba(101,147,255,.17); box-shadow: inset 3px 0 #8cb4ff; }
 .lyrics-line-row.is-current .lyrics-line { color: #fff; font-weight: 800; text-shadow: 0 0 22px rgba(130,174,255,.65); }
-@property --word-progress { syntax: '<percentage>'; inherits: false; initial-value: 0%; }
-.karaoke-word { display: inline-block; border-radius: 5px; color: rgba(245,247,255,.48); transition: --word-progress .24s linear, color .16s ease, text-shadow .16s ease; }
-.karaoke-word.is-word-sung { color: #ffb9dc; }
-.karaoke-word.is-word-current { background-image: linear-gradient(90deg, #ffd3e9 var(--word-progress, 0%), rgba(245,247,255,.55) var(--word-progress, 0%)); background-clip: text; color: transparent; text-shadow: 0 0 18px rgba(255,130,192,.24); }
-.karaoke-word.is-word-upcoming { color: rgba(245,247,255,.48); }
 .karaoke-artist-card { position: sticky; top: 16px; grid-column: 2; display: grid; grid-template-columns: 64px minmax(0,1fr); align-items: center; gap: 12px; margin-top: 28px; padding: 15px; border: 1px solid rgba(255,255,255,.08); border-radius: 18px; background: rgba(255,255,255,.055); }
 .karaoke-artist-avatar { position: relative; display: grid; width: 64px; height: 64px; place-items: center; overflow: hidden; border-radius: 50%; background: linear-gradient(145deg,#436ef4,#ec66b0); color: #fff; font-size: 24px; font-weight: 800; }
 .karaoke-artist-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
@@ -1399,13 +1394,8 @@ button:focus-visible, a:focus-visible {
 .lyrics-line-row.is-important .lyrics-mark-button { opacity: 1; }
 .lyrics-line-row.is-current { border-radius: 8px; background: rgba(255,96,173,.12); box-shadow: inset 3px 0 #ff71b6; }
 .lyrics-line-row.is-done .lyrics-line { color: #ffc2df; }
-.lyrics-line-row.is-done .karaoke-lyric-glyph { opacity: .78; }
 .lyrics-line-row.is-current .lyrics-line { color: #fff; text-shadow: 0 0 20px rgba(255,116,188,.35); }
 .lyrics-line.is-current { border: 0; background: transparent; box-shadow: none; }
-.karaoke-lyric-glyph { background-image: linear-gradient(90deg, #ff78bc var(--glyph-progress,0%), rgba(244,246,255,.52) var(--glyph-progress,0%)); background-clip: text; -webkit-background-clip: text; }
-@supports (-webkit-background-clip: text) { .karaoke-lyric-glyph { color: transparent; } }
-.karaoke-word.is-word-sung { color: #ffc2df; }
-.karaoke-word.is-word-current { background-image: linear-gradient(90deg,#ffadd5 var(--word-progress,0%),rgba(245,247,255,.57) var(--word-progress,0%)); }
 .karaoke-lyrics-modal.is-karaoke-mode .karaoke-lyrics-text { min-height: 0; font-size: clamp(22px, var(--lyrics-font-size, 25px), 34px); line-height: 1.9; }
 .karaoke-lyrics-modal.is-karaoke-mode .lyrics-line-row { justify-content: center; }
 .karaoke-lyrics-modal.is-karaoke-mode .lyrics-line { text-align: center !important; }
@@ -1419,7 +1409,6 @@ button:focus-visible, a:focus-visible {
 .karaoke-audio-panel input:focus-visible,
 .karaoke-lyrics-text button:focus-visible { outline: 3px solid #ff91c6; outline-offset: 3px; }
 @media (max-width: 800px) {
-  .karaoke-lyric-glyph { background: none; color: inherit; }
   .karaoke-lyrics-topbar { grid-template-columns: 138px minmax(0,1fr) 40px; min-height: 190px; gap: 18px; padding: 22px; }
   .karaoke-cover-wrap { width: 138px; height: 138px; }
   .karaoke-lyrics-topbar h3 { font-size: clamp(28px, 5.2vw, 42px); }
