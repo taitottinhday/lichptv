@@ -12,7 +12,7 @@ import { AccessToken, LiveKitAPI } from 'livekit-server-sdk';
 import { defaultSchedule } from './schedule-data.js';
 import { AVATAR_IMAGE_URL } from './avatar-config.js';
 import { UNIQUE_KARAOKE_SONGS } from './karaoke-data.js';
-import { karaokeLyricsTextSimilarity, parseSyncedKaraokeLyrics } from './karaoke-timing.js';
+import { parseSyncedKaraokeLyrics, syncedLyricsMatchReference } from './karaoke-timing.js';
 
 const { Pool } = pg;
 const app = express();
@@ -342,7 +342,7 @@ function lyricsEntryHasTiming(entry) {
 }
 
 function lyricsTextMatches(left, right) {
-  return karaokeLyricsTextSimilarity(left, right) >= 0.9;
+  return syncedLyricsMatchReference(left, right);
 }
 
 async function localLyricsText(songId) {
@@ -587,7 +587,7 @@ async function resolveLrclibLyrics(song) {
   };
 }
 
-async function resolveZingLrcLyrics(song) {
+async function resolveZingLrcLyrics(song, referenceLyrics = '') {
   try {
     zingLrcManifestPromise ||= readFile(karaokeLrcManifestPath, 'utf8').then(JSON.parse);
     const manifest = await zingLrcManifestPromise;
@@ -608,7 +608,7 @@ async function resolveZingLrcLyrics(song) {
     const timedLines = parseSyncedKaraokeLyrics(rawLrc);
     if (timedLines.length < 2) return { status: 'not_found', reason: 'Nguồn LRC không có đủ timestamp.', provider: 'zing-lrc' };
 
-    const staticLyrics = await localLyricsText(song.songId);
+    const staticLyrics = await localLyricsText(song.songId) || String(referenceLyrics || '');
     const lyrics = timedLines.map((line) => line.text).join('\n');
     if (!staticLyrics.trim() || !lyricsTextMatches(staticLyrics, lyrics)) {
       return { status: 'needs_verification', reason: 'Lời LRC không khớp đủ với lời đang có; không tự ghép timestamp.', provider: 'zing-lrc' };
@@ -665,7 +665,7 @@ async function resolveMusixmatchLyrics(song) {
   };
 }
 
-async function resolveLyrics(song) {
+async function resolveLyrics(song, referenceLyrics = '') {
   if (lyricsProvider === 'lrclib') {
     let lrclib;
     try {
@@ -673,11 +673,20 @@ async function resolveLyrics(song) {
     } catch (error) {
       lrclib = { status: 'provider_error', reason: error.message || 'LRCLIB không phản hồi.', provider: 'lrclib' };
     }
-    if (lrclib.status === 'matched' && parseSyncedKaraokeLyrics(lrclib.syncedLyrics).length >= 2) {
-      const staticLyrics = await localLyricsText(song.songId);
-      if (!staticLyrics.trim() || lyricsTextMatches(staticLyrics, lrclib.lyrics)) return lrclib;
+    const hasSyncedLyrics = parseSyncedKaraokeLyrics(lrclib.syncedLyrics).length >= 2;
+    if (lrclib.status === 'matched' && hasSyncedLyrics) {
+      const staticLyrics = await localLyricsText(song.songId) || String(referenceLyrics || '');
+      if (staticLyrics.trim() && lyricsTextMatches(staticLyrics, lrclib.lyrics)) return lrclib;
+      const zing = await resolveZingLrcLyrics(song, referenceLyrics);
+      if (zing.status === 'matched') return zing;
+      return {
+        ...lrclib,
+        status: 'needs_verification',
+        reason: 'Không có lời tham chiếu khớp đủ để xác minh LRC; chỉ giữ lời tĩnh.',
+        syncedLyrics: ''
+      };
     }
-    const zing = await resolveZingLrcLyrics(song);
+    const zing = await resolveZingLrcLyrics(song, referenceLyrics);
     return zing.status === 'matched' ? zing : lrclib;
   }
   if (lyricsProvider === 'link') {
@@ -696,6 +705,7 @@ async function syncOneLyrics(song, { force = false } = {}) {
   if (existing && !force && lyricsEntryHasTiming(existing)) {
     return { status: 'skipped', reason: 'Bài đã có lời đồng bộ được lưu.', entry: existing };
   }
+  const existingText = String(existing?.lyrics_text || existing?.lyrics || '').trim();
   if (!lyricsProviderConfigured) {
     return {
       status: 'link_only',
@@ -703,10 +713,9 @@ async function syncOneLyrics(song, { force = false } = {}) {
       reason: 'Chưa cấu hình API lời bài hát; mở nguồn bên ngoài để xem trực tiếp.'
     };
   }
-  const resolved = await resolveLyrics(song);
+  const resolved = await resolveLyrics(song, existingText);
   if (resolved.status === 'link_only') return existing ? { ...resolved, status: 'skipped', entry: existing } : resolved;
   if (resolved.status !== 'matched') return existing ? { ...resolved, status: 'skipped', entry: existing } : resolved;
-  const existingText = String(existing?.lyrics_text || existing?.lyrics || '').trim();
   if (existingText && !lyricsTextMatches(existingText, resolved.lyrics)) {
     return { status: 'skipped', reason: 'Lời có timestamp không khớp lời đang lưu; giữ nguyên để tránh chạy sai bài.', entry: existing };
   }

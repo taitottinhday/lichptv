@@ -129,6 +129,13 @@ export function karaokeLyricsTextSimilarity(left, right) {
   return previous[widthTokens.length] / Math.max(leftTokens.length, rightTokens.length);
 }
 
+/** A timed lyric source is unsafe to use when it cannot be checked against known lyrics. */
+export function syncedLyricsMatchReference(referenceLyrics, candidateLyrics) {
+  const reference = String(referenceLyrics || '').trim();
+  const candidate = String(candidateLyrics || '').trim();
+  return Boolean(reference && candidate && karaokeLyricsTextSimilarity(reference, candidate) >= 0.9);
+}
+
 export function wordPlaybackState(word, currentTimeMs) {
   const startMs = Number(word?.startMs);
   const endMs = Number(word?.endMs);

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { activeLyricIndex, activeTimedLyricIndex, getLineProgress, getLineState, karaokeLyricsTextSimilarity, lrcLineIntervals, normalizeTimedLyrics, parseSyncedKaraokeLyrics, timingMatchesAudio, wordPlaybackState } from '../karaoke-timing.js';
+import { activeLyricIndex, activeTimedLyricIndex, getLineProgress, getLineState, karaokeLyricsTextSimilarity, lrcLineIntervals, normalizeTimedLyrics, parseSyncedKaraokeLyrics, syncedLyricsMatchReference, timingMatchesAudio, wordPlaybackState } from '../karaoke-timing.js';
 
 // Explicit test-only timing fixture. These timestamps do not represent a real song.
 const fixtureLrc = '[00:00.00]Mẫu lời một\n[00:01.00]Mẫu lời hai';
@@ -155,6 +155,15 @@ test('Zing LRC manifest contains only entries verified against the existing stat
 
 test('plain text has no inferred synchronization timestamps', () => {
   assert.deepEqual(parseSyncedKaraokeLyrics('Chỉ là lời văn bản\nKhông có mốc thời gian'), []);
+});
+
+test('timed lyrics require a known matching lyric reference or stay static', () => {
+  const reference = 'Mình yêu nhau đi cho qua mộng dài\\nMình yêu nhau đi ngây thơ khờ dại';
+  const matchingLrcText = 'Mình yêu nhau đi cho qua mộng dài\\nMình yêu nhau đi ngây thơ khờ dại';
+  assert.equal(syncedLyricsMatchReference(reference, 'Mình yêu nhau đi cho qua mộng dài\\nMình yêu nhau đi ngây thơ khờ dại'), true);
+  assert.equal(syncedLyricsMatchReference(reference, matchingLrcText), true);
+  assert.equal(syncedLyricsMatchReference('', matchingLrcText), false);
+  assert.equal(syncedLyricsMatchReference(reference, 'Bài hát hoàn toàn khác\\nKhông cùng lời đang có'), false);
 });
 
 test('lyrics with small transcription differences can still match while different lyrics do not', () => {
