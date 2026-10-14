@@ -156,7 +156,7 @@ test('authorized users can read the schedule; an empty database is identified as
   assert.equal(adminView.response.status, 200);
 });
 
-test('an unreachable configured PostgreSQL database returns an API error instead of default calendar data', async () => {
+test('an unreachable configured PostgreSQL database returns the fallback roster with an explicit error', async () => {
   const badDbPort = port + 1;
   const badDbOrigin = `http://127.0.0.1:${badDbPort}`;
   const badDbProcess = spawn(process.execPath, ['server.mjs'], {
@@ -173,9 +173,12 @@ test('an unreachable configured PostgreSQL database returns an API error instead
     const login = await loginResponse.json();
     const scheduleResponse = await fetch(`${badDbOrigin}/api/schedule`, { headers: { Authorization: `Bearer ${login.token}` } });
     const result = await scheduleResponse.json();
-    assert.equal(scheduleResponse.status, 500);
+    assert.equal(scheduleResponse.status, 503);
     assert.equal(result.error, 'Chưa đọc được lịch của Vy.');
-    assert.equal(result.schedule, undefined);
+    assert.equal(result.fallback, true);
+    assert.equal(result.schedule['2026-09-26'], '18');
+    assert.equal(result.schedule['2026-10-25'], '9');
+    assert.equal(result.schedule['2026-10-26'], undefined);
   } finally {
     if (badDbProcess.exitCode === null) badDbProcess.kill();
   }

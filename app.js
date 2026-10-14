@@ -4164,6 +4164,7 @@ async function loadFoodRequests() {
 async function loadSharedSchedule() {
   const status = $('#scheduleSyncStatus');
   const retry = $('#retryScheduleLoad');
+  let serverFallback = null;
   if (status) status.textContent = 'Đang tải lịch từ máy chủ…';
   if (retry) retry.hidden = true;
   try {
@@ -4174,6 +4175,7 @@ async function loadSharedSchedule() {
       setAuthenticated(false);
       throw new Error('Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại.');
     }
+    if (data.fallback === true && data.schedule && typeof data.schedule === 'object') serverFallback = data;
     if (!response.ok) throw new Error(data.error || 'Chưa tải được lịch dùng chung.');
     state.schedule = { ...(data.schedule || {}) };
     state.scheduleLoaded = true;
@@ -4183,11 +4185,13 @@ async function loadSharedSchedule() {
       ? 'Chưa có lịch lưu bền vững; lịch mới sẽ mất khi máy chủ khởi động lại.'
       : 'Đang hiển thị lịch mẫu; lịch này chưa được lưu trong cơ sở dữ liệu.';
   } catch (error) {
-    state.schedule = {};
+    state.schedule = serverFallback ? { ...serverFallback.schedule } : {};
     state.scheduleLoaded = false;
     renderOverview();
     renderCalendar();
-    if (status) status.textContent = `Không tải được lịch: ${error.message}`;
+    if (status) status.textContent = serverFallback
+      ? `Không tải được lịch mới nhất: ${error.message} Đang hiển thị lịch dự phòng đến hết 25/10/2026; hãy thử tải lại để kiểm tra máy chủ.`
+      : `Không tải được lịch: ${error.message}`;
     if (retry) retry.hidden = false;
   }
 }

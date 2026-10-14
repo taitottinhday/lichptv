@@ -1512,7 +1512,11 @@ app.get('/api/schedule', async (request, response) => {
     return response.set('Cache-Control', 'no-store').json(await readSharedSchedule());
   } catch (error) {
     console.error('Không đọc được lịch dùng chung:', error.code || 'PostgreSQL/Supabase query failed');
-    return response.status(500).json({ error: 'Chưa đọc được lịch của Vy.' });
+    return response.set('Cache-Control', 'no-store').status(503).json({
+      error: 'Chưa đọc được lịch của Vy.',
+      fallback: true,
+      schedule: { ...defaultSchedule }
+    });
   }
 });
 
