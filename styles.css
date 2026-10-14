@@ -1072,6 +1072,11 @@ button:focus-visible, a:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* Mobile devices use their physical volume buttons; iOS ignores JS volume changes. */
+@media (max-width: 900px) and (pointer: coarse) {
+  .karaoke-audio-volume { display: none; }
+}
 .schedule-sync-status { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 24px; margin-top: 9px; color: #8d5278; font-size: 11px; line-height: 1.45; }
 .schedule-sync-status .text-button { flex: 0 0 auto; margin: 0; }
 .day-unassigned { display: block; margin-top: 8px; color: #8992a8; font-size: 9px; line-height: 1.2; }
