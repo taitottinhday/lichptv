@@ -1,7 +1,7 @@
 /** Pure timing helpers shared by the karaoke player and its regression tests. */
 export function parseSyncedKaraokeLyrics(value) {
   const parsed = [];
-  const rawLines = String(value || '').replace(/\r\n?/g, '\n').split('\n');
+  const rawLines = String(value || '').replace(/^\uFEFF/, '').replace(/\r\n?/g, '\n').split('\n');
   const offsetLine = rawLines.find((line) => /^\s*\[offset\s*:\s*[+-]?\d+\s*\]\s*$/i.test(line));
   const offsetMatch = offsetLine?.match(/\[offset\s*:\s*([+-]?\d+)\s*\]/i);
   const offsetSeconds = offsetMatch ? Number(offsetMatch[1]) / 1000 : 0;
@@ -18,7 +18,13 @@ export function parseSyncedKaraokeLyrics(value) {
       if (Number.isFinite(seconds)) parsed.push({ seconds: Math.max(0, seconds), text });
     }
   }
-  return parsed.length >= 2 ? parsed.sort((a, b) => a.seconds - b.seconds) : [];
+  parsed.sort((a, b) => a.seconds - b.seconds);
+  // Repeated tags with the same text and time can otherwise create zero-length
+  // rows that disappear from the karaoke timeline.
+  const unique = parsed.filter((line, index) => index === 0
+    || line.seconds !== parsed[index - 1].seconds
+    || line.text !== parsed[index - 1].text);
+  return unique.length >= 2 ? unique : [];
 }
 
 export function clamp01(value) {
@@ -59,28 +65,34 @@ export function normalizeTimedLyrics(input, { warn = false } = {}) {
   return result.sort((left, right) => left.start - right.start || left.end - right.end);
 }
 
-/** LRC supplies starts only; the next start is an explicitly approximate line end. */
-export function lrcLineIntervals(lines) {
+/** LRC supplies starts only; the next start gives an approximate end, and a known track duration can close the final interval. */
+export function lrcLineIntervals(lines, durationSeconds = null) {
   if (!Array.isArray(lines)) return [];
-  return lines.slice(0, -1).map((line, index) => ({
-    id: `lrc-${index}-${line.seconds}`,
-    sourceIndex: index,
-    text: line.text,
-    start: line.seconds,
-    end: lines[index + 1].seconds
-  })).filter((line) => line.text?.trim() && Number.isFinite(line.start) && Number.isFinite(line.end) && line.start >= 0 && line.end > line.start);
+  const duration = durationSeconds == null ? Number.NaN : Number(durationSeconds);
+  return lines.map((line, index) => {
+    const nextStart = lines[index + 1]?.seconds ?? Number.NaN;
+    const rawEnd = Number.isFinite(nextStart) ? nextStart : duration;
+    return {
+      id: `lrc-${index}-${line.seconds}`,
+      sourceIndex: index,
+      text: line.text,
+      start: line.seconds,
+      end: Number.isFinite(duration) ? Math.min(rawEnd, duration) : rawEnd
+    };
+  }).filter((line) => line.text?.trim() && Number.isFinite(line.start) && Number.isFinite(line.end)
+    && line.start >= 0 && (!Number.isFinite(duration) || line.start < duration) && line.end > line.start);
 }
 
-/** Adjust line boundaries for small recording-length differences after the track is verified. */
+/** Keep LRC timestamps anchored to the recording; duration variance only closes the final interval. */
 export function fitTimedLyricIntervalsToAudio(lines, sourceDurationSeconds, audioDurationSeconds) {
   if (!Array.isArray(lines)) return [];
-  const sourceDuration = Number(sourceDurationSeconds);
   const audioDuration = Number(audioDurationSeconds);
-  if (!Number.isFinite(sourceDuration) || sourceDuration <= 0
-    || !Number.isFinite(audioDuration) || audioDuration <= 0) return lines;
-  const ratio = audioDuration / sourceDuration;
-  if (!Number.isFinite(ratio) || ratio <= 0) return lines;
-  return lines.map((line) => ({ ...line, start: line.start * ratio, end: line.end * ratio }));
+  if (!Number.isFinite(audioDuration) || audioDuration <= 0) return lines;
+  return lines.map((line) => ({
+    ...line,
+    end: Math.min(Number(line.end), audioDuration)
+  })).filter((line) => Number.isFinite(line.start) && Number.isFinite(line.end)
+    && line.start >= 0 && line.start < audioDuration && line.end > line.start);
 }
 
 /** Create explicitly approximate row intervals for lyrics that have no timestamps. */
