@@ -956,26 +956,16 @@ function karaokeLyricsLineTimeline(session, audio, audioState = state.karaokeAud
         endMs: line?.endMs
       })), { warn: import.meta.env.DEV })
       : fitTimedLyricIntervalsToAudio(
-        lrcLineIntervals(parseSyncedKaraokeLyrics(session.syncedLyrics)),
+        lrcLineIntervals(parseSyncedKaraokeLyrics(session.syncedLyrics), session.durationSeconds),
         session.durationSeconds,
         audio.duration
       );
     if (lines.length) return { lines, estimated: false, verified: true };
   }
 
-  const canEstimate = Boolean(session?.text?.trim() && !session.loading
-    && session.songId && audioState.songId === session.songId && audio?.currentSrc
-    && Number.isFinite(audio.duration) && audio.duration >= 10);
-  if (!canEstimate) return { lines: [], estimated: false, verified: false };
-  const parsedSyncedLines = parseSyncedKaraokeLyrics(session.syncedLyrics);
-  const lyrics = session.source === 'user-lrc' && parsedSyncedLines.length
-    ? parsedSyncedLines.map((line) => line.text)
-    : session.text.replace(/\r\n?/g, '\n').split('\n');
-  return {
-    lines: estimateLyricLineIntervals(lyrics, audio.duration),
-    estimated: true,
-    verified: false
-  };
+  // Never advance the highlighted line from guessed timings. A wrong recording
+  // can have the same lyrics but a different intro, arrangement, or tempo.
+  return { lines: [], estimated: false, verified: false };
 }
 
 function startKaraokeLyricsFrameLoop() {
