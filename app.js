@@ -1006,9 +1006,10 @@ function cacheKaraokeLyrics(song, data) {
   return true;
 }
 
-async function fetchLiveKaraokeLyrics(song, { store = true } = {}) {
+async function fetchLiveKaraokeLyrics(song, { store = true, refresh = false } = {}) {
   try {
-    const response = await fetch(`/api/lyrics/resolve/${encodeURIComponent(song.songId)}`, { cache: 'no-store' });
+    const refreshQuery = refresh ? '?refresh=1' : '';
+    const response = await fetch(`/api/lyrics/resolve/${encodeURIComponent(song.songId)}${refreshQuery}`, { cache: 'no-store' });
     const data = await response.json().catch(() => ({}));
     if (!response.ok || !data?.lyrics?.trim()) return null;
     if (store) {
@@ -1031,8 +1032,8 @@ function sameKaraokeLyricsText(left, right) {
 
 async function refreshKaraokeTimedLyrics(song, requestId) {
   const session = state.karaokeLyricsModal;
-  if (session.requestId !== requestId || session.editing || session.sourceName === 'LRC có timestamp' || karaokeSessionHasTimestamps(session)) return;
-  const liveLyrics = await fetchLiveKaraokeLyrics(song, { store: false });
+  if (session.requestId !== requestId || session.editing || session.sourceName === 'LRC có timestamp') return;
+  const liveLyrics = await fetchLiveKaraokeLyrics(song, { store: false, refresh: true });
   if (session.requestId !== requestId || session.editing || !liveLyrics || !(
     liveLyrics.wordSyncLines?.length || parseSyncedKaraokeLyrics(liveLyrics.syncedLyrics).length
   )) return;
@@ -1063,7 +1064,7 @@ async function preloadKaraokeLyricsLibrary() {
   const button = $('#preloadKaraokeLyrics');
   const status = $('#karaokeLibraryLyricsStatus');
   if (!button || !status) return;
-  const songs = UNIQUE_KARAOKE_SONGS.filter((song) => !karaokeSessionHasTimestamps(karaokeLyricsForSong(song)));
+  const songs = UNIQUE_KARAOKE_SONGS;
   if (!songs.length) {
     status.textContent = 'Các bài hiện có lời đồng bộ đã sẵn sàng trong phiên này.';
     return;
@@ -1074,7 +1075,7 @@ async function preloadKaraokeLyricsLibrary() {
     const song = songs[index];
     status.textContent = `Đang tìm thêm lời ${index + 1}/${songs.length}: ${song.title}`;
     try {
-      const response = await fetch(`/api/lyrics/resolve/${encodeURIComponent(song.songId)}`, { cache: 'no-store' });
+      const response = await fetch(`/api/lyrics/resolve/${encodeURIComponent(song.songId)}?refresh=1`, { cache: 'no-store' });
       const data = await response.json().catch(() => ({}));
       if (data?.lyrics?.trim() && (data.wordSyncLines?.length || parseSyncedKaraokeLyrics(data.syncedLyrics).length)) {
         const existing = karaokeLyricsForSong(song);
@@ -1458,7 +1459,7 @@ async function openKaraokeLyrics(songId, { continueQueue = false } = {}) {
     .then((metadata) => { if (metadata?.ok && session.requestId === requestId) { session.metadata = metadata; renderKaraokeLyricsModal(); } })
     .catch(() => {});
   if (stored?.text) {
-    if (!karaokeSessionHasTimestamps(session)) refreshKaraokeTimedLyrics(song, requestId);
+    refreshKaraokeTimedLyrics(song, requestId);
     return;
   }
   const serverLyrics = await fetchStoredKaraokeLyrics(song);
@@ -1474,7 +1475,7 @@ async function openKaraokeLyrics(songId, { continueQueue = false } = {}) {
     session.loading = false;
     session.error = false;
     renderKaraokeLyricsModal();
-    if (!karaokeSessionHasTimestamps(session)) refreshKaraokeTimedLyrics(song, requestId);
+    refreshKaraokeTimedLyrics(song, requestId);
     return;
   }
   try {

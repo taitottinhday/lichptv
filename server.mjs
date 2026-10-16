@@ -230,6 +230,19 @@ function normalizeTrackTitle(value) {
   return withoutTrailingQualifier || normalized;
 }
 
+const lrclibTitleQualifiers = new Set([
+  'original', 'official', 'audio', 'video', 'mv', 'music', 'lyrics', 'lyric', 'live', 'version',
+  'ver', 'acoustic', 'remix', 'cover', 'karaoke', 'remastered', 'from', 'ost', 'full', 'hd', '4k'
+]);
+
+function lrclibTitleMatches(candidate, titleKey) {
+  const candidateKey = normalizeTrackTitle(candidate);
+  if (candidateKey === titleKey) return true;
+  if (!candidateKey.startsWith(`${titleKey} `)) return false;
+  return candidateKey.slice(titleKey.length + 1).split(' ').every((token) =>
+    lrclibTitleQualifiers.has(token) || /^\d{4}$/.test(token));
+}
+
 function parseLrcLibLyricsfile(raw) {
   const source = String(raw || '');
   if (!source.trim()) return [];
@@ -494,7 +507,7 @@ async function lrclibRequest(path, params = {}) {
 function chooseLrclibTrack(song, records) {
   const titleKey = normalizeTrackTitle(song.title);
   const artistKey = normalizeTrackTitle(song.artist || song.composer);
-  const exactTitle = records.filter((record) => normalizeTrackTitle(record.trackName || record.name) === titleKey);
+  const exactTitle = records.filter((record) => lrclibTitleMatches(record.trackName || record.name, titleKey));
   if (!exactTitle.length) return { status: 'not_found', reason: 'LRCLIB không có kết quả trùng chính xác tên bài.' };
   const artistMatches = artistKey
     ? exactTitle.filter((record) => normalizeTrackTitle(record.artistName) === artistKey)
@@ -509,7 +522,7 @@ function chooseLrclibTrack(song, records) {
   const candidates = artistKey ? (exactArtistSpelling.length ? exactArtistSpelling : artistMatches) : exactTitle;
   const expectedDuration = Number(song.duration);
   const hasExpectedDuration = Number.isFinite(expectedDuration) && expectedDuration > 0;
-  const durationTolerance = hasExpectedDuration ? Math.max(8, expectedDuration * 0.05) : 0;
+  const durationTolerance = hasExpectedDuration ? Math.max(2, expectedDuration * 0.005) : 0;
   if (candidates.length > 1 && (!hasExpectedDuration || candidates.some((record) => !Number.isFinite(Number(record.duration))))) {
     return { status: 'needs_verification', reason: 'Có nhiều phiên bản cùng tên nhưng thiếu thời lượng để khớp audio.' };
   }
@@ -1396,7 +1409,7 @@ app.get('/api/lyrics/resolve/:songId', async (request, response) => {
   const song = karaokeSongById(request.params.songId);
   if (!song) return response.status(404).json({ error: 'Không tìm thấy bài hát.' });
   try {
-    const result = await syncOneLyrics(song);
+    const result = await syncOneLyrics(song, { force: request.query.refresh === '1' });
     return response.json(lyricsResultPayload(song, result));
   } catch (error) {
     console.error(`Tra cứu LRCLIB thất bại cho ${song.songId}:`, error.message);
