@@ -7,3 +7,16 @@ export const defaultSchedule = {
   '2026-10-16': '9', '2026-10-17': 'N', '2026-10-18': '9', '2026-10-19': 'N', '2026-10-20': '9',
   '2026-10-21': '9', '2026-10-22': 'D', '2026-10-23': 'N', '2026-10-24': 'N', '2026-10-25': '9'
 };
+
+export const RECURRING_SCHEDULE_START = '2026-10-26';
+
+export function getRecurringScheduleCode(dateKey) {
+  if (typeof dateKey !== 'string' || dateKey < RECURRING_SCHEDULE_START) return null;
+  const weekday = new Date(`${dateKey}T12:00:00Z`).getUTCDay();
+  return weekday === 0 ? '18' : 'HC';
+}
+
+export function getScheduleCode(schedule, dateKey) {
+  if (Object.prototype.hasOwnProperty.call(schedule || {}, dateKey)) return schedule[dateKey];
+  return getRecurringScheduleCode(dateKey);
+}

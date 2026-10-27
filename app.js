@@ -1,6 +1,7 @@
 import { AVATAR_IMAGE_URL } from './avatar-config.js';
 import { KARAOKE_CATEGORIES, UNIQUE_KARAOKE_SONGS } from './karaoke-data.js';
 import { parseSyncedKaraokeLyrics } from './karaoke-timing.js';
+import { getScheduleCode } from './schedule-data.js';
 
 const ADMIN_TOKEN_KEY = 'lich-cua-vy-admin-token-v1';
 const VY_TOKEN_KEY = 'lich-cua-vy-audio-session-v1';
@@ -3958,7 +3959,7 @@ function renderAdminCalendar() {
   for (let day = 1; day <= daysInMonth; day += 1) {
     const date = new Date(year, month, day);
     const key = localDateKey(date);
-    const code = schedule[key];
+    const code = getScheduleCode(schedule, key);
     const info = codeInfo(code);
     const cell = document.createElement('div');
     cell.className = `day-cell${key === todayKey ? ' is-today' : ''}`;
@@ -4053,6 +4054,17 @@ function parseDate(key) {
   return new Date(year, month - 1, day);
 }
 
+function getReminderDateKeys(schedule, futureDays = 365) {
+  const keys = new Set(Object.keys(schedule || {}));
+  const date = todayAtMidnight();
+  for (let index = 0; index < futureDays; index += 1) {
+    const key = localDateKey(date);
+    if (getScheduleCode(schedule, key)) keys.add(key);
+    date.setDate(date.getDate() + 1);
+  }
+  return [...keys].sort();
+}
+
 function displayDate(date, options = { day: 'numeric', month: 'long' }) {
   return new Intl.DateTimeFormat('vi-VN', options).format(date);
 }
@@ -4060,6 +4072,7 @@ function displayDate(date, options = { day: 'numeric', month: 'long' }) {
 function codeInfo(code) {
   if (code === 'D') return { title: 'Ca ngày · 12 tiếng', subtitle: '07:30 — 20:00', className: 'day', note: '☀️ Chúc nàng một ca ngày thật suôn sẻ nha!' };
   if (code === 'N') return { title: 'Ca đêm · 12 tiếng', subtitle: '19:30 — 07:30 hôm sau', className: 'night', note: '🌙 Ca đêm cố lên, tan ca nhớ về nghỉ ngơi nhé!' };
+  if (code === 'HC') return { title: 'Ca hành chính · 9 tiếng', subtitle: '07:30 — 16:30', className: 'work', note: '☀️ Chúc nàng một ngày làm việc vui vẻ, tan ca bình an nha!' };
   if (code === '18') return { title: 'Được nghỉ', subtitle: 'Một ngày để nạp lại năng lượng', className: 'off', note: '🧸 Hôm nay nàng được nghỉ rồi, ngủ thật ngon nha!' };
   if (code === '9') return { title: 'Được nghỉ', subtitle: 'Một ngày để nạp lại năng lượng', className: 'off', note: '🌷 Nghỉ ngơi vui vẻ nhé, Vy xứng đáng được yêu chiều!' };
   if (code === 'eAD') return { title: 'Lịch điều chỉnh', subtitle: 'Kiểm tra lại với điều dưỡng trưởng', className: 'adjusted', note: '💌 Nhớ kiểm tra lại lịch chi tiết nha!' };
@@ -4076,6 +4089,9 @@ function shiftWindow(date, code) {
     start.setHours(19, 30, 0, 0);
     end.setDate(end.getDate() + 1);
     end.setHours(7, 30, 0, 0);
+  } else if (code === 'HC') {
+    start.setHours(7, 30, 0, 0);
+    end.setHours(16, 30, 0, 0);
   } else {
     return null;
   }
@@ -4085,7 +4101,7 @@ function shiftWindow(date, code) {
 function getActiveShift(now = new Date()) {
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const todayKey = localDateKey(today);
-  const todayCode = state.schedule[todayKey];
+  const todayCode = getScheduleCode(state.schedule, todayKey);
   const todayWindow = shiftWindow(today, todayCode);
   if (todayWindow && now >= todayWindow.start && now < todayWindow.end) {
     return { code: todayCode, date: today, ...todayWindow };
@@ -4093,7 +4109,7 @@ function getActiveShift(now = new Date()) {
 
   const yesterday = new Date(today);
   yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayCode = state.schedule[localDateKey(yesterday)];
+  const yesterdayCode = getScheduleCode(state.schedule, localDateKey(yesterday));
   const nightWindow = shiftWindow(yesterday, yesterdayCode);
   if (nightWindow && now >= nightWindow.start && now < nightWindow.end) {
     return { code: yesterdayCode, date: yesterday, ...nightWindow };
@@ -4143,8 +4159,8 @@ function renderOverview() {
   const today = todayAtMidnight();
   const tomorrow = new Date(today);
   tomorrow.setDate(today.getDate() + 1);
-  const todayCode = state.schedule[localDateKey(today)] || '';
-  const tomorrowCode = state.schedule[localDateKey(tomorrow)] || '';
+  const todayCode = getScheduleCode(state.schedule, localDateKey(today)) || '';
+  const tomorrowCode = getScheduleCode(state.schedule, localDateKey(tomorrow)) || '';
   renderShiftCard('today', today, todayCode);
   renderShiftCard('tomorrow', tomorrow, tomorrowCode);
 
@@ -4152,7 +4168,7 @@ function renderOverview() {
   const greeting = hour < 11 ? 'Chào buổi sáng, Vy yêu 🌤️' : hour < 18 ? 'Chào buổi chiều, Vy yêu 🌼' : 'Chào buổi tối, Vy yêu 🌙';
   $('#welcomeTitle').textContent = greeting;
   $('#currentGreeting').textContent = 'Phan Thị Thảo Vy · số 6';
-  $('#heroMessage').textContent = !todayCode ? 'Lịch hôm nay chưa được cập nhật; mình kiểm tra lại sau nhé.' : todayCode === 'D' || todayCode === 'N' ? 'Nàng nhớ giữ sức, làm việc vui vẻ và tan ca bình an để về với anh iu nhé.' : 'Hôm nay nàng có thể thong thả một chút, nhớ chăm sóc bản thân và nhớ anh iu nha.';
+  $('#heroMessage').textContent = !todayCode ? 'Lịch hôm nay chưa được cập nhật; mình kiểm tra lại sau nhé.' : ['D', 'N', 'HC'].includes(todayCode) ? 'Nàng nhớ giữ sức, làm việc vui vẻ và tan ca bình an để về với anh iu nhé.' : 'Hôm nay nàng có thể thong thả một chút, nhớ chăm sóc bản thân và nhớ anh iu nha.';
 }
 
 function renderShiftCard(prefix, date, code) {
@@ -4185,7 +4201,7 @@ function renderCalendar() {
   for (let day = 1; day <= daysInMonth; day += 1) {
     const date = new Date(year, month, day);
     const key = localDateKey(date);
-    const code = state.schedule[key];
+    const code = getScheduleCode(state.schedule, key);
     const info = codeInfo(code);
     const cell = document.createElement('button');
     cell.type = 'button';
@@ -4235,7 +4251,7 @@ function bindCalendarSwipe() {
 function openDayModal(key) {
   if (state.suppressCalendarClick) return;
   state.selectedDate = key;
-  state.selectedCode = state.schedule[key] || null;
+  state.selectedCode = getScheduleCode(state.schedule, key) || null;
   $('#modalDate').textContent = displayDate(parseDate(key), { weekday: 'long', day: 'numeric', month: 'long' });
   $('#modalTitle').textContent = `Lịch ngày ${parseDate(key).getDate()}${state.selectedCode ? '' : ' · Chưa cập nhật'}`;
   $('#modalSubtitle').textContent = state.selectedCode ? 'Chọn ca của Vy cho ngày này' : 'Ngày chưa có dữ liệu. Chỉ chọn ca khi lịch đã được xác nhận.';
@@ -4328,6 +4344,7 @@ function showIosInstallGuidance() {
 function reminderDescription(code) {
   if (code === 'D') return 'đi làm ca D · 07:30–20:00';
   if (code === 'N') return 'đi làm ca N · 19:30–07:30 hôm sau';
+  if (code === 'HC') return 'đi làm ca hành chính · 07:30–16:30';
   if (code === '18' || code === '9') return 'được nghỉ';
   if (code === 'eAD') return 'lịch điều chỉnh · eAD';
   return 'chưa có lịch';
@@ -4366,9 +4383,9 @@ function createCalendarEvent(uid, start, title, description) {
 
 function exportCalendarFile() {
   const events = [];
-  Object.keys(state.schedule).sort().forEach((key) => {
+  getReminderDateKeys(state.schedule).forEach((key) => {
     const date = parseDate(key);
-    const code = state.schedule[key];
+    const code = getScheduleCode(state.schedule, key);
     const description = reminderDescription(code);
     const todayStart = new Date(date);
     todayStart.setHours(6, 0, 0, 0);
@@ -4380,7 +4397,7 @@ function exportCalendarFile() {
 
     const tomorrow = new Date(date);
     tomorrow.setDate(tomorrow.getDate() - 1);
-    const tomorrowCode = state.schedule[localDateKey(date)];
+    const tomorrowCode = getScheduleCode(state.schedule, localDateKey(date));
     const tomorrowStart = new Date(tomorrow);
     tomorrowStart.setHours(20, 0, 0, 0);
     events.push(createCalendarEvent(`${key}-evening`, tomorrowStart, 'Chúc em yêu buổi tối thật dịu dàng', `Ngày mai ${description}. Ngủ ngon để mai luôn tràn đầy năng lượng nha 💞`));
@@ -4498,9 +4515,9 @@ async function scheduleNativeReminders(localNotifications) {
   }
   const notifications = [];
   const now = new Date();
-  Object.keys(state.schedule).sort().forEach((key, index) => {
+  getReminderDateKeys(state.schedule, 18).forEach((key, index) => {
     const date = parseDate(key);
-    const code = state.schedule[key];
+    const code = getScheduleCode(state.schedule, key);
     const label = reminderDescription(code);
     const morningAtSix = new Date(date);
     morningAtSix.setHours(6, 0, 0, 0);

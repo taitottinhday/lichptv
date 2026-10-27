@@ -532,6 +532,7 @@ body.karaoke-modal-open { overflow: hidden; }
 .day-cell.is-outside .day-number { color: #bdb9bd; }
 .shift-chip { display: block; margin-top: 11px; padding: 5px 4px; border-radius: 8px; font-size: 10px; font-weight: 700; text-align: center; }
 .shift-chip.day { background: var(--mint); color: var(--mint-ink); }
+.shift-chip.work { background: #dcecff; color: #315a8e; }
 .shift-chip.night { background: var(--lavender); color: var(--lavender-ink); }
 .shift-chip.off { background: var(--yellow); color: var(--yellow-ink); }
 .shift-chip.adjusted { background: #f9e2ed; color: #a4486c; }

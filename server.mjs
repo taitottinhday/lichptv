@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url';
 import { Readable } from 'node:stream';
 import sharp from 'sharp';
 import { AccessToken, LiveKitAPI } from 'livekit-server-sdk';
-import { defaultSchedule } from './schedule-data.js';
+import { defaultSchedule, getScheduleCode } from './schedule-data.js';
 import { AVATAR_IMAGE_URL } from './avatar-config.js';
 import { UNIQUE_KARAOKE_SONGS } from './karaoke-data.js';
 import { parseSyncedKaraokeLyrics, syncedLyricsMatchReference } from './karaoke-timing.js';
@@ -802,6 +802,7 @@ function addDays(key, amount) {
 function shiftDescription(code) {
   if (code === 'D') return 'đi làm ca D, 07:30–20:00';
   if (code === 'N') return 'đi làm ca N, 19:30–07:30 hôm sau';
+  if (code === 'HC') return 'đi làm ca hành chính, 07:30–16:30';
   if (code === '18' || code === '9') return 'được nghỉ';
   if (code === 'eAD') return 'có lịch điều chỉnh eAD';
   return null;
@@ -814,7 +815,7 @@ function prettyDate(key) {
 
 function scheduleEntries(schedule) {
   return Object.entries(schedule || {})
-    .filter(([dateKey, code]) => /^\d{4}-\d{2}-\d{2}$/.test(dateKey) && ['D', 'N', '18', '9', 'eAD'].includes(code))
+    .filter(([dateKey, code]) => /^\d{4}-\d{2}-\d{2}$/.test(dateKey) && ['D', 'N', 'HC', '18', '9', 'eAD'].includes(code))
     .slice(0, 500);
 }
 
@@ -1132,7 +1133,7 @@ async function dispatchDailyReminder(moment) {
   const today = vietnamDateKey();
   const dateKey = moment === 'evening' ? addDays(today, 1) : today;
   let code;
-  try { code = (await readSharedSchedule()).schedule[dateKey]; }
+  try { code = getScheduleCode((await readSharedSchedule()).schedule, dateKey); }
   catch (error) { console.error('Không đọc được lịch để gửi nhắc:', error.message); }
   const description = shiftDescription(code) || 'chưa có dữ liệu lịch';
   const dateText = prettyDate(dateKey);
