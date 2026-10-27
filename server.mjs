@@ -1785,6 +1785,9 @@ app.post('/api/food-requests/:id/respond', async (request, response) => {
   }
 });
 
+const { registerOfflineShellRoute } = await import('./offline-shell.js');
+registerOfflineShellRoute(app, distRoot);
+
 app.use(express.static(distRoot, { etag: false, maxAge: 0 }));
 app.use((request, response) => {
   if (request.method !== 'GET') return response.status(404).json({ error: 'Not found.' });

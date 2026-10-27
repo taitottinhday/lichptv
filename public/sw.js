@@ -1,9 +1,78 @@
-const CACHE_NAME = 'lich-cua-vy-v7';
+const CACHE_NAME = 'lich-cua-vy-v8';
+const OFFLINE_ASSET_EXTENSIONS = new Set(['.css', '.html', '.ico', '.jpeg', '.jpg', '.js', '.json', '.png', '.svg', '.txt', '.webmanifest']);
 
-self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('install', (event) => {
+  event.waitUntil((async () => {
+    const response = await fetch('/offline-precache.json', { cache: 'no-store' });
+    if (!response.ok) throw new Error('Không tải được danh sách tài nguyên offline.');
+    const payload = await response.json();
+    const files = Array.isArray(payload.files) ? payload.files : [];
+    const cache = await caches.open(CACHE_NAME);
+    const shell = ['/', '/index.html', '/app-icon.jpg?v=2', ...files];
+    await cache.addAll([...new Set(shell)]);
+    await self.skipWaiting();
+  })());
+});
+
 self.addEventListener('activate', (event) => {
-  event.waitUntil(caches.keys().then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))));
-  self.clients.claim();
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)));
+    await self.clients.claim();
+  })());
+});
+
+async function fetchWithTimeout(request, timeoutMs = 2500) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(request, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+async function handleNavigation(request) {
+  const cache = await caches.open(CACHE_NAME);
+  try {
+    const response = await fetchWithTimeout(request);
+    if (response.ok) {
+      await cache.put(request, response.clone());
+      return response;
+    }
+  } catch {
+    // Khi mất mạng hoặc mạng yếu, dùng trang app đã được lưu trước đó.
+  }
+  return (await cache.match(request, { ignoreSearch: true }))
+    || (await cache.match('/index.html'))
+    || (await cache.match('/'))
+    || Response.error();
+}
+
+async function handleStaticAsset(request) {
+  const cache = await caches.open(CACHE_NAME);
+  const cached = await cache.match(request, { ignoreSearch: true });
+  if (cached) return cached;
+  const response = await fetch(request);
+  if (response.ok) await cache.put(request, response.clone());
+  return response;
+}
+
+self.addEventListener('fetch', (event) => {
+  const request = event.request;
+  const url = new URL(request.url);
+  if (request.method !== 'GET' || url.origin !== self.location.origin) return;
+  if (url.pathname.startsWith('/api/')) return;
+
+  if (request.mode === 'navigate') {
+    event.respondWith(handleNavigation(request));
+    return;
+  }
+
+  const extension = url.pathname.slice(url.pathname.lastIndexOf('.')).toLowerCase();
+  if (OFFLINE_ASSET_EXTENSIONS.has(extension)) {
+    event.respondWith(handleStaticAsset(request));
+  }
 });
 
 self.addEventListener('push', (event) => {
