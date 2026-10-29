@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lich-cua-vy-v9';
+const CACHE_NAME = 'lich-cua-vy-v10';
 const OFFLINE_ASSET_EXTENSIONS = new Set(['.css', '.html', '.ico', '.jpeg', '.jpg', '.js', '.json', '.png', '.svg', '.txt', '.webmanifest']);
 
 self.addEventListener('install', (event) => {

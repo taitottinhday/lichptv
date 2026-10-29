@@ -43,6 +43,8 @@ const state = {
   karaokeCategory: 'all',
   karaokeQuery: '',
   karaokeShowSelected: false,
+  karaokeOfflineOnly: false,
+  offlineAudioSongIds: new Set(),
   karaokeSelected: loadKaraokeSelection(),
   karaokeLyrics: loadKaraokeLyrics(),
   // Live lyrics are kept in memory only when the provider does not grant offline caching rights.
@@ -125,6 +127,15 @@ async function getOfflineAudio(songId) {
   return new Promise((resolve, reject) => {
     const request = db.transaction(OFFLINE_AUDIO_STORE, 'readonly').objectStore(OFFLINE_AUDIO_STORE).get(songId);
     request.onsuccess = () => { db.close(); resolve(request.result || null); };
+    request.onerror = () => { db.close(); reject(request.error); };
+  });
+}
+
+async function getOfflineAudioSongIds() {
+  const db = await openOfflineMediaDb();
+  return new Promise((resolve, reject) => {
+    const request = db.transaction(OFFLINE_AUDIO_STORE, 'readonly').objectStore(OFFLINE_AUDIO_STORE).getAllKeys();
+    request.onsuccess = () => { db.close(); resolve(new Set(request.result || [])); };
     request.onerror = () => { db.close(); reject(request.error); };
   });
 }
@@ -1001,6 +1012,8 @@ async function saveCurrentKaraokeAudioOffline() {
     if (audioState.offlineSaved) {
       await deleteOfflineAudio(songId);
       audioState.offlineSaved = false;
+      state.offlineAudioSongIds.delete(songId);
+      renderKaraoke();
       showToast('Đã xóa bản nhạc offline khỏi thiết bị.');
       return;
     }
@@ -1026,6 +1039,8 @@ async function saveCurrentKaraokeAudioOffline() {
       savedAt: new Date().toISOString()
     });
     if (state.karaokeAudio.songId === songId) audioState.offlineSaved = true;
+    state.offlineAudioSongIds.add(songId);
+    renderKaraoke();
     showToast('Đã lưu bài nhạc trên thiết bị để nghe offline 🎵');
   } catch (error) {
     showToast(error.message || 'Chưa lưu được bài nhạc offline.');
@@ -1536,7 +1551,8 @@ function karaokeSongsForView() {
       || song.show === state.karaokeCategory;
     const matchesQuery = !query || song.title.toLocaleLowerCase().includes(query);
     const matchesSelected = !state.karaokeShowSelected || state.karaokeSelected.has(song.title);
-    return matchesCategory && matchesQuery && matchesSelected;
+    const matchesOffline = !state.karaokeOfflineOnly || state.offlineAudioSongIds.has(song.songId);
+    return matchesCategory && matchesQuery && matchesSelected && matchesOffline;
   });
 }
 
@@ -1575,6 +1591,7 @@ function renderKaraoke() {
         </button>
         <span class="karaoke-artwork" aria-hidden="true">♫</span>
         <span class="karaoke-song-copy"><strong>${escapeHtml(song.title)}</strong><small>${escapeHtml(state.karaokeShowSelected ? karaokeSongFilterLabel(song) : categoryLabel)}</small></span>
+        ${state.offlineAudioSongIds.has(song.songId) ? '<span class="karaoke-offline-badge" title="Đã lưu nhạc trên thiết bị">✓ Offline</span>' : ''}
         <span class="karaoke-song-action">Xem lời ↗</span>
       </article>
     `;
@@ -1584,6 +1601,12 @@ function renderKaraoke() {
   $('#showKaraokeSelected').classList.toggle('is-active', state.karaokeShowSelected);
   $('#showKaraokeSelected').setAttribute('aria-pressed', String(state.karaokeShowSelected));
   $('#showKaraokeSelected').textContent = state.karaokeShowSelected ? '☷ Xem tất cả' : '♡ Đã chọn';
+  const offlineToggle = $('#showKaraokeOffline');
+  if (offlineToggle) {
+    offlineToggle.classList.toggle('is-active', state.karaokeOfflineOnly);
+    offlineToggle.setAttribute('aria-pressed', String(state.karaokeOfflineOnly));
+    offlineToggle.textContent = `⬇ Đã lưu offline (${state.offlineAudioSongIds.size})`;
+  }
   renderKaraokeSelectedPanel();
   list.querySelectorAll('[data-karaoke-song-id]').forEach((card) => {
     const openLyrics = () => openKaraokeLyrics(card.dataset.karaokeSongId);
@@ -1941,6 +1964,16 @@ function bindKaraoke() {
     state.karaokeShowSelected = !state.karaokeShowSelected;
     if (state.karaokeShowSelected) {
       state.karaokeCategory = 'all';
+      state.karaokeQuery = '';
+      search.value = '';
+    }
+    renderKaraoke();
+  });
+  $('#showKaraokeOffline')?.addEventListener('click', () => {
+    state.karaokeOfflineOnly = !state.karaokeOfflineOnly;
+    if (state.karaokeOfflineOnly) {
+      state.karaokeCategory = 'all';
+      state.karaokeShowSelected = false;
       state.karaokeQuery = '';
       search.value = '';
     }
@@ -4885,6 +4918,10 @@ function init() {
   applyAvatarImage();
   renderFoodMenu();
   bindKaraoke();
+  getOfflineAudioSongIds().then((songIds) => {
+    state.offlineAudioSongIds = songIds;
+    renderKaraoke();
+  }).catch((error) => console.warn('Không đọc được danh sách nhạc offline:', error));
   bindEvents();
   bindNotificationNavigation();
   setAuthenticated(false);

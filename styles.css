@@ -225,6 +225,7 @@ body.karaoke-modal-open { overflow: hidden; }
 .karaoke-section .section-kicker { color: #ff9dcc; }
 .karaoke-section h2 { color: var(--music-text); font-family: 'DM Sans', system-ui, sans-serif; font-size: clamp(25px, 3.3vw, 36px); letter-spacing: -.045em; }
 .karaoke-section .karaoke-intro { max-width: 680px; color: var(--music-muted); line-height: 1.6; }
+.karaoke-offline-badge { align-self: center; padding: 5px 8px; border: 1px solid rgba(91,220,170,.28); border-radius: 999px; background: rgba(54,190,137,.12); color: #8fe7c0; font-size: 10px; font-weight: 800; white-space: nowrap; }
 .karaoke-count { border: 1px solid rgba(255, 95, 175, .22); background: rgba(255, 95, 175, .12); color: #ffc4e1; }
 .karaoke-search-wrap, .karaoke-selected-toggle, .karaoke-clear-button, .karaoke-preload-button {
   min-height: 46px;
