@@ -2,9 +2,10 @@ import express from 'express';
 import cron from 'node-cron';
 import pg from 'pg';
 import webpush from 'web-push';
-import { readFile } from 'node:fs/promises';
+import { createReadStream } from 'node:fs';
+import { readFile, realpath, stat } from 'node:fs/promises';
 import { createHash, createHmac, randomBytes, randomUUID, timingSafeEqual } from 'node:crypto';
-import { resolve } from 'node:path';
+import { basename, extname, isAbsolute, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { Readable } from 'node:stream';
 import sharp from 'sharp';
@@ -19,8 +20,10 @@ const app = express();
 const port = Number(process.env.PORT || 4173);
 const isProduction = process.env.NODE_ENV === 'production' || Boolean(process.env.RAILWAY_ENVIRONMENT);
 const distRoot = resolve(fileURLToPath(new URL('./dist', import.meta.url)));
+const projectRoot = resolve(fileURLToPath(new URL('./', import.meta.url)));
 const publicRoot = resolve(fileURLToPath(new URL('./public/', import.meta.url)));
 const audioManifestPath = resolve(fileURLToPath(new URL('./public/audio-manifest.json', import.meta.url)));
+const localAudioOverridesPath = resolve(fileURLToPath(new URL('./reports/karaoke-local-audio-overrides.json', import.meta.url)));
 const karaokeLrcManifestPath = resolve(fileURLToPath(new URL('./public/karaoke-lrc-manifest.json', import.meta.url)));
 const databaseUrl = process.env.DATABASE_URL;
 const pool = databaseUrl ? new Pool({ connectionString: databaseUrl, ssl: databaseUrl.includes('localhost') ? false : { rejectUnauthorized: false }, connectionTimeoutMillis: 5000, idleTimeoutMillis: 30000, query_timeout: 12000, statement_timeout: 10000, max: 8 }) : null;
@@ -253,7 +256,7 @@ function karaokeSongById(songId) {
 
 async function karaokeManifestMetadata(song) {
   try {
-    const manifest = JSON.parse(await readFile(audioManifestPath, 'utf8'));
+    const manifest = await readAudioManifestWithLocalOverrides();
     const entry = manifest.entries?.[song.songId];
     return {
       artist: String(entry?.artist || '').trim(),
@@ -1168,6 +1171,103 @@ app.get('/api/health', (_request, response) => response.json({
   lyricsLinkFallback: true
 }));
 
+async function localProjectAudioForEntry(entry) {
+  if (entry?.localPlayback !== true) return null;
+  const sourceFile = entry.sourceFile;
+  if (typeof sourceFile !== 'string' || basename(sourceFile) !== sourceFile || extname(sourceFile).toLowerCase() !== '.mp3') {
+    throw new Error('Unsafe local audio filename.');
+  }
+  const filePath = resolve(projectRoot, sourceFile);
+  let resolvedPath;
+  try {
+    resolvedPath = await realpath(filePath);
+  } catch (error) {
+    if (error.code === 'ENOENT') return null;
+    throw error;
+  }
+  const relativePath = relative(projectRoot, resolvedPath);
+  if (!relativePath || relativePath.startsWith('..') || isAbsolute(relativePath)) throw new Error('Local audio path escapes the project root.');
+  let fileInfo;
+  try {
+    fileInfo = await stat(resolvedPath);
+  } catch (error) {
+    if (error.code === 'ENOENT') return null;
+    throw error;
+  }
+  if (!fileInfo.isFile() || fileInfo.size < 16_000) throw new Error('Local audio file is missing or too small.');
+  return { filePath: resolvedPath, fileInfo };
+}
+
+async function readAudioManifestWithLocalOverrides() {
+  const manifest = JSON.parse(await readFile(audioManifestPath, 'utf8'));
+  let overrides;
+  try {
+    overrides = JSON.parse(await readFile(localAudioOverridesPath, 'utf8'));
+  } catch (error) {
+    if (error.code === 'ENOENT') return manifest;
+    throw error;
+  }
+  if (overrides?.schemaVersion !== 1 || !overrides.entries || typeof overrides.entries !== 'object') {
+    throw new Error('Invalid local audio overrides manifest.');
+  }
+  for (const [songId, entry] of Object.entries(overrides.entries)) {
+    if (entry?.songId !== songId || typeof entry.sourceFile !== 'string'
+      || entry.objectKey !== `audio/${songId}.mp3` || entry.mimeType !== 'audio/mpeg'
+      || entry.localPlayback !== true) throw new Error(`Invalid local audio override for ${songId}.`);
+    manifest.entries[songId] = { ...manifest.entries[songId], ...entry };
+  }
+  return manifest;
+}
+
+function streamLocalProjectAudio(request, response, localAudio) {
+  const { filePath, fileInfo } = localAudio;
+  const size = fileInfo.size;
+  let start = 0;
+  let end = size - 1;
+  let status = 200;
+  const rangeHeader = request.headers.range;
+  if (rangeHeader) {
+    const match = /^bytes=(\d*)-(\d*)$/.exec(rangeHeader.trim());
+    if (!match || (!match[1] && !match[2])) {
+      response.set('Content-Range', `bytes */${size}`);
+      return response.status(416).end();
+    }
+    if (!match[1]) {
+      const suffixLength = Number(match[2]);
+      if (!Number.isSafeInteger(suffixLength) || suffixLength <= 0) {
+        response.set('Content-Range', `bytes */${size}`);
+        return response.status(416).end();
+      }
+      start = Math.max(0, size - suffixLength);
+    } else {
+      start = Number(match[1]);
+      if (match[2]) end = Number(match[2]);
+    }
+    if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || start < 0 || end < start || start >= size) {
+      response.set('Content-Range', `bytes */${size}`);
+      return response.status(416).end();
+    }
+    end = Math.min(end, size - 1);
+    status = 206;
+    response.set('Content-Range', `bytes ${start}-${end}/${size}`);
+  }
+  response.set({
+    'Content-Type': 'audio/mpeg',
+    'Content-Length': String(end - start + 1),
+    'Accept-Ranges': 'bytes',
+    'Last-Modified': fileInfo.mtime.toUTCString()
+  });
+  response.status(status);
+  const stream = createReadStream(filePath, { start, end });
+  stream.on('error', (error) => {
+    console.error('Local audio stream read failed:', error.message);
+    if (!response.headersSent) response.status(500).end();
+    else if (!response.destroyed) response.destroy(error);
+  });
+  stream.pipe(response);
+  return undefined;
+}
+
 app.get('/api/audio/url/:songId', async (request, response) => {
   response.set('Cache-Control', 'no-store');
   if (!isAdminRequest(request) && !isVyRequest(request)) {
@@ -1176,7 +1276,7 @@ app.get('/api/audio/url/:songId', async (request, response) => {
   const song = karaokeSongById(request.params.songId);
   if (!song) return response.status(404).json({ code: 'SONG_NOT_FOUND', error: 'Không tìm thấy bài karaoke này.' });
   try {
-    const manifest = JSON.parse(await readFile(audioManifestPath, 'utf8'));
+    const manifest = await readAudioManifestWithLocalOverrides();
     const entry = manifest?.schemaVersion === 1 ? manifest.entries?.[song.songId] : null;
     if (!entry) {
       return response.status(404).json({ code: 'AUDIO_NOT_FOUND', error: 'Chưa có audio được ghép với bài này trong manifest.' });
@@ -1187,7 +1287,17 @@ app.get('/api/audio/url/:songId', async (request, response) => {
       || typeof entry.mimeType !== 'string' || !entry.mimeType.startsWith('audio/')) {
       return response.status(503).json({ code: 'AUDIO_MANIFEST_INVALID', error: 'Manifest audio không khớp songId hoặc MIME type; đã chặn phát nhầm bài.' });
     }
-    if (!r2Configured) return response.status(503).json({
+    let localAudio = null;
+    try {
+      localAudio = await localProjectAudioForEntry(entry);
+    } catch (error) {
+      console.error(`Local audio manifest entry invalid for ${song.songId}:`, error.message);
+      return response.status(503).json({ code: 'LOCAL_AUDIO_INVALID', error: 'File audio trong project không hợp lệ.' });
+    }
+    if (!localAudio && entry.localOnly === true) return response.status(404).json({
+      code: 'AUDIO_NOT_FOUND', error: 'File audio cục bộ của bài này chưa có trong project.'
+    });
+    if (!r2Configured && !localAudio) return response.status(503).json({
       code: 'PRIVATE_AUDIO_NOT_CONFIGURED',
       error: 'Audio chưa sẵn sàng: server thiếu các biến R2 riêng tư.'
     });
@@ -1195,6 +1305,8 @@ app.get('/api/audio/url/:songId', async (request, response) => {
       songId: song.songId,
       audioUrl: `/api/audio/stream/${encodeURIComponent(song.songId)}?ticket=${encodeURIComponent(createAudioStreamTicket(song.songId))}`,
       mimeType: entry.mimeType,
+      audioSource: localAudio ? 'local-project' : 'cloudflare-r2-private',
+      durationSeconds: Number(entry.durationSeconds) || null,
       expiresInSeconds: 6 * 60 * 60
     });
   } catch (error) {
@@ -1214,7 +1326,7 @@ app.get('/api/audio/stream/:songId', async (request, response) => {
 
   let manifest;
   try {
-    manifest = JSON.parse(await readFile(audioManifestPath, 'utf8'));
+    manifest = await readAudioManifestWithLocalOverrides();
   } catch {
     return response.status(503).end();
   }
@@ -1224,6 +1336,14 @@ app.get('/api/audio/stream/:songId', async (request, response) => {
     || entry.objectKey.includes('..') || typeof entry.mimeType !== 'string' || !entry.mimeType.startsWith('audio/')) {
     return response.status(404).end();
   }
+  try {
+    const localAudio = await localProjectAudioForEntry(entry);
+    if (localAudio) return streamLocalProjectAudio(request, response, localAudio);
+  } catch (error) {
+    console.error(`Local audio stream unavailable for ${songId}:`, error.message);
+    return response.status(503).end();
+  }
+  if (entry.localOnly === true) return response.status(404).end();
   if (!r2Configured) return response.status(503).end();
 
   const abortController = new AbortController();
@@ -1266,7 +1386,7 @@ app.get('/api/karaoke/metadata/:songId', async (request, response) => {
   const cached = karaokeMetadataCache.get(song.songId);
   if (cached && cached.expiresAt > Date.now()) return response.json(cached.data);
   try {
-    const manifest = JSON.parse(await readFile(audioManifestPath, 'utf8'));
+    const manifest = await readAudioManifestWithLocalOverrides();
     const entry = manifest.entries?.[song.songId];
     const sourceLabel = String(entry?.sourceFile || '').replace(/\s*\[[^\]]+\]\.(mp3|m4a|wav|flac|ogg)$/i, '');
     const sourceTitle = String(entry?.title || song.title);
@@ -1369,7 +1489,7 @@ app.post('/api/lyrics/sync-one', async (request, response) => {
   const song = karaokeSongById(request.body?.songId);
   if (!song) return response.status(400).json({ error: 'songId không hợp lệ.' });
   try {
-    const result = await syncOneLyrics(song, { force: request.body?.force === true });
+    const result = await syncOneLyrics(song);
     return response.json(lyricsResultPayload(song, result));
   } catch (error) {
     console.error(`Đồng bộ lyrics thất bại cho ${song.songId}:`, error.message);

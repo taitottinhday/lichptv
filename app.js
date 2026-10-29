@@ -5,6 +5,9 @@ import { getScheduleCode } from './schedule-data.js';
 
 const ADMIN_TOKEN_KEY = 'lich-cua-vy-admin-token-v1';
 const VY_TOKEN_KEY = 'lich-cua-vy-audio-session-v1';
+const VY_SCHEDULE_CACHE_KEY = 'lich-cua-vy-offline-schedule-v1';
+const OFFLINE_MEDIA_DB = 'lich-cua-vy-offline-media-v1';
+const OFFLINE_AUDIO_STORE = 'audio';
 const ADMIN_PUSH_ENABLED_KEY = 'lich-cua-vy-admin-push-enabled-v1';
 const CHAT_IMAGE_PREFIX = '__lich_chat_image__:';
 const CHAT_CALL_PREFIX = '__lich_call__:';
@@ -14,6 +17,7 @@ const KARAOKE_LYRICS_DIR = '/lyrics/';
 const KARAOKE_LYRICS_STORAGE_KEY = 'lich-cua-vy-karaoke-lyrics-v2';
 const KARAOKE_LYRICS_UI_STORAGE_KEY = 'lich-cua-vy-karaoke-lyrics-ui-v1';
 const CHAT_TIME_ZONE = 'Asia/Ho_Chi_Minh';
+const MUSIC_APP_URL = import.meta.env.VITE_MUSIC_APP_URL?.trim() || '';
 const LOVE_START_DATE = new Date(2022, 10, 3, 0, 0, 0);
 const FACE_LANDMARKER_MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
 const FACE_LANDMARKER_WASM_URL = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm';
@@ -46,7 +50,7 @@ const state = {
   karaokeLyricsSession: {},
   karaokePlaybackQueue: [],
   karaokeLyricsModal: createKaraokeLyricsModalState(),
-  karaokeAudio: { songId: null, status: 'idle', message: '', requestId: 0, controller: null, entry: null, activeLineIndex: -1, autoPlay: false },
+  karaokeAudio: { songId: null, status: 'idle', message: '', requestId: 0, controller: null, entry: null, activeLineIndex: -1, autoPlay: false, objectUrl: '', offlineSaved: false, savingOffline: false },
   toastTimer: null,
   countdownTimer: null,
   chatTimer: null,
@@ -64,6 +68,97 @@ function sessionToken(role = 'vy') {
 function sessionHeaders(role = 'vy', extra = {}) {
   const token = sessionToken(role);
   return { ...extra, ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+}
+
+function readCachedSchedule() {
+  try {
+    const cached = JSON.parse(localStorage.getItem(VY_SCHEDULE_CACHE_KEY) || 'null');
+    if (cached?.version !== 1 || !cached.schedule || typeof cached.schedule !== 'object' || Array.isArray(cached.schedule)) return null;
+    return cached;
+  } catch {
+    localStorage.removeItem(VY_SCHEDULE_CACHE_KEY);
+    return null;
+  }
+}
+
+function cacheSchedule(schedule) {
+  try {
+    localStorage.setItem(VY_SCHEDULE_CACHE_KEY, JSON.stringify({ version: 1, schedule, savedAt: new Date().toISOString() }));
+  } catch (error) {
+    console.warn('Không lưu được lịch để xem offline:', error);
+  }
+}
+
+function showCachedScheduleOffline() {
+  const cached = readCachedSchedule();
+  if (!cached) return false;
+  state.schedule = { ...cached.schedule };
+  state.scheduleLoaded = true;
+  renderOverview();
+  renderCalendar();
+  const savedAt = cached.savedAt ? new Date(cached.savedAt) : null;
+  const savedLabel = savedAt && !Number.isNaN(savedAt.getTime())
+    ? new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short' }).format(savedAt)
+    : 'lần gần nhất';
+  const status = $('#scheduleSyncStatus');
+  if (status) status.textContent = `Đang offline · hiển thị lịch đã tải ${savedLabel}. Kết nối mạng để cập nhật.`;
+  const retry = $('#retryScheduleLoad');
+  if (retry) retry.hidden = false;
+  return true;
+}
+
+function openOfflineMediaDb() {
+  return new Promise((resolve, reject) => {
+    if (!('indexedDB' in window)) return reject(new Error('Thiết bị không hỗ trợ lưu nhạc offline.'));
+    const request = indexedDB.open(OFFLINE_MEDIA_DB, 1);
+    request.onupgradeneeded = () => {
+      if (!request.result.objectStoreNames.contains(OFFLINE_AUDIO_STORE)) {
+        request.result.createObjectStore(OFFLINE_AUDIO_STORE, { keyPath: 'songId' });
+      }
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error || new Error('Không mở được kho nhạc offline.'));
+  });
+}
+
+async function getOfflineAudio(songId) {
+  const db = await openOfflineMediaDb();
+  return new Promise((resolve, reject) => {
+    const request = db.transaction(OFFLINE_AUDIO_STORE, 'readonly').objectStore(OFFLINE_AUDIO_STORE).get(songId);
+    request.onsuccess = () => { db.close(); resolve(request.result || null); };
+    request.onerror = () => { db.close(); reject(request.error); };
+  });
+}
+
+async function putOfflineAudio(record) {
+  const db = await openOfflineMediaDb();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(OFFLINE_AUDIO_STORE, 'readwrite');
+    transaction.objectStore(OFFLINE_AUDIO_STORE).put(record);
+    transaction.oncomplete = () => { db.close(); resolve(); };
+    transaction.onerror = () => { db.close(); reject(transaction.error); };
+    transaction.onabort = () => { db.close(); reject(transaction.error || new Error('Không lưu được bài nhạc offline.')); };
+  });
+}
+
+async function deleteOfflineAudio(songId) {
+  const db = await openOfflineMediaDb();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(OFFLINE_AUDIO_STORE, 'readwrite');
+    transaction.objectStore(OFFLINE_AUDIO_STORE).delete(songId);
+    transaction.oncomplete = () => { db.close(); resolve(); };
+    transaction.onerror = () => { db.close(); reject(transaction.error); };
+  });
+}
+
+async function clearOfflineAudio() {
+  const db = await openOfflineMediaDb();
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(OFFLINE_AUDIO_STORE, 'readwrite');
+    transaction.objectStore(OFFLINE_AUDIO_STORE).clear();
+    transaction.oncomplete = () => { db.close(); resolve(); };
+    transaction.onerror = () => { db.close(); reject(transaction.error); };
+  });
 }
 
 let nativeNotificationsPromise;
@@ -394,9 +489,15 @@ function renderKaraokeAudioControls() {
   const play = $('#karaokeAudioPlay');
   const seek = $('#karaokeAudioSeek');
   const status = $('#karaokeAudioStatus');
+  const saveOffline = $('#saveKaraokeAudioOffline');
   if (!audio || !play || !seek || !status) return;
   status.textContent = session.message || 'Chưa mở audio';
   status.dataset.state = session.status;
+  if (saveOffline) {
+    saveOffline.textContent = session.savingOffline ? 'Đang lưu…' : session.offlineSaved ? '✓ Đã lưu offline · Xóa' : '⬇ Lưu để nghe offline';
+    saveOffline.disabled = session.savingOffline || !session.songId;
+    saveOffline.setAttribute('aria-label', session.offlineSaved ? 'Xóa bản nhạc đã lưu offline' : 'Lưu bài nhạc để nghe offline');
+  }
   play.disabled = session.status !== 'ready' && session.status !== 'buffering';
   play.textContent = audio.paused ? '▶' : 'Ⅱ';
   play.setAttribute('aria-label', audio.paused ? 'Phát nhạc' : 'Tạm dừng nhạc');
@@ -800,6 +901,7 @@ function resetKaraokeAudio(message = '', status = 'idle') {
     audio.removeAttribute('src');
     audio.load();
   }
+  if (previous.objectUrl) URL.revokeObjectURL(previous.objectUrl);
   state.karaokeAudio = {
     songId: null,
     status,
@@ -808,7 +910,10 @@ function resetKaraokeAudio(message = '', status = 'idle') {
     controller: null,
     entry: null,
     activeLineIndex: -1,
-    autoPlay: false
+    autoPlay: false,
+    objectUrl: '',
+    offlineSaved: false,
+    savingOffline: false
   };
   renderKaraokeAudioControls();
   $('#karaokeLyricsText')?.querySelectorAll('.lyrics-line-row.is-current').forEach((line) => {
@@ -840,6 +945,24 @@ async function prepareKaraokeAudio(songId, autoPlay = false) {
   audioState.controller = controller;
   renderKaraokeAudioControls();
   try {
+    try {
+      const cachedAudio = await getOfflineAudio(songId);
+      if (cachedAudio?.blob instanceof Blob && cachedAudio.blob.size > 0) {
+        const audio = $('#karaokeAudioElement');
+        if (!audio || state.karaokeAudio.requestId !== requestId) return;
+        audioState.objectUrl = URL.createObjectURL(cachedAudio.blob);
+        audioState.offlineSaved = true;
+        audioState.entry = { songId, durationSeconds: Number(cachedAudio.durationSeconds) || null, audioSource: 'offline-cache', offline: true };
+        audio.src = audioState.objectUrl;
+        audio.load();
+        audioState.status = 'loading';
+        audioState.message = 'Đang mở bài đã lưu trên thiết bị…';
+        renderKaraokeAudioControls();
+        return;
+      }
+    } catch (error) {
+      console.warn('Không đọc được bài nhạc offline:', error);
+    }
     const urlResponse = await requestKaraokeAudioUrl(songId, controller.signal);
     const payload = await urlResponse.json().catch(() => ({}));
     if (state.karaokeAudio.requestId !== requestId) return;
@@ -867,6 +990,52 @@ async function prepareKaraokeAudio(songId, autoPlay = false) {
     audioState.message = error.message || 'Không tải được audio.';
   }
   renderKaraokeAudioControls();
+}
+
+async function saveCurrentKaraokeAudioOffline() {
+  const audioState = state.karaokeAudio;
+  const songId = audioState.songId;
+  if (!songId || audioState.savingOffline) return;
+  audioState.savingOffline = true;
+  renderKaraokeAudioControls();
+  try {
+    if (audioState.offlineSaved) {
+      await deleteOfflineAudio(songId);
+      audioState.offlineSaved = false;
+      showToast('Đã xóa bản nhạc offline khỏi thiết bị.');
+      return;
+    }
+    const response = await requestKaraokeAudioUrl(songId);
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || payload.songId !== songId || typeof payload.audioUrl !== 'string') {
+      throw new Error(payload.error || 'Chưa tải được audio để lưu offline.');
+    }
+    const audioUrl = new URL(payload.audioUrl, window.location.origin);
+    if (audioUrl.origin !== window.location.origin || audioUrl.protocol !== window.location.protocol) {
+      throw new Error('Đường dẫn audio không an toàn; đã dừng tải.');
+    }
+    const audioResponse = await fetch(audioUrl.href, { cache: 'no-store' });
+    if (!audioResponse.ok) throw new Error('Không tải được file nhạc. Hãy thử lại khi mạng ổn định.');
+    const blob = await audioResponse.blob();
+    if (!blob.size || !blob.type.startsWith('audio/')) throw new Error('File tải về không phải audio hợp lệ.');
+    await putOfflineAudio({
+      songId,
+      blob,
+      title: currentKaraokeLyricsSong()?.title || songId,
+      mimeType: blob.type,
+      durationSeconds: Number(payload.durationSeconds) || null,
+      savedAt: new Date().toISOString()
+    });
+    if (state.karaokeAudio.songId === songId) audioState.offlineSaved = true;
+    showToast('Đã lưu bài nhạc trên thiết bị để nghe offline 🎵');
+  } catch (error) {
+    showToast(error.message || 'Chưa lưu được bài nhạc offline.');
+  } finally {
+    if (state.karaokeAudio.songId === songId) {
+      audioState.savingOffline = false;
+      renderKaraokeAudioControls();
+    }
+  }
 }
 
 function updateKaraokeSyncedLyrics({ refreshRows = false } = {}) {
@@ -1643,6 +1812,7 @@ function bindKaraoke() {
       }
     } else audio.pause();
   });
+  $('#saveKaraokeAudioOffline')?.addEventListener('click', saveCurrentKaraokeAudioOffline);
   $('#karaokeAudioSeek')?.addEventListener('input', (event) => {
     if (!audio || !Number.isFinite(audio.duration)) return;
     audio.currentTime = Number(event.target.value);
@@ -3751,16 +3921,28 @@ async function restoreAuthenticatedSession() {
   try {
     const response = await fetch('/api/session', { headers: sessionHeaders('vy'), cache: 'no-store' });
     const data = await response.json().catch(() => ({}));
-    if (!response.ok || data.role !== 'vy') throw new Error('Phiên đăng nhập đã hết hạn.');
+    if (response.status === 401 || (response.ok && data.role !== 'vy')) {
+      localStorage.removeItem(VY_TOKEN_KEY);
+      setAuthenticated(false);
+      return;
+    }
+    if (!response.ok) throw new Error('Máy chủ chưa phản hồi.');
     state.authenticatedRole = 'vy';
     setAuthenticated(true);
     await loadSharedSchedule();
     handleIncomingCallHint();
     handleIncomingNotificationTarget();
   } catch {
-    localStorage.removeItem(VY_TOKEN_KEY);
-    state.authenticatedRole = null;
-    setAuthenticated(false);
+    // Chỉ khôi phục chế độ xem cục bộ sau khi tài khoản đã đăng nhập thành công trước đó.
+    state.authenticatedRole = 'vy';
+    setAuthenticated(true);
+    if (showCachedScheduleOffline()) {
+      handleIncomingCallHint();
+      handleIncomingNotificationTarget();
+    } else {
+      setAuthenticated(false);
+      $('#loginError').textContent = 'Chưa có lịch lưu trên thiết bị này. Hãy kết nối mạng và đăng nhập để tải lịch trước.';
+    }
   }
 }
 
@@ -3922,20 +4104,28 @@ async function loadSharedSchedule() {
     if (!response.ok) throw new Error(data.error || 'Chưa tải được lịch dùng chung.');
     state.schedule = { ...(data.schedule || {}) };
     state.scheduleLoaded = true;
+    cacheSchedule(state.schedule);
     renderOverview();
     renderCalendar();
     if (status) status.textContent = data.hasStoredEntries ? '' : data.storageMode === 'memory'
       ? 'Chưa có lịch lưu bền vững; lịch mới sẽ mất khi máy chủ khởi động lại.'
       : 'Đang hiển thị lịch mẫu; lịch này chưa được lưu trong cơ sở dữ liệu.';
   } catch (error) {
-    state.schedule = serverFallback ? { ...serverFallback.schedule } : {};
-    state.scheduleLoaded = false;
-    renderOverview();
-    renderCalendar();
-    if (status) status.textContent = serverFallback
-      ? `Không tải được lịch mới nhất: ${error.message} Đang hiển thị lịch dự phòng đến hết 25/10/2026; hãy thử tải lại để kiểm tra máy chủ.`
-      : `Không tải được lịch: ${error.message}`;
-    if (retry) retry.hidden = false;
+    if (serverFallback) {
+      state.schedule = { ...serverFallback.schedule };
+      state.scheduleLoaded = false;
+      renderOverview();
+      renderCalendar();
+      if (status) status.textContent = `Không tải được lịch mới nhất: ${error.message} Đang hiển thị lịch dự phòng đến hết 25/10/2026; hãy thử tải lại để kiểm tra máy chủ.`;
+      if (retry) retry.hidden = false;
+    } else if (!showCachedScheduleOffline()) {
+      state.schedule = {};
+      state.scheduleLoaded = false;
+      renderOverview();
+      renderCalendar();
+      if (status) status.textContent = `Không tải được lịch: ${error.message}`;
+      if (retry) retry.hidden = false;
+    }
   }
 }
 
@@ -4319,6 +4509,8 @@ async function handleLogin(event) {
 function handleLogout() {
   closeKaraokeLyrics();
   localStorage.removeItem(VY_TOKEN_KEY);
+  localStorage.removeItem(VY_SCHEDULE_CACHE_KEY);
+  clearOfflineAudio().catch((error) => console.warn('Không xóa được nhạc offline khi đăng xuất:', error));
   localStorage.removeItem(ADMIN_TOKEN_KEY);
   state.authenticatedRole = null;
   setAuthenticated(false);
@@ -4724,6 +4916,12 @@ function init() {
       console.error('Không đăng ký được service worker:', error);
     });
   }
+  window.addEventListener('online', () => {
+    if (state.authenticatedRole === 'vy') loadSharedSchedule();
+  });
+  window.addEventListener('offline', () => {
+    if (state.authenticatedRole === 'vy' && readCachedSchedule()) showCachedScheduleOffline();
+  });
   restoreAuthenticatedSession();
 }
 

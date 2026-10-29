@@ -64,7 +64,7 @@
         </div>
       </header>
 
-      <a class="karaoke-quick-link" href="#karaokeSection" aria-label="Đi tới khu vực karaoke"><span aria-hidden="true">🎤</span><span>Karaoke</span></a>
+      <button class="karaoke-quick-link music-quick-link" id="musicQuickLink" type="button" aria-label="Vy muốn nghe nhạc ko"><span aria-hidden="true">♫</span><span>Vy muốn nghe nhạc ko</span></button>
 
       <main>
         <section class="love-counter-card" id="loveCounter" aria-labelledby="loveCounterHeading">
@@ -529,15 +529,17 @@
             </div>
             <label class="karaoke-audio-volume" for="karaokeAudioVolume"><span aria-hidden="true">◖))</span><input id="karaokeAudioVolume" type="range" min="0" max="1" step="0.01" value="0.8" aria-label="Âm lượng" /></label>
           </div>
+          <button class="lyrics-tool-button" id="saveKaraokeAudioOffline" type="button" disabled>⬇ Lưu để nghe offline</button>
+          <small class="karaoke-vocal-status">Hãy lưu từng bài khi có mạng để nghe lại lúc offline.</small>
         </section>
         <div class="karaoke-lyrics-body" id="karaokeLyricsBody" hidden>
           <div class="karaoke-lyrics-title-row"><h4>Lời bài hát</h4><span id="lyricsFontSizeValue" aria-live="polite">20px</span><button class="karaoke-lyrics-follow" id="karaokeLyricsFollow" type="button" hidden>Theo lời bài hát</button></div>
           <div class="karaoke-lyrics-status" id="karaokeLyricsStatus" role="status" aria-live="polite">Đang tìm lời bài hát…</div>
+          <a class="button button-light karaoke-lyrics-source-link" id="openKaraokeLyricsSource" href="#" target="_blank" rel="noopener noreferrer" hidden>Mở nguồn lời bài hát ↗</a>
           <div class="karaoke-lyrics-empty" id="karaokeLyricsEmpty" hidden>
             <div class="karaoke-lyrics-empty-icon" aria-hidden="true">♪</div>
             <strong>Bài hát này chưa có lời</strong>
             <p id="karaokeLyricsEmptyMessage">Em có thể mở nguồn lời hợp pháp hoặc thêm nội dung mà mình có quyền sử dụng để lưu và xem offline.</p>
-            <a class="button button-light karaoke-lyrics-source-link" id="openKaraokeLyricsSource" href="#" target="_blank" rel="noopener noreferrer" hidden>Mở nguồn lời bài hát ↗</a>
             <button class="button button-primary" id="addKaraokeLyrics" type="button">＋ Thêm lời bài hát</button>
           </div>
           <div class="karaoke-lyrics-text" id="karaokeLyricsText" tabindex="0" aria-live="polite"></div>
@@ -547,6 +549,7 @@
             <button class="lyrics-mini-button" id="showAllLyrics" type="button">Hiện tất cả</button>
           </div>
           <form class="karaoke-lyrics-editor" id="karaokeLyricsEditor" hidden>
+            <p id="karaokeLyricsEditorStatus" hidden>Bài này chưa có lời lưu trong project. Hãy mở nguồn tra cứu và xác nhận đúng bài trước khi thêm lời.</p>
             <label for="karaokeLyricsInput">Dán hoặc chỉnh sửa lời bài hát</label>
             <textarea id="karaokeLyricsInput" rows="12" spellcheck="false" placeholder="Dán lời bài hát vào đây…\n\nLời sẽ hiển thị tĩnh, không chạy theo thời gian audio."></textarea>
             <div class="karaoke-editor-actions">
