@@ -4886,7 +4886,7 @@ function init() {
   applyAvatarImage();
   $('#musicQuickLink')?.addEventListener('click', () => {
     if (!MUSIC_APP_URL) {
-      showToast('Góc nghe nhạc chưa được cấu hình địa chỉ website. Hãy thêm VITE_MUSIC_APP_URL sau khi deploy frontend nhạc.');
+      $('#karaokeSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
     try {
