@@ -938,12 +938,6 @@ body.karaoke-modal-open { overflow: hidden; }
 .karaoke-audio-panel { margin-inline: 30px; border-radius: 20px; background: linear-gradient(120deg,rgba(39,60,112,.7),rgba(78,36,82,.55)); }
 .karaoke-lyrics-mode-row { margin-inline: 30px; }
 .karaoke-lyrics-status[hidden] { display: none !important; }
-.karaoke-quick-link { position: fixed; z-index: 80; top: 50%; right: max(14px, env(safe-area-inset-right)); display: flex; align-items: center; gap: 8px; padding: 12px 15px; transform: translateY(-50%); border: 1px solid rgba(255,255,255,.16); border-radius: 999px; background: linear-gradient(120deg,#ff5faf,#8d69f5 65%,#4388ff); color: #fff; box-shadow: 0 10px 30px rgba(52,54,122,.38), inset 0 1px rgba(255,255,255,.22); font-size: 13px; font-weight: 800; text-decoration: none; transition: transform .2s, box-shadow .2s; }
-.karaoke-quick-link:hover { transform: translateY(-50%) scale(1.04); box-shadow: 0 14px 35px rgba(52,54,122,.46), inset 0 1px rgba(255,255,255,.22); }
-.karaoke-quick-link > span:first-child { font-size: 18px; }
-.app-shell .karaoke-section { display: none !important; }
-.music-quick-link { cursor: pointer; font-family: inherit; }
-.music-quick-link > span:last-child { white-space: nowrap; }
 .karaoke-judge { display: grid; flex: 0 0 auto; gap: 10px; margin: 12px 30px 12px; padding: 15px 17px; border: 1px solid rgba(255,125,190,.2); border-radius: 20px; background: linear-gradient(120deg,rgba(255,95,175,.1),rgba(67,136,255,.11)),rgba(15,20,39,.72); box-shadow: inset 0 1px rgba(255,255,255,.04); }
 .karaoke-judge-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .karaoke-judge-kicker { color: #ff9dcc; font-size: 9px; font-weight: 850; letter-spacing: .14em; }
@@ -992,8 +986,6 @@ body.karaoke-modal-open { overflow: hidden; }
   .lyrics-tool-button, .lyrics-mini-button { min-height: 44px; }
 }
 @media (max-width: 700px) {
-  .karaoke-quick-link { top: auto; right: max(13px, env(safe-area-inset-right)); bottom: max(18px, calc(env(safe-area-inset-bottom) + 10px)); padding: 11px 15px; transform: none; }
-  .karaoke-quick-link:hover { transform: translateY(-2px); }
   .karaoke-judge { margin: 12px 14px 0; padding: 14px; border-radius: 18px; }
 }
 @media (max-width: 560px) {

@@ -17,7 +17,6 @@ const KARAOKE_LYRICS_DIR = '/lyrics/';
 const KARAOKE_LYRICS_STORAGE_KEY = 'lich-cua-vy-karaoke-lyrics-v2';
 const KARAOKE_LYRICS_UI_STORAGE_KEY = 'lich-cua-vy-karaoke-lyrics-ui-v1';
 const CHAT_TIME_ZONE = 'Asia/Ho_Chi_Minh';
-const MUSIC_APP_URL = import.meta.env.VITE_MUSIC_APP_URL?.trim() || '';
 const LOVE_START_DATE = new Date(2022, 10, 3, 0, 0, 0);
 const FACE_LANDMARKER_MODEL_URL = 'https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task';
 const FACE_LANDMARKER_WASM_URL = 'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm';
@@ -4884,19 +4883,6 @@ function bindEvents() {
 
 function init() {
   applyAvatarImage();
-  $('#musicQuickLink')?.addEventListener('click', () => {
-    if (!MUSIC_APP_URL) {
-      $('#karaokeSection')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      return;
-    }
-    try {
-      const musicUrl = new URL(MUSIC_APP_URL, window.location.origin);
-      if (!['http:', 'https:'].includes(musicUrl.protocol)) throw new Error('Invalid music URL');
-      window.location.assign(musicUrl.href);
-    } catch {
-      showToast('Địa chỉ website nghe nhạc chưa hợp lệ. Kiểm tra VITE_MUSIC_APP_URL nhé.');
-    }
-  });
   renderFoodMenu();
   bindKaraoke();
   bindEvents();
